@@ -162,6 +162,24 @@
   .cookie-decline:hover { background: var(--bg); color: var(--text); }
   .cookie-accept { background: rgba(126,227,195,.12); color: var(--accent); border: 1px solid rgba(126,227,195,.2); }
   .cookie-accept:hover { background: var(--accent); color: var(--bg); }
+
+  .modal-overlay { position: fixed; inset: 0; z-index: 2000; background: rgba(5,7,10,.75); backdrop-filter: blur(4px);
+    display: none; align-items: center; justify-content: center; padding: 1.2rem; }
+  .modal-overlay.show { display: flex; }
+  .modal-box { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; max-width: 420px; width: 100%;
+    box-shadow: 0 20px 60px -10px rgba(0,0,0,.7); position: relative; overflow: hidden; }
+  .modal-box::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 2px;
+    background: linear-gradient(to right, transparent, var(--accent), transparent); }
+  .modal-close { position: absolute; top: .8rem; right: .8rem; background: none; border: none; color: var(--text-muted);
+    font-size: 1.2rem; line-height: 1; padding: .3rem .5rem; border-radius: 4px; }
+  .modal-close:hover { color: var(--text); background: var(--surface-hover); }
+  .modal-body { padding: 2rem 1.6rem 1.6rem; text-align: center; }
+  .modal-icon { width: 44px; height: 44px; border-radius: 999px; background: rgba(126,227,195,.1); display: flex;
+    align-items: center; justify-content: center; margin: 0 auto .9rem; }
+  .modal-body h2 { font-size: 1.05rem; margin: 0 0 .5rem; color: var(--text); }
+  .modal-body p { font-size: .82rem; color: var(--text-muted); margin: 0 0 1.3rem; line-height: 1.6; }
+  .modal-actions { display: flex; flex-direction: column; gap: .6rem; }
+  .modal-actions .oauth-btn, .modal-actions .btn-ghost { justify-content: center; width: 100%; }
 </style>
 </head>
 <body>
@@ -335,6 +353,28 @@ curl -X POST https://skillsmith.ch/api/scan_pro \
   </div>
 </footer>
 
+<div id="loginModal" class="modal-overlay" onclick="if (event.target === this) closeLoginModal();">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeLoginModal()" aria-label="Close">&times;</button>
+    <div class="modal-body">
+      <div class="modal-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7EE3C3" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+      </div>
+      <h2>Sign in to scan</h2>
+      <p>Free, takes a few seconds, syncs your 5 scans/day across devices. Your pasted text stays right where it is.</p>
+      <div class="modal-actions">
+        <a href="/api/auth/github/start" class="oauth-btn">
+          <svg height="16" width="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          Sign in with GitHub
+        </a>
+        <a href="#" onclick="closeLoginModal(); doSignup(); return false;" class="btn-ghost" style="display:inline-flex;align-items:center;">
+          Skip sign-in, get an anonymous key
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="consentBanner" class="cookie-pill">
   <div style="flex:1;color:var(--text-muted);">
     This site uses Google AdSense, which may use cookies to serve ads. See our
@@ -500,6 +540,7 @@ async function refreshAccountBar() {
   const loggedIn = document.getElementById('accountLoggedIn');
   if (!key) { loggedOut.style.display = 'block'; loggedIn.style.display = 'none'; return; }
   loggedOut.style.display = 'none'; loggedIn.style.display = 'block';
+  closeLoginModal();
   try {
     const res = await fetch('/api/signup?api_key=' + encodeURIComponent(key));
     const data = await res.json();
@@ -539,11 +580,17 @@ function showResultError(label, message) {
   switchTab('overview');
 }
 
+function showLoginModal() {
+  document.getElementById('loginModal').classList.add('show');
+}
+function closeLoginModal() {
+  document.getElementById('loginModal').classList.remove('show');
+}
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeLoginModal(); });
+
 function promptLogin() {
-  document.getElementById('accountLoggedOut').scrollIntoView({ behavior: 'smooth', block: 'center' });
-  document.getElementById('accountLoggedOut').style.outline = '2px solid #7ee3c3';
-  setTimeout(() => { document.getElementById('accountLoggedOut').style.outline = 'none'; }, 2000);
-  showResultError('SIGN IN REQUIRED', "Sign in above (GitHub, or an anonymous key) to run the scan -- it's free, takes a few seconds, and your text stays in the box.");
+  showLoginModal();
+  showResultError('SIGN IN REQUIRED', "Sign in to run the scan -- it's free, takes a few seconds, and your text stays in the box.");
 }
 
 async function runScan(payload, btn) {
