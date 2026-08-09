@@ -266,21 +266,12 @@ async function activatePro() {
   }
 }
 
-function setScanEnabled(enabled) {
-  document.getElementById('scanBtn').disabled = !enabled;
-  document.getElementById('input').disabled = !enabled;
-  document.getElementById('input').placeholder = enabled
-    ? document.getElementById('input').placeholder
-    : 'Sign in above to scan a skill.';
-}
-
 async function refreshAccountBar() {
   const key = getApiKey();
   const loggedOut = document.getElementById('accountLoggedOut');
   const loggedIn = document.getElementById('accountLoggedIn');
-  if (!key) { loggedOut.style.display = 'block'; loggedIn.style.display = 'none'; setScanEnabled(false); return; }
+  if (!key) { loggedOut.style.display = 'block'; loggedIn.style.display = 'none'; return; }
   loggedOut.style.display = 'none'; loggedIn.style.display = 'block';
-  setScanEnabled(true);
   try {
     const res = await fetch('/api/signup?api_key=' + encodeURIComponent(key));
     const data = await res.json();
@@ -304,15 +295,20 @@ async function refreshAccountBar() {
 }
 refreshAccountBar();
 
+function promptLogin() {
+  document.getElementById('accountLoggedOut').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  document.getElementById('accountLoggedOut').style.outline = '2px solid #7ee3c3';
+  setTimeout(() => { document.getElementById('accountLoggedOut').style.outline = 'none'; }, 2000);
+  document.getElementById('result').innerHTML =
+    '<span class="badge high">SIGN IN REQUIRED</span> Sign in above (GitHub, Google, or an anonymous key) to run the scan -- it\'s free, takes a few seconds, and your text stays in the box.';
+}
+
 async function doScan() {
   const btn = document.getElementById('scanBtn');
   const resultEl = document.getElementById('result');
   const text = document.getElementById('input').value;
-  if (!getApiKey()) {
-    resultEl.innerHTML = '<span class="badge high">SIGN IN REQUIRED</span> Sign in above (GitHub, Google, or an anonymous key) to scan a skill -- it\'s free.';
-    return;
-  }
   if (!text.trim()) { resultEl.textContent = 'Paste a SKILL.md first.'; return; }
+  if (!getApiKey()) { promptLogin(); return; }
   btn.disabled = true; btn.textContent = 'Scanning...';
   resultEl.textContent = '';
   try {
