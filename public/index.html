@@ -6,7 +6,35 @@
 <title>skillsmith — lint &amp; security-scan a Claude Agent Skill, live</title>
 <meta name="description" content="Paste a SKILL.md and instantly see lint issues and a static security scan: prompt-injection phrasing, dangerous code patterns. Free, no signup, no data stored.">
 <meta name="google-adsense-account" content="ca-pub-4465607676285389">
-<!-- AdSense script is loaded dynamically from JS only after ad-cookie consent, see consent banner below -->
+<script>
+  // Google Consent Mode: set defaults to "denied" BEFORE adsbygoogle.js loads,
+  // so the script can be present unconditionally (as Google's own setup
+  // instructions require) while no ad/analytics cookie is actually stored
+  // or personalized ad served until our consent banner below is accepted.
+  // https://developers.google.com/tag-platform/security/guides/consent
+  window.dataLayer = window.dataLayer || [];
+  function gtag() { dataLayer.push(arguments); }
+  gtag('consent', 'default', {
+    ad_storage: 'denied',
+    ad_user_data: 'denied',
+    ad_personalization: 'denied',
+    analytics_storage: 'denied',
+  });
+  (function () {
+    try {
+      if (localStorage.getItem('skillsmith-ad-consent') === 'accepted') {
+        gtag('consent', 'update', {
+          ad_storage: 'granted',
+          ad_user_data: 'granted',
+          ad_personalization: 'granted',
+          analytics_storage: 'granted',
+        });
+      }
+    } catch (e) {}
+  })();
+</script>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4465607676285389"
+     crossorigin="anonymous"></script>
 <style>
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
@@ -138,32 +166,29 @@ curl -X POST https://skillsmith-web.vercel.app/api/scan_pro \
   </div>
 </div>
 <script>
-function loadAdsense() {
-  if (document.getElementById('adsbygoogle-script')) return;
-  var s = document.createElement('script');
-  s.id = 'adsbygoogle-script';
-  s.async = true;
-  s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4465607676285389';
-  s.crossOrigin = 'anonymous';
-  document.head.appendChild(s);
-}
 function setConsent(accepted) {
-  localStorage.setItem('ad-consent', accepted ? 'accepted' : 'declined');
+  localStorage.setItem('skillsmith-ad-consent', accepted ? 'accepted' : 'declined');
   document.getElementById('consentBanner').style.display = 'none';
-  if (accepted) loadAdsense();
+  // adsbygoogle.js is already loaded unconditionally (Google requires the
+  // base tag present on every page); Consent Mode controls whether it's
+  // allowed to actually store a cookie / serve a personalized ad.
+  gtag('consent', 'update', {
+    ad_storage: accepted ? 'granted' : 'denied',
+    ad_user_data: accepted ? 'granted' : 'denied',
+    ad_personalization: accepted ? 'granted' : 'denied',
+    analytics_storage: accepted ? 'granted' : 'denied',
+  });
 }
 function showConsentBanner() {
   document.getElementById('consentBanner').style.display = 'block';
 }
 (function initConsent() {
-  var choice = localStorage.getItem('ad-consent');
-  if (choice === 'accepted') {
-    loadAdsense();
-  } else if (choice === 'declined') {
-    // respected: do not load the ads script
-  } else {
+  var choice = localStorage.getItem('skillsmith-ad-consent');
+  if (choice !== 'accepted' && choice !== 'declined') {
     showConsentBanner();
   }
+  // if already accepted, the default-consent script in <head> already
+  // called gtag('consent','update',...granted) before this ran
 })();
 </script>
 <script>
