@@ -2,68 +2,78 @@
 
 Live browser demo for [skillsmith](https://github.com/Larslllllll/skillsmith):
 paste a `SKILL.md`, get instant lint + static security-scan results.
-Stateless — nothing submitted is stored.
 
 **Live:** https://skillsmith-web.vercel.app
 
-- `public/index.html` — single-page paste-and-scan UI (free tier)
-- `api/scan.py` — Vercel Python (WSGI) serverless function, free tier: one file per call
-- `api/scan_pro.py` — **Pro tier**: batch-scan up to 25 files per call, gated by a
-  real on-chain USDC (Solana) payment
+- `public/index.html` — paste-and-scan UI + signup/account bar
+- `api/scan.py` — `POST /api/scan`, single-file scan
+- `api/scan_pro.py` — `POST /api/scan_pro`, batch scan (up to 25 files) + Pro activation
+- `api/signup.py` — `POST /api/signup` (create account), `GET /api/signup?api_key=...` (quota status)
+- `api/account.py` — shared account/quota store (Vercel Blob-backed)
 
-## Pro API
+## Pricing: one account, any device
 
-```
-POST /api/scan-pro
-```
+No email or password: `POST /api/signup` mints an API key. Save it and
+paste it into skillsmith-web on your other device to share the **same**
+quota — sign up once, use it from your phone and your laptop without
+double-paying or hitting two separate free-tier counters.
 
-Call it with no `payment_signature` to get pricing + a pay-to address:
+| Tier | Limit | Price |
+| --- | --- | --- |
+| Free (no signup) | 5 scans/day, tracked per IP | $0 |
+| Free (signed up) | 5 scans/day, tracked per account, same on every device | $0 |
+| Pro | 100 scans/day for 30 days, same on every device | $5 USDC (Solana) |
 
-```bash
-curl -X POST https://skillsmith-web.vercel.app/api/scan-pro \
-  -H "Content-Type: application/json" \
-  -d '{"files":[{"name":"a/SKILL.md","text":"..."}]}'
-```
-
-```json
-{
-  "error": "payment_required",
-  "price_usdc": 0.02,
-  "pay_to": "2esJogvKTYDuxZaB9PEuEaHvz4U6TuQnTx3pkLcdH34N",
-  "mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-  "network": "solana-mainnet"
-}
-```
-
-Send `price_usdc` worth of USDC (SPL token, mainnet) to `pay_to`, then
-resubmit with the finalized transaction signature:
+## API
 
 ```bash
-curl -X POST https://skillsmith-web.vercel.app/api/scan-pro \
+# 1. sign up
+curl -X POST https://skillsmith-web.vercel.app/api/signup
+# -> {"api_key": "sk_...", "free_daily_limit": 5, "pro_price_usdc": 5.0, "pro_daily_limit": 100}
+
+# 2. scan (free tier, consumes 1/5 daily)
+curl -X POST https://skillsmith-web.vercel.app/api/scan \
   -H "Content-Type: application/json" \
-  -d '{"payment_signature":"<tx signature>","files":[{"name":"a/SKILL.md","text":"..."}]}'
+  -d '{"api_key":"sk_...","text":"---\nname: x\ndescription: y\n---\n\nbody"}'
+
+# 3. check quota any time
+curl "https://skillsmith-web.vercel.app/api/signup?api_key=sk_..."
 ```
 
-The signature is verified server-side against the public Solana JSON-RPC
-(`getTransaction`), checking that a finalized USDC transfer of at least
-`price_usdc` landed at `pay_to`. No API key, no account, no webhook —
-pay-per-call.
+### Pro API
 
-**Test mode:** use `"payment_signature": "test_signature_anything"` to
-exercise the batch endpoint for free while integrating, without sending a
-real payment.
+```bash
+# activate: send 5 USDC (SPL, mainnet mint EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v)
+# to 2esJogvKTYDuxZaB9PEuEaHvz4U6TuQnTx3pkLcdH34N, then:
+curl -X POST https://skillsmith-web.vercel.app/api/scan_pro \
+  -H "Content-Type: application/json" \
+  -d '{"api_key":"sk_...","activate_payment_signature":"<tx signature>"}'
+# -> {"activated": true, "pro_expires_at": ..., "pro_daily_limit": 100}
 
-**Known limitation:** signature reuse is not yet blocked across cold
-starts (no persistence layer wired up in this first version) — fine for a
-$0.02-scale utility, would add before handling larger amounts.
+# then batch-scan (consumes 1/100 daily, regardless of file count in the batch):
+curl -X POST https://skillsmith-web.vercel.app/api/scan_pro \
+  -H "Content-Type: application/json" \
+  -d '{"api_key":"sk_...","files":[{"name":"a/SKILL.md","text":"..."},{"name":"b/SKILL.md","text":"..."}]}'
+```
 
-## Why USDC/Solana instead of Stripe
+**Test mode:** any `activate_payment_signature` starting with
+`test_signature_` activates Pro without a real payment, for integration
+testing.
 
-This is a tool built for AI agents as much as for humans — agents can hold
-and spend a Solana wallet autonomously with no human-in-the-loop signup,
-KYC, or card entry, which a card-based paywall would require. It's the
-same "pay-per-call over HTTP" model used elsewhere in the agent-tooling
-ecosystem (x402-style flows, AgentVault-style marketplaces).
+## How quota tracking works
+
+Accounts are stored as JSON blobs in Vercel Blob storage
+(`api/account.py`), keyed by a hash of the API key, so the same account
+looks identical no matter which device or browser calls the API. Callers
+with no `api_key` fall back to a coarser per-IP pseudo-account (still
+5/day), which is why signing up matters once you use more than one
+device or network.
+
+Known limitation, documented rather than hidden: Vercel Blob is an object
+store, not a transactional database, so a rare race between two
+near-simultaneous requests from the same account could under-count a
+quota check by one. Fine at this project's scale; would move to a proper
+KV/DB store before this needed to be airtight under load.
 
 ## Legal / policy pages
 

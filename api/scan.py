@@ -12,6 +12,8 @@ from typing import Any
 
 import yaml
 
+from account import check_and_consume_quota, pseudo_key_for_ip
+
 _CORS_HEADERS = [
     ("Access-Control-Allow-Origin", "*"),
     ("Access-Control-Allow-Methods", "POST, OPTIONS"),
@@ -122,7 +124,23 @@ def handle(environ, start_response):
         text = payload.get("text", "")
         if not isinstance(text, str) or len(text) > 100_000:
             raise ValueError("text must be a string under 100,000 chars")
+
+        api_key = payload.get("api_key") or ""
+        auth_header = environ.get("HTTP_AUTHORIZATION", "")
+        if not api_key and auth_header.startswith("Bearer "):
+            api_key = auth_header[len("Bearer "):].strip()
+        if not api_key:
+            forwarded = environ.get("HTTP_X_FORWARDED_FOR", "")
+            client_ip = forwarded.split(",")[0].strip() if forwarded else environ.get("REMOTE_ADDR", "")
+            api_key = pseudo_key_for_ip(client_ip)
+
+        allowed, quota_info = check_and_consume_quota(api_key)
+        if not allowed:
+            start_response("429 Too Many Requests", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": "quota_exceeded", "quota": quota_info}).encode()]
+
         result = analyze(text)
+        result["quota"] = quota_info
         start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps(result).encode()]
     except Exception as e:  # noqa: BLE001 - return a clean JSON error either way

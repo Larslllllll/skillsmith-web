@@ -1,7 +1,0 @@
-{
-  "version": 2,
-  "routes": [
-    { "src": "/api/scan-pro", "dest": "/api/scan_pro.py" },
-    { "src": "/api/scan", "dest": "/api/scan.py" }
-  ]
-}
