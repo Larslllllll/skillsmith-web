@@ -61,6 +61,28 @@ Body markdown describing usage."></textarea>
   <button id="scanBtn" onclick="doScan()">Scan</button>
   <div id="result"></div>
 </main>
+<section id="pro" style="max-width:900px;margin:2rem auto 0;padding:0 1.5rem;">
+  <div style="border:1px solid #2a3140;border-radius:8px;padding:1.2rem;">
+    <h2 style="margin:0 0 .3rem;color:#7ee3c3;font-size:1.1rem;">Pro: batch-scan up to 25 skills, $0.02 USDC per call</h2>
+    <p style="color:#9aa5b1;margin:.2rem 0 .8rem;font-size:.9rem;">
+      For CI pipelines and repos with many skills. Pay in USDC on Solana, no account, no subscription.
+      <code>POST /api/scan-pro</code> with no <code>payment_signature</code> returns the pay-to address and price;
+      pay, then resubmit with the transaction signature to run the batch.
+      Testable for free with a <code>test_signature_*</code> value. See
+      <a href="https://github.com/Larslllllll/skillsmith-web#pro-api">docs on GitHub</a>.
+    </p>
+    <pre style="background:#11151c;border:1px solid #2a3140;border-radius:6px;padding:.8rem;font-size:.78rem;overflow:auto;margin:0;">curl -X POST https://skillsmith-web.vercel.app/api/scan-pro \
+  -H "Content-Type: application/json" \
+  -d '{"files":[{"name":"a/SKILL.md","text":"..."},{"name":"b/SKILL.md","text":"..."}]}'
+&#8594; 402 Payment Required: {"price_usdc": 0.02, "pay_to": "2esJogvKTYDuxZaB9PEuEaHvz4U6TuQnTx3pkLcdH34N", "mint": "USDC"}
+
+# pay 0.02 USDC to that address on Solana mainnet, then:
+curl -X POST https://skillsmith-web.vercel.app/api/scan-pro \
+  -H "Content-Type: application/json" \
+  -d '{"payment_signature":"&lt;your tx signature&gt;","files":[...]}'
+&#8594; 200 OK: {"payment":"verified 0.02 USDC","results":[...]}</pre>
+  </div>
+</section>
 <footer>
   Static heuristic scanner, no sandbox, no substitute for reading the code.
   Built with <a href="https://github.com/Larslllllll/skillsmith">skillsmith</a>,
