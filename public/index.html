@@ -50,11 +50,20 @@
 
   <div id="accountBar" style="border:1px solid #2a3140;border-radius:8px;padding:.8rem 1rem;margin-top:1rem;font-size:.85rem;">
     <div id="accountLoggedOut">
-      <span style="color:#9aa5b1;">5 free scans/day, no signup needed on one device. </span>
-      <a href="/api/auth/github/start">Sign in with GitHub</a> ·
-      <a href="/api/auth/google/start">Sign in with Google</a> ·
-      <a href="#" onclick="doSignup(); return false;">or get an anonymous key</a>
-      — any of these share your quota across phone + laptop, or unlock Pro (100/day for $5).
+      <p style="color:#9aa5b1;margin:0 0 .7rem;">Sign in to scan — free, 5 scans/day, syncs across your devices. Or upgrade to Pro (100/day for $5).</p>
+      <div style="display:flex;flex-wrap:wrap;gap:.6rem;">
+        <a href="/api/auth/github/start" style="display:inline-flex;align-items:center;gap:.5rem;background:#f1f5f9;color:#0b0e14;padding:.6rem 1.1rem;border-radius:6px;font-weight:700;text-decoration:none;">
+          <svg height="18" width="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          Sign in with GitHub
+        </a>
+        <a href="/api/auth/google/start" style="display:inline-flex;align-items:center;gap:.5rem;background:#f1f5f9;color:#0b0e14;padding:.6rem 1.1rem;border-radius:6px;font-weight:700;text-decoration:none;">
+          <svg height="18" width="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 01-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.81.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 009 18z"/><path fill="#FBBC05" d="M3.97 10.72A5.4 5.4 0 013.68 9c0-.6.1-1.18.29-1.72V4.95H.96A9 9 0 000 9c0 1.45.35 2.83.96 4.05l3.01-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 00.96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58z"/></svg>
+          Sign in with Google
+        </a>
+        <a href="#" onclick="doSignup(); return false;" style="display:inline-flex;align-items:center;background:none;border:1px solid #2a3140;color:#9aa5b1;padding:.6rem 1.1rem;border-radius:6px;text-decoration:none;">
+          Skip sign-in, get an anonymous key
+        </a>
+      </div>
     </div>
     <div id="accountLoggedIn" style="display:none;">
       <span id="quotaLine" style="color:#9aa5b1;"></span> ·
@@ -257,16 +266,29 @@ async function activatePro() {
   }
 }
 
+function setScanEnabled(enabled) {
+  document.getElementById('scanBtn').disabled = !enabled;
+  document.getElementById('input').disabled = !enabled;
+  document.getElementById('input').placeholder = enabled
+    ? document.getElementById('input').placeholder
+    : 'Sign in above to scan a skill.';
+}
+
 async function refreshAccountBar() {
   const key = getApiKey();
   const loggedOut = document.getElementById('accountLoggedOut');
   const loggedIn = document.getElementById('accountLoggedIn');
-  if (!key) { loggedOut.style.display = 'block'; loggedIn.style.display = 'none'; return; }
+  if (!key) { loggedOut.style.display = 'block'; loggedIn.style.display = 'none'; setScanEnabled(false); return; }
   loggedOut.style.display = 'none'; loggedIn.style.display = 'block';
+  setScanEnabled(true);
   try {
     const res = await fetch('/api/signup?api_key=' + encodeURIComponent(key));
     const data = await res.json();
-    if (data.tier === 'pro') {
+    if (data.tier === 'unlimited') {
+      document.getElementById('quotaLine').textContent =
+        (data.name ? data.name + ' · ' : '') + 'unlimited scans';
+      document.getElementById('proUpsell').innerHTML = '';
+    } else if (data.tier === 'pro') {
       document.getElementById('quotaLine').textContent =
         'Pro: ' + data.used + '/' + data.limit + ' scans used today';
       document.getElementById('proUpsell').innerHTML = '';
@@ -286,6 +308,10 @@ async function doScan() {
   const btn = document.getElementById('scanBtn');
   const resultEl = document.getElementById('result');
   const text = document.getElementById('input').value;
+  if (!getApiKey()) {
+    resultEl.innerHTML = '<span class="badge high">SIGN IN REQUIRED</span> Sign in above (GitHub, Google, or an anonymous key) to scan a skill -- it\'s free.';
+    return;
+  }
   if (!text.trim()) { resultEl.textContent = 'Paste a SKILL.md first.'; return; }
   btn.disabled = true; btn.textContent = 'Scanning...';
   resultEl.textContent = '';
@@ -296,6 +322,10 @@ async function doScan() {
       body: JSON.stringify({ text, api_key: getApiKey() }),
     });
     const data = await res.json();
+    if (res.status === 401) {
+      resultEl.innerHTML = '<span class="badge high">SIGN IN REQUIRED</span> ' + (data.message || 'Sign in to scan.');
+      return;
+    }
     if (res.status === 429) {
       resultEl.innerHTML = '<span class="badge high">DAILY LIMIT REACHED</span> ' +
         (data.quota && data.quota.error ? data.quota.error : 'try again tomorrow, or upgrade to Pro.');

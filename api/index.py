@@ -227,6 +227,18 @@ def handle_scan(environ, start_response):
         if not isinstance(text, str) or len(text) > 100_000:
             raise ValueError("text must be a string under 100,000 chars")
 
+        explicit_api_key = payload.get("api_key") or ""
+        auth_header = environ.get("HTTP_AUTHORIZATION", "")
+        if not explicit_api_key and auth_header.startswith("Bearer "):
+            explicit_api_key = auth_header[len("Bearer "):].strip()
+        if not explicit_api_key:
+            start_response("401 Unauthorized", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({
+                "error": "sign_in_required",
+                "message": "Sign in or sign up (both free) to scan a skill.",
+                "signup": "POST /api/signup, or use /api/auth/github/start | /api/auth/google/start",
+            }).encode()]
+
         api_key = _client_api_key(environ, payload)
         allowed, quota_info = check_and_consume_quota(api_key)
         if not allowed:
@@ -329,7 +341,9 @@ def handle_signup(environ, start_response, method):
             return [json.dumps({"error": "unknown api_key"}).encode()]
         is_pro = record.get("pro_expires_at", 0) > time.time()
         today = time.strftime("%Y-%m-%d", time.gmtime())
-        if is_pro:
+        if record.get("unlimited"):
+            body = {"tier": "unlimited", "name": record.get("name", "")}
+        elif is_pro:
             used = record.get("pro_used_count", 0) if record.get("pro_used_date") == today else 0
             body = {"tier": "pro", "limit": PRO_DAILY_LIMIT, "used": used,
                     "remaining": max(0, PRO_DAILY_LIMIT - used), "pro_expires_at": record.get("pro_expires_at")}

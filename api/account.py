@@ -37,6 +37,12 @@ PRO_DAILY_LIMIT = 100
 PRO_PRICE_USDC = 5.0
 PRO_DURATION_DAYS = 30
 
+# GitHub user IDs (numeric, stable even if the username changes) that get
+# unlimited scans, no payment. Intentionally a short hardcoded list, not a
+# config surface -- this is "the project owner's own account", not a
+# general admin/allowlist feature.
+UNLIMITED_GITHUB_IDS = {"205042050"}  # Larslllllll
+
 
 def _today() -> str:
     return time.strftime("%Y-%m-%d", time.gmtime())
@@ -125,16 +131,21 @@ def get_or_create_account_by_identity(provider: str, external_id: str, email: st
             "created_at": time.time(), "free_used_date": "", "free_used_count": 0,
             "pro_expires_at": 0, "pro_used_date": "", "pro_used_count": 0,
         }
+        unlimited = provider == "github" and external_id in UNLIMITED_GITHUB_IDS
         record.update({"provider": provider, "email": email, "name": name, "avatar_url": avatar_url})
+        if unlimited:
+            record["unlimited"] = True
         _blob_put(_blob_path(api_key), record)
         return api_key, record
 
     api_key = new_api_key()
+    unlimited = provider == "github" and external_id in UNLIMITED_GITHUB_IDS
     record = {
         "created_at": time.time(), "free_used_date": "", "free_used_count": 0,
         "pro_expires_at": 0, "pro_used_date": "", "pro_used_count": 0,
         "provider": provider, "external_id": external_id,
         "email": email, "name": name, "avatar_url": avatar_url,
+        "unlimited": unlimited,
     }
     _blob_put(_blob_path(api_key), record)
     _blob_put(_identity_path(provider, external_id), {"api_key": api_key})
@@ -189,6 +200,9 @@ def check_and_consume_quota(api_key: str | None) -> tuple[bool, dict]:
             "created_at": time.time(), "free_used_date": "", "free_used_count": 0,
             "pro_expires_at": 0, "pro_used_date": "", "pro_used_count": 0,
         }
+
+    if record.get("unlimited"):
+        return True, {"tier": "unlimited"}
 
     today = _today()
     is_pro = record.get("pro_expires_at", 0) > time.time()
