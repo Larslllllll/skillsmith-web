@@ -17,7 +17,10 @@ from __future__ import annotations
 import hashlib
 import time
 
-from account import _blob_get, _blob_put, BLOB_API_BASE, _blob_headers
+try:
+    from .account import _blob_get, _blob_put, BLOB_API_BASE, _blob_headers
+except ImportError:  # local/script execution without package context
+    from account import _blob_get, _blob_put, BLOB_API_BASE, _blob_headers
 import urllib.request
 import json
 
