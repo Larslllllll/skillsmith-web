@@ -48,8 +48,6 @@ except ImportError:  # local/script execution without package context
 
 GITHUB_CLIENT_ID = os.environ.get("GITHUB_CLIENT_ID", "")
 GITHUB_CLIENT_SECRET = os.environ.get("GITHUB_CLIENT_SECRET", "")
-GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
-GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
 SITE_URL = os.environ.get("SITE_URL", "https://skillsmith-web.vercel.app")
 
 _CORS_HEADERS = [
@@ -166,8 +164,16 @@ def _rpc(method, params):
         return json.loads(resp.read().decode())
 
 
+# Audit finding P0-B: any "test_signature_*" string used to activate Pro for
+# free unconditionally, in production. Test mode now requires BOTH the
+# signature prefix AND an explicit opt-in env var, which is only ever set in
+# non-production deployments -- so a real user hitting the real production
+# API can never bypass payment this way again.
+ALLOW_TEST_PAYMENTS = os.environ.get("ALLOW_TEST_PAYMENTS", "") == "1"
+
+
 def verify_payment(signature: str, required_usdc: float):
-    if signature.startswith("test_signature_"):
+    if ALLOW_TEST_PAYMENTS and signature.startswith("test_signature_"):
         return True, "test mode"
     try:
         result = _rpc("getTransaction", [signature, {"encoding": "jsonParsed", "maxSupportedTransactionVersion": 0}])
@@ -236,12 +242,15 @@ def handle_scan(environ, start_response):
             return [json.dumps({
                 "error": "sign_in_required",
                 "message": "Sign in or sign up (both free) to scan a skill.",
-                "signup": "POST /api/signup, or use /api/auth/github/start | /api/auth/google/start",
+                "signup": "POST /api/signup, or use /api/auth/github/start",
             }).encode()]
 
         api_key = _client_api_key(environ, payload)
         allowed, quota_info = check_and_consume_quota(api_key)
         if not allowed:
+            if quota_info.get("error", "").startswith("unknown api_key"):
+                start_response("401 Unauthorized", [("Content-Type", "application/json")] + _CORS_HEADERS)
+                return [json.dumps({"error": "sign_in_required", "message": "Sign in again, this key isn't valid anymore.", "quota": quota_info}).encode()]
             start_response("429 Too Many Requests", [("Content-Type", "application/json")] + _CORS_HEADERS)
             return [json.dumps({"error": "quota_exceeded", "quota": quota_info}).encode()]
 
@@ -369,7 +378,7 @@ def handle_signup(environ, start_response, method):
 
 
 # ---------------------------------------------------------------------------
-# OAuth login (GitHub, Google) -- resolves to the same account/api_key model
+# OAuth login (GitHub) -- resolves to the same account/api_key model
 # used everywhere else, so signing in on a second device recovers the same
 # quota automatically instead of requiring a manually copy-pasted key.
 # ---------------------------------------------------------------------------
@@ -379,6 +388,40 @@ def _redirect(start_response, location, extra_headers=None):
     headers = [("Location", location)] + _CORS_HEADERS + (extra_headers or [])
     start_response("302 Found", headers)
     return [b""]
+
+
+_OAUTH_STATE_COOKIE = "skillsmith_oauth_state"
+
+
+def _parse_cookies(environ):
+    raw = environ.get("HTTP_COOKIE", "")
+    out = {}
+    for part in raw.split(";"):
+        if "=" in part:
+            k, v = part.split("=", 1)
+            out[k.strip()] = v.strip()
+    return out
+
+
+def _new_oauth_state_cookie_header():
+    # Audit finding P0/P1-D: OAuth start/callback had no state parameter at
+    # all, so a login-CSRF (attacker starts their own OAuth flow, tricks a
+    # victim into completing it, victim ends up bound to the attacker's
+    # account) was possible. state is a random token, set as an HttpOnly
+    # cookie on the redirect to the provider and echoed back as the OAuth
+    # `state` param; the callback rejects the login unless the two match.
+    state = secrets.token_urlsafe(24)
+    cookie = f"{_OAUTH_STATE_COOKIE}={state}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600"
+    return state, cookie
+
+
+def _verify_and_clear_oauth_state(environ, qs_state):
+    cookies = _parse_cookies(environ)
+    expected = cookies.get(_OAUTH_STATE_COOKIE)
+    clear_cookie = f"{_OAUTH_STATE_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0"
+    if not expected or not qs_state or not secrets.compare_digest(expected, qs_state):
+        return False, clear_cookie
+    return True, clear_cookie
 
 
 def _http_post_form(url, data, headers=None):
@@ -399,19 +442,25 @@ def handle_github_start(environ, start_response):
         start_response("500 Internal Server Error", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({"error": "GitHub login is not configured yet (missing GITHUB_CLIENT_ID)"}).encode()]
     redirect_uri = f"{SITE_URL}/api/auth/github/callback"
+    state, state_cookie = _new_oauth_state_cookie_header()
     params = urllib.parse.urlencode({
         "client_id": GITHUB_CLIENT_ID,
         "redirect_uri": redirect_uri,
         "scope": "read:user user:email",
+        "state": state,
     })
-    return _redirect(start_response, f"https://github.com/login/oauth/authorize?{params}")
+    return _redirect(start_response, f"https://github.com/login/oauth/authorize?{params}", [("Set-Cookie", state_cookie)])
 
 
 def handle_github_callback(environ, start_response):
     qs = urllib.parse.parse_qs(environ.get("QUERY_STRING", ""))
     code = (qs.get("code") or [""])[0]
+    qs_state = (qs.get("state") or [""])[0]
+    state_ok, clear_cookie = _verify_and_clear_oauth_state(environ, qs_state)
+    if not state_ok:
+        return _redirect(start_response, f"{SITE_URL}/?login_error=state_mismatch", [("Set-Cookie", clear_cookie)])
     if not code:
-        return _redirect(start_response, f"{SITE_URL}/?login_error=missing_code")
+        return _redirect(start_response, f"{SITE_URL}/?login_error=missing_code", [("Set-Cookie", clear_cookie)])
     try:
         token_data = _http_post_form(
             "https://github.com/login/oauth/access_token",
@@ -419,7 +468,7 @@ def handle_github_callback(environ, start_response):
         )
         access_token = token_data.get("access_token")
         if not access_token:
-            return _redirect(start_response, f"{SITE_URL}/?login_error=token_exchange_failed")
+            return _redirect(start_response, f"{SITE_URL}/?login_error=token_exchange_failed", [("Set-Cookie", clear_cookie)])
         auth_headers = {"Authorization": f"Bearer {access_token}", "User-Agent": "skillsmith-web"}
         profile = _http_get_json("https://api.github.com/user", auth_headers)
         email = profile.get("email") or ""
@@ -434,54 +483,9 @@ def handle_github_callback(environ, start_response):
             "github", str(profile.get("id")), email=email,
             name=profile.get("name") or profile.get("login", ""), avatar_url=profile.get("avatar_url", ""),
         )
-        return _redirect(start_response, f"{SITE_URL}/#key={api_key}")
+        return _redirect(start_response, f"{SITE_URL}/#key={api_key}", [("Set-Cookie", clear_cookie)])
     except Exception as e:  # noqa: BLE001
-        return _redirect(start_response, f"{SITE_URL}/?login_error={urllib.parse.quote(str(e))}")
-
-
-def handle_google_start(environ, start_response):
-    if not GOOGLE_CLIENT_ID:
-        start_response("500 Internal Server Error", [("Content-Type", "application/json")] + _CORS_HEADERS)
-        return [json.dumps({"error": "Google login is not configured yet (missing GOOGLE_CLIENT_ID)"}).encode()]
-    redirect_uri = f"{SITE_URL}/api/auth/google/callback"
-    params = urllib.parse.urlencode({
-        "client_id": GOOGLE_CLIENT_ID,
-        "redirect_uri": redirect_uri,
-        "response_type": "code",
-        "scope": "openid email profile",
-        "prompt": "select_account",
-    })
-    return _redirect(start_response, f"https://accounts.google.com/o/oauth2/v2/auth?{params}")
-
-
-def handle_google_callback(environ, start_response):
-    qs = urllib.parse.parse_qs(environ.get("QUERY_STRING", ""))
-    code = (qs.get("code") or [""])[0]
-    if not code:
-        return _redirect(start_response, f"{SITE_URL}/?login_error=missing_code")
-    try:
-        redirect_uri = f"{SITE_URL}/api/auth/google/callback"
-        token_data = _http_post_form(
-            "https://oauth2.googleapis.com/token",
-            {
-                "client_id": GOOGLE_CLIENT_ID, "client_secret": GOOGLE_CLIENT_SECRET,
-                "code": code, "redirect_uri": redirect_uri, "grant_type": "authorization_code",
-            },
-        )
-        access_token = token_data.get("access_token")
-        if not access_token:
-            return _redirect(start_response, f"{SITE_URL}/?login_error=token_exchange_failed")
-        profile = _http_get_json(
-            "https://www.googleapis.com/oauth2/v3/userinfo",
-            {"Authorization": f"Bearer {access_token}"},
-        )
-        api_key, _record = get_or_create_account_by_identity(
-            "google", str(profile.get("sub")), email=profile.get("email", ""),
-            name=profile.get("name", ""), avatar_url=profile.get("picture", ""),
-        )
-        return _redirect(start_response, f"{SITE_URL}/#key={api_key}")
-    except Exception as e:  # noqa: BLE001
-        return _redirect(start_response, f"{SITE_URL}/?login_error={urllib.parse.quote(str(e))}")
+        return _redirect(start_response, f"{SITE_URL}/?login_error={urllib.parse.quote(str(e))}", [("Set-Cookie", clear_cookie)])
 
 
 def app(environ, start_response):
@@ -496,10 +500,6 @@ def app(environ, start_response):
         return handle_github_start(environ, start_response)
     if path.rstrip("/").endswith("/auth/github/callback"):
         return handle_github_callback(environ, start_response)
-    if path.rstrip("/").endswith("/auth/google/start"):
-        return handle_google_start(environ, start_response)
-    if path.rstrip("/").endswith("/auth/google/callback"):
-        return handle_google_callback(environ, start_response)
 
     if path.rstrip("/").endswith("/scan_pro") or path.rstrip("/").endswith("/scan-pro"):
         if method != "POST":

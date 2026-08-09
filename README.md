@@ -13,10 +13,11 @@ paste a `SKILL.md`, get instant lint + static security-scan results.
 
 ## Pricing: one account, any device
 
-No email or password: `POST /api/signup` mints an API key. Save it and
-paste it into skillsmith-web on your other device to share the **same**
-quota — sign up once, use it from your phone and your laptop without
-double-paying or hitting two separate free-tier counters.
+Sign in with GitHub, or `POST /api/signup` for an anonymous API key (no
+email/password). Save the key and paste it into skillsmith-web on your
+other device to share the **same** quota — sign up once, use it from your
+phone and your laptop without double-paying or hitting two separate
+free-tier counters. Scanning requires being signed in (either way).
 
 | Tier | Limit | Price |
 | --- | --- | --- |
@@ -79,3 +80,30 @@ KV/DB store before this needed to be airtight under load.
 
 - [Privacy Policy](public/privacy-policy.html) — what data is (and isn't) collected, AdSense cookie disclosure, EU consent handling
 - [Terms of Service](public/terms.html)
+
+
+## Security notes (fixed after an external audit, 2026-08-09)
+
+An external review flagged several real issues, all fixed same-day:
+
+- **XSS via scan results** (P0): scan output (including the untrusted
+  skill's own `name` field) was rendered with `innerHTML`. Fixed: results
+  are now built as DOM nodes with `textContent` only, so a malicious
+  `SKILL.md` can't inject script into the page that scans it.
+- **Free payment bypass** (P0): any `test_signature_*` string activated
+  Pro for free in production. Fixed: test mode now also requires an
+  `ALLOW_TEST_PAYMENTS=1` env var that is never set in production.
+- **Free-quota bypass** (P0): an unknown `api_key` silently got a fresh
+  blank quota record instead of being rejected, so a new random key
+  reset the "5/day" limit every time. Fixed: unknown real (`sk_...`) keys
+  are now rejected with 401 instead of auto-created.
+- **OAuth without `state`** (P1): GitHub login had no CSRF protection.
+  Fixed: a random `state` is set as an HttpOnly cookie on `/api/auth/github/start`
+  and verified against the callback's `state` query param.
+- **Account data in a public blob store** (P1): account records (email,
+  name, avatar, quota) were stored with public access. Fixed: moved to a
+  private Vercel Blob store (`skillsmith-accounts`) that 403s without the
+  server's own token.
+
+Google sign-in was removed (not configured / not wanted) — GitHub and an
+anonymous key are the two ways to get an account.

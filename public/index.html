@@ -56,10 +56,6 @@
           <svg height="18" width="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
           Sign in with GitHub
         </a>
-        <a href="/api/auth/google/start" style="display:inline-flex;align-items:center;gap:.5rem;background:#f1f5f9;color:#0b0e14;padding:.6rem 1.1rem;border-radius:6px;font-weight:700;text-decoration:none;">
-          <svg height="18" width="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 01-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.81.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 009 18z"/><path fill="#FBBC05" d="M3.97 10.72A5.4 5.4 0 013.68 9c0-.6.1-1.18.29-1.72V4.95H.96A9 9 0 000 9c0 1.45.35 2.83.96 4.05l3.01-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 00.96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58z"/></svg>
-          Sign in with Google
-        </a>
         <a href="#" onclick="doSignup(); return false;" style="display:inline-flex;align-items:center;background:none;border:1px solid #2a3140;color:#9aa5b1;padding:.6rem 1.1rem;border-radius:6px;text-decoration:none;">
           Skip sign-in, get an anonymous key
         </a>
@@ -201,7 +197,7 @@ function loadExample(kind) {
 function getApiKey() { return localStorage.getItem('skillsmith-api-key') || ''; }
 
 (function captureOAuthKey() {
-  // GitHub/Google login redirects back to /#key=sk_..., pick it up and store it,
+  // GitHub login redirects back to /#key=sk_..., pick it up and store it,
   // then clean the URL so the key doesn't linger in browser history.
   if (location.hash.startsWith('#key=')) {
     const key = decodeURIComponent(location.hash.slice(5));
@@ -300,7 +296,7 @@ function promptLogin() {
   document.getElementById('accountLoggedOut').style.outline = '2px solid #7ee3c3';
   setTimeout(() => { document.getElementById('accountLoggedOut').style.outline = 'none'; }, 2000);
   document.getElementById('result').innerHTML =
-    '<span class="badge high">SIGN IN REQUIRED</span> Sign in above (GitHub, Google, or an anonymous key) to run the scan -- it\'s free, takes a few seconds, and your text stays in the box.';
+    '<span class="badge high">SIGN IN REQUIRED</span> Sign in above (GitHub, or an anonymous key) to run the scan -- it\'s free, takes a few seconds, and your text stays in the box.';
 }
 
 async function doScan() {
@@ -335,21 +331,51 @@ async function doScan() {
     btn.disabled = false; btn.textContent = 'Scan';
   }
 }
+// SECURITY: everything rendered here can originate from an attacker-controlled
+// SKILL.md (name, parse_error, lint/finding messages). Never use innerHTML with
+// this data -- build DOM nodes and set textContent only, so a malicious skill
+// can't inject a <script>/<img onerror> etc. into this page and reach the
+// api_key sitting in localStorage. See GITHUB_SCAN_RESULTS.md / audit P0-A.
+function addRow(parent, parts) {
+  const row = document.createElement('div');
+  row.className = 'row';
+  for (const part of parts) {
+    if (typeof part === 'string') {
+      row.appendChild(document.createTextNode(part));
+    } else {
+      row.appendChild(part);
+    }
+  }
+  parent.appendChild(row);
+  return row;
+}
+
+function badge(text, cls) {
+  const span = document.createElement('span');
+  span.className = 'badge ' + cls;
+  span.textContent = text; // untrusted-safe: textContent never executes markup
+  return span;
+}
+
 function render(data) {
   const el = document.getElementById('result');
-  el.innerHTML = '';
-  const add = (html) => { const d = document.createElement('div'); d.className = 'row'; d.innerHTML = html; el.appendChild(d); };
+  el.innerHTML = ''; // safe: clearing, not inserting untrusted content
 
   if (!data.parse_ok) {
-    add(`<span class="badge high">PARSE ERROR</span> ${data.parse_error}`);
+    addRow(el, [badge('PARSE ERROR', 'high'), ' ' + (data.parse_error || '')]);
     return;
   }
-  add(`<b>name:</b> ${data.name || '(missing)'}`);
-  add(`<b>Lint:</b> ${data.lint_ok ? '<span class="badge clean">OK</span>' : '<span class="badge high">ISSUES</span>'}`);
-  (data.lint_issues || []).forEach(i => add(`&nbsp;&nbsp;[${i.level}] ${i.code}: ${i.message}`));
 
-  add(`<b>Security scan:</b> <span class="badge ${data.risk_level}">${data.risk_level.toUpperCase()} (score ${data.risk_score})</span>`);
-  (data.findings || []).forEach(f => add(`&nbsp;&nbsp;[${f.source}] ${f.message} (+${f.weight})`));
+  addRow(el, [(() => { const b = document.createElement('b'); b.textContent = 'name:'; return b; })(), ' ' + (data.name || '(missing)')]);
+  addRow(el, [(() => { const b = document.createElement('b'); b.textContent = 'Lint:'; return b; })(), ' ', badge(data.lint_ok ? 'OK' : 'ISSUES', data.lint_ok ? 'clean' : 'high')]);
+  (data.lint_issues || []).forEach(i => addRow(el, [`  [${i.level}] ${i.code}: ${i.message}`]));
+
+  addRow(el, [
+    (() => { const b = document.createElement('b'); b.textContent = 'Security scan:'; return b; })(),
+    ' ',
+    badge(`${(data.risk_level || '').toUpperCase()} (score ${data.risk_score})`, data.risk_level || 'low'),
+  ]);
+  (data.findings || []).forEach(f => addRow(el, [`  [${f.source}] ${f.message} (+${f.weight})`]));
 }
 </script>
 </body>

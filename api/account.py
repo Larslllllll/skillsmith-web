@@ -76,9 +76,23 @@ def _blob_headers() -> dict:
 
 
 def _blob_put(path: str, data: dict) -> None:
+    # Audit finding P1-E: account records (OAuth provider/external id, email,
+    # name, avatar, quota/Pro status) were previously written with
+    # access=public to a public-access blob store, meaning anyone who
+    # guessed or leaked a blob URL could read another user's account data
+    # with no auth at all. This now writes to a *private* Vercel Blob store
+    # (skillsmith-accounts): objects 403 for anonymous requests and only
+    # resolve for requests carrying our BLOB_READ_WRITE_TOKEN, same as any
+    # other server-side secret.
     body = json.dumps(data).encode()
-    url = f"{BLOB_API_BASE}/{path}?access=public&addRandomSuffix=false"
-    req = urllib.request.Request(url, data=body, headers=_blob_headers(), method="PUT")
+    url = f"{BLOB_API_BASE}/{path}"
+    headers = {
+        **_blob_headers(),
+        "x-vercel-blob-access": "private",
+        "x-add-random-suffix": "0",
+        "x-content-type": "application/json",
+    }
+    req = urllib.request.Request(url, data=body, headers=headers, method="PUT")
     with urllib.request.urlopen(req, timeout=10) as resp:
         resp.read()
 
@@ -108,7 +122,10 @@ def _blob_get(path: str) -> dict | None:
         return None
     latest = max(blobs, key=lambda b: b.get("uploadedAt", ""))
     try:
-        with urllib.request.urlopen(latest["url"], timeout=10) as resp:
+        # Private-store blob URLs 403 without auth (that's the point -- see
+        # _blob_put); the download itself needs the same bearer token.
+        dl_req = urllib.request.Request(latest["url"], headers=_blob_headers(), method="GET")
+        with urllib.request.urlopen(dl_req, timeout=10) as resp:
             return json.loads(resp.read().decode())
     except urllib.error.URLError:
         return None
@@ -192,14 +209,21 @@ def check_and_consume_quota(api_key: str | None) -> tuple[bool, dict]:
 
     record = get_account(api_key)
     if record is None:
-        # Unknown key (including IP-derived pseudo-keys for anonymous
-        # users): start a fresh, blank record rather than hard-failing.
-        # This keeps a mistyped/never-signed-up key usable instead of
-        # locking a user out entirely.
-        record = {
-            "created_at": time.time(), "free_used_date": "", "free_used_count": 0,
-            "pro_expires_at": 0, "pro_used_date": "", "pro_used_count": 0,
-        }
+        # Audit finding P0-C: previously ANY unknown string was silently
+        # accepted here and given a fresh blank quota record, which meant
+        # "5 free scans/day" was trivially bypassed by sending a new random
+        # api_key on every call. Real accounts (from /api/signup or OAuth
+        # login, prefixed "sk_") must already exist -- an unknown "sk_..."
+        # key is now rejected outright. Only the coarse per-IP pseudo-key
+        # fallback (prefixed "ip_", generated server-side, never user
+        # supplied) is allowed to start a fresh record on first use.
+        if api_key.startswith("ip_"):
+            record = {
+                "created_at": time.time(), "free_used_date": "", "free_used_count": 0,
+                "pro_expires_at": 0, "pro_used_date": "", "pro_used_count": 0,
+            }
+        else:
+            return False, {"error": "unknown api_key, sign in again"}
 
     if record.get("unlimited"):
         return True, {"tier": "unlimited"}
