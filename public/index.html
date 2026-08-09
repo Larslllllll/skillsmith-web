@@ -524,20 +524,37 @@ async function refreshAccountBar() {
 }
 refreshAccountBar();
 
+function showResultError(label, message) {
+  // Writes into the overview tab only via safe DOM nodes, and never wipes
+  // #result's own tab-content children (see the note in runScan() about
+  // why that used to crash the next render() call).
+  const overview = document.getElementById('tab-overview');
+  const details = document.getElementById('tab-details');
+  const db = document.getElementById('tab-db');
+  if (!overview) return; // defensive: tab structure should always exist, but never throw over an error message
+  overview.innerHTML = '';
+  if (details) details.innerHTML = '';
+  if (db) db.innerHTML = '';
+  addRow(overview, [badge(label, 'high'), ' ' + message]);
+  switchTab('overview');
+}
+
 function promptLogin() {
   document.getElementById('accountLoggedOut').scrollIntoView({ behavior: 'smooth', block: 'center' });
   document.getElementById('accountLoggedOut').style.outline = '2px solid #7ee3c3';
   setTimeout(() => { document.getElementById('accountLoggedOut').style.outline = 'none'; }, 2000);
-  document.getElementById('result').innerHTML =
-    '<span class="badge high">SIGN IN REQUIRED</span> Sign in above (GitHub, or an anonymous key) to run the scan -- it\'s free, takes a few seconds, and your text stays in the box.';
+  showResultError('SIGN IN REQUIRED', "Sign in above (GitHub, or an anonymous key) to run the scan -- it's free, takes a few seconds, and your text stays in the box.");
 }
 
 async function runScan(payload, btn) {
-  const resultEl = document.getElementById('result');
+  // Note: intentionally do NOT touch #result's innerHTML/textContent here --
+  // it contains the persistent tab-overview/tab-details/tab-db child divs
+  // that render()/showResultError() look up by id; wiping the container
+  // would delete them and crash the next render() call with
+  // "Cannot set properties of null".
   if (!getApiKey()) { promptLogin(); return; }
   const originalLabel = btn.textContent;
   btn.disabled = true; btn.textContent = 'Scanning...';
-  resultEl.textContent = '';
   try {
     const res = await fetch('/api/scan', {
       method: 'POST',
@@ -546,16 +563,15 @@ async function runScan(payload, btn) {
     });
     const data = await res.json();
     if (res.status === 401) {
-      resultEl.innerHTML = '<span class="badge high">SIGN IN REQUIRED</span> ' + (data.message || 'Sign in to scan.');
+      showResultError('SIGN IN REQUIRED', data.message || 'Sign in to scan.');
       return;
     }
     if (res.status === 429) {
-      resultEl.innerHTML = '<span class="badge high">DAILY LIMIT REACHED</span> ' +
-        (data.quota && data.quota.error ? data.quota.error : 'try again tomorrow, or upgrade to Pro.');
+      showResultError('DAILY LIMIT REACHED', (data.quota && data.quota.error) ? data.quota.error : 'try again tomorrow, or upgrade to Pro.');
       return;
     }
     if (res.status === 400) {
-      resultEl.innerHTML = '<span class="badge high">ERROR</span> ' + (data.error || 'something went wrong.');
+      showResultError('ERROR', data.error || 'something went wrong.');
       return;
     }
     render(data);
@@ -567,16 +583,14 @@ async function runScan(payload, btn) {
 
 async function doScanUrl() {
   const url = document.getElementById('urlInput').value.trim();
-  const resultEl = document.getElementById('result');
-  if (!url) { resultEl.textContent = 'Paste a github.com SKILL.md link first.'; return; }
+  if (!url) { showResultError('INPUT NEEDED', 'Paste a github.com SKILL.md link first.'); return; }
   await runScan({ url }, document.getElementById('scanUrlBtn'));
 }
 
 async function doScan() {
   const btn = document.getElementById('scanBtn');
-  const resultEl = document.getElementById('result');
   const text = document.getElementById('input').value;
-  if (!text.trim()) { resultEl.textContent = 'Paste a SKILL.md first.'; return; }
+  if (!text.trim()) { showResultError('INPUT NEEDED', 'Paste a SKILL.md first.'); return; }
   if (!getApiKey()) { promptLogin(); return; }
   await runScan({ text }, btn);
 }
