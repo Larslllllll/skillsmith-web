@@ -108,6 +108,39 @@ def _blob_get(path: str) -> dict | None:
         return None
 
 
+def _identity_path(provider: str, external_id: str) -> str:
+    h = hashlib.sha256(f"{provider}:{external_id}".encode()).hexdigest()[:32]
+    return f"identities/{h}.json"
+
+
+def get_or_create_account_by_identity(provider: str, external_id: str, email: str = "", name: str = "", avatar_url: str = "") -> tuple[str, dict]:
+    """Log in with GitHub/Google: resolve (provider, external_id) to a stable
+    api_key so re-logging in on any device recovers the SAME account/quota,
+    without the user having to copy-paste a key manually.
+    """
+    identity = _blob_get(_identity_path(provider, external_id))
+    if identity and identity.get("api_key"):
+        api_key = identity["api_key"]
+        record = get_account(api_key) or {
+            "created_at": time.time(), "free_used_date": "", "free_used_count": 0,
+            "pro_expires_at": 0, "pro_used_date": "", "pro_used_count": 0,
+        }
+        record.update({"provider": provider, "email": email, "name": name, "avatar_url": avatar_url})
+        _blob_put(_blob_path(api_key), record)
+        return api_key, record
+
+    api_key = new_api_key()
+    record = {
+        "created_at": time.time(), "free_used_date": "", "free_used_count": 0,
+        "pro_expires_at": 0, "pro_used_date": "", "pro_used_count": 0,
+        "provider": provider, "external_id": external_id,
+        "email": email, "name": name, "avatar_url": avatar_url,
+    }
+    _blob_put(_blob_path(api_key), record)
+    _blob_put(_identity_path(provider, external_id), {"api_key": api_key})
+    return api_key, record
+
+
 def create_account() -> tuple[str, dict]:
     api_key = new_api_key()
     record = {

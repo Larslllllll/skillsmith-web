@@ -51,7 +51,10 @@
   <div id="accountBar" style="border:1px solid #2a3140;border-radius:8px;padding:.8rem 1rem;margin-top:1rem;font-size:.85rem;">
     <div id="accountLoggedOut">
       <span style="color:#9aa5b1;">5 free scans/day, no signup needed on one device. </span>
-      <a href="#" onclick="doSignup(); return false;">Sign up (free)</a> to share your quota across phone + laptop, or unlock Pro (100/day for $5).
+      <a href="/api/auth/github/start">Sign in with GitHub</a> ·
+      <a href="/api/auth/google/start">Sign in with Google</a> ·
+      <a href="#" onclick="doSignup(); return false;">or get an anonymous key</a>
+      — any of these share your quota across phone + laptop, or unlock Pro (100/day for $5).
     </div>
     <div id="accountLoggedIn" style="display:none;">
       <span id="quotaLine" style="color:#9aa5b1;"></span> ·
@@ -187,6 +190,20 @@ function loadExample(kind) {
   document.getElementById('input').value = EXAMPLES[kind];
 }
 function getApiKey() { return localStorage.getItem('skillsmith-api-key') || ''; }
+
+(function captureOAuthKey() {
+  // GitHub/Google login redirects back to /#key=sk_..., pick it up and store it,
+  // then clean the URL so the key doesn't linger in browser history.
+  if (location.hash.startsWith('#key=')) {
+    const key = decodeURIComponent(location.hash.slice(5));
+    localStorage.setItem('skillsmith-api-key', key);
+    history.replaceState(null, '', location.pathname + location.search);
+  }
+  const params = new URLSearchParams(location.search);
+  if (params.get('login_error')) {
+    alert('Sign-in failed: ' + params.get('login_error'));
+  }
+})();
 
 async function doSignup() {
   const res = await fetch('/api/signup', { method: 'POST' });

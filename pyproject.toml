@@ -3,3 +3,6 @@ name = "skillsmith-web"
 version = "0.1.0"
 requires-python = ">=3.9"
 dependencies = ["pyyaml>=6.0"]
+
+[tool.vercel]
+entrypoint = "api.index:app"
