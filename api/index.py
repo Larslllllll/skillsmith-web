@@ -21,17 +21,30 @@ import os
 import secrets
 import urllib.parse
 
-from account import (
-    PRO_PRICE_USDC,
-    PRO_DURATION_DAYS,
-    PRO_DAILY_LIMIT,
-    activate_pro,
-    check_and_consume_quota,
-    create_account,
-    get_account,
-    get_or_create_account_by_identity,
-    pseudo_key_for_ip,
-)
+try:
+    from .account import (
+        PRO_PRICE_USDC,
+        PRO_DURATION_DAYS,
+        PRO_DAILY_LIMIT,
+        activate_pro,
+        check_and_consume_quota,
+        create_account,
+        get_account,
+        get_or_create_account_by_identity,
+        pseudo_key_for_ip,
+    )
+except ImportError:  # local/script execution without package context
+    from account import (
+        PRO_PRICE_USDC,
+        PRO_DURATION_DAYS,
+        PRO_DAILY_LIMIT,
+        activate_pro,
+        check_and_consume_quota,
+        create_account,
+        get_account,
+        get_or_create_account_by_identity,
+        pseudo_key_for_ip,
+    )
 
 GITHUB_CLIENT_ID = os.environ.get("GITHUB_CLIENT_ID", "")
 GITHUB_CLIENT_SECRET = os.environ.get("GITHUB_CLIENT_SECRET", "")
