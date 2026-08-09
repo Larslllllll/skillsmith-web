@@ -189,6 +189,37 @@ def get_or_create_account_by_identity(provider: str, external_id: str, email: st
     return api_key, record
 
 
+SIGNUP_DAILY_LIMIT_PER_IP = 3
+
+
+def check_and_consume_signup_quota(ip: str) -> tuple[bool, str]:
+    """Rate-limit anonymous account creation per IP.
+
+    Without this, POST /api/signup being unauthenticated and free meant
+    anyone hitting their 5/day free limit could just call it again for a
+    brand new key and an unlimited effective quota -- the daily limit was
+    real per-account but not real per-visitor. GitHub sign-in isn't rate
+    limited here since a real GitHub account is already a much higher bar
+    than an anonymous key.
+    """
+    # Soft limit, not a hard boundary: the blob-store list API has a short
+    # eventual-consistency window, so a burst of near-simultaneous requests
+    # can occasionally slip one extra signup through. That's an accepted
+    # tradeoff (see _blob_get's docstring) -- this still raises the cost of
+    # casual quota-bypass abuse from "free and instant" to "rate limited",
+    # which is the actual goal, not airtight enforcement.
+    key = "ip_signup_" + hashlib.sha256((ip or "unknown").encode()).hexdigest()[:24]
+    record = _blob_get(_identity_path("signup_rl", key)) or {"date": "", "count": 0}
+    today = _today()
+    if record.get("date") != today:
+        record = {"date": today, "count": 0}
+    if record["count"] >= SIGNUP_DAILY_LIMIT_PER_IP:
+        return False, "too many anonymous accounts created from this network today, try again tomorrow or sign in with GitHub"
+    record["count"] += 1
+    _blob_put(_identity_path("signup_rl", key), record)
+    return True, ""
+
+
 def create_account() -> tuple[str, dict]:
     api_key = new_api_key()
     record = {

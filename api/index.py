@@ -31,6 +31,7 @@ try:
         activate_pro,
         add_pay_per_use_credit,
         check_and_consume_quota,
+        check_and_consume_signup_quota,
         create_account,
         get_account,
         get_or_create_account_by_identity,
@@ -46,6 +47,7 @@ except ImportError:  # local/script execution without package context
         activate_pro,
         add_pay_per_use_credit,
         check_and_consume_quota,
+        check_and_consume_signup_quota,
         create_account,
         get_account,
         get_or_create_account_by_identity,
@@ -206,6 +208,10 @@ def analyze(text: str) -> dict:
 
     risk_score = sum(f["weight"] for f in findings)
     risk_level = "clean" if risk_score == 0 else "low" if risk_score < 8 else "medium" if risk_score < 20 else "high"
+    # 0-100 "security score" for a single-glance gauge, VirusTotal/Socket.dev
+    # style: 100 = nothing found, drops fast since even one medium finding
+    # (weight ~6-8) should visibly move the needle.
+    security_score = max(0, 100 - risk_score * 4)
 
     return {
         "parse_ok": True,
@@ -214,6 +220,7 @@ def analyze(text: str) -> dict:
         "lint_issues": lint_issues,
         "findings": findings,
         "risk_score": risk_score,
+        "security_score": security_score,
         "risk_level": risk_level,
         "disclaimer": DISCLAIMER,
     }
@@ -553,6 +560,13 @@ def handle_signup(environ, start_response, method):
                     "pro_price_usdc": PRO_PRICE_USDC, "pro_duration_days": PRO_DURATION_DAYS}
         start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps(body).encode()]
+
+    forwarded = environ.get("HTTP_X_FORWARDED_FOR", "")
+    client_ip = forwarded.split(",")[0].strip() if forwarded else environ.get("REMOTE_ADDR", "")
+    allowed, rl_error = check_and_consume_signup_quota(client_ip)
+    if not allowed:
+        start_response("429 Too Many Requests", [("Content-Type", "application/json")] + _CORS_HEADERS)
+        return [json.dumps({"error": rl_error, "tip": "sign in with GitHub instead, it's not rate limited"}).encode()]
 
     api_key, record = create_account()
     start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)

@@ -6,6 +6,7 @@
 <title>skillsmith — lint &amp; security-scan a Claude Agent Skill, live</title>
 <meta name="description" content="Paste a SKILL.md and instantly see lint issues and a static security scan: prompt-injection phrasing, dangerous code patterns. Free, no signup, no data stored.">
 <meta name="google-adsense-account" content="ca-pub-4465607676285389">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <script>
   // Google Consent Mode: set defaults to "denied" BEFORE adsbygoogle.js loads,
   // so the script can be present unconditionally (as Google's own setup
@@ -625,6 +626,31 @@ function render(data) {
   }
 
   // --- Overview tab: quick summary ---
+  if (typeof data.security_score === 'number') {
+    const gaugeWrap = document.createElement('div');
+    gaugeWrap.style.margin = '.2rem 0 1rem';
+    const scoreLine = document.createElement('div');
+    scoreLine.style.display = 'flex';
+    scoreLine.style.justifyContent = 'space-between';
+    scoreLine.style.marginBottom = '.3rem';
+    const label = document.createElement('span');
+    label.textContent = 'Security score';
+    label.style.color = 'var(--text-muted)';
+    label.style.fontSize = '.75rem';
+    const val = document.createElement('span');
+    val.textContent = data.security_score + ' / 100';
+    val.style.fontWeight = '700';
+    val.style.fontSize = '.85rem';
+    val.style.color = data.security_score >= 90 ? 'var(--accent)' : data.security_score >= 60 ? '#e3d17e' : '#ff8080';
+    scoreLine.appendChild(label); scoreLine.appendChild(val);
+    const barBg = document.createElement('div');
+    barBg.style.cssText = 'height:8px;border-radius:4px;background:var(--border);overflow:hidden;';
+    const barFill = document.createElement('div');
+    barFill.style.cssText = `height:100%;width:${data.security_score}%;border-radius:4px;background:${data.security_score >= 90 ? 'var(--accent)' : data.security_score >= 60 ? '#e3d17e' : '#ff8080'};transition:width .3s;`;
+    barBg.appendChild(barFill);
+    gaugeWrap.appendChild(scoreLine); gaugeWrap.appendChild(barBg);
+    overview.appendChild(gaugeWrap);
+  }
   addRow(overview, [bold('name:'), ' ' + (data.name || '(missing)')]);
   addRow(overview, [bold('Lint:'), ' ', badge(data.lint_ok ? 'OK' : 'ISSUES', data.lint_ok ? 'clean' : 'high')]);
   addRow(overview, [
