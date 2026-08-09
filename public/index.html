@@ -100,6 +100,13 @@
 <main>
   <button class="example-btn" onclick="loadExample('clean')">Load clean example</button>
   <button class="example-btn" onclick="loadExample('risky')">Load risky example</button>
+
+  <div style="display:flex;gap:.5rem;margin:0 0 .6rem;flex-wrap:wrap;">
+    <input id="urlInput" type="text" placeholder="or paste a github.com/.../blob/.../SKILL.md link"
+      style="flex:1;min-width:280px;background:#11151c;color:#d8dee9;border:1px solid #2a3140;border-radius:6px;padding:.6rem .8rem;font-family:inherit;font-size:.85rem;">
+    <button id="scanUrlBtn" onclick="doScanUrl()" style="margin-top:0;">Scan URL</button>
+  </div>
+
   <textarea id="input" placeholder="---
 name: my-skill
 description: One-line description of what this skill does and when to use it.
@@ -324,19 +331,17 @@ function promptLogin() {
     '<span class="badge high">SIGN IN REQUIRED</span> Sign in above (GitHub, or an anonymous key) to run the scan -- it\'s free, takes a few seconds, and your text stays in the box.';
 }
 
-async function doScan() {
-  const btn = document.getElementById('scanBtn');
+async function runScan(payload, btn) {
   const resultEl = document.getElementById('result');
-  const text = document.getElementById('input').value;
-  if (!text.trim()) { resultEl.textContent = 'Paste a SKILL.md first.'; return; }
   if (!getApiKey()) { promptLogin(); return; }
+  const originalLabel = btn.textContent;
   btn.disabled = true; btn.textContent = 'Scanning...';
   resultEl.textContent = '';
   try {
     const res = await fetch('/api/scan', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text, api_key: getApiKey() }),
+      body: JSON.stringify({ ...payload, api_key: getApiKey() }),
     });
     const data = await res.json();
     if (res.status === 401) {
@@ -348,13 +353,31 @@ async function doScan() {
         (data.quota && data.quota.error ? data.quota.error : 'try again tomorrow, or upgrade to Pro.');
       return;
     }
+    if (res.status === 400) {
+      resultEl.innerHTML = '<span class="badge high">ERROR</span> ' + (data.error || 'something went wrong.');
+      return;
+    }
     render(data);
     refreshAccountBar();
-  } catch (e) {
-    resultEl.textContent = 'Error: ' + e;
   } finally {
-    btn.disabled = false; btn.textContent = 'Scan';
+    btn.disabled = false; btn.textContent = originalLabel;
   }
+}
+
+async function doScanUrl() {
+  const url = document.getElementById('urlInput').value.trim();
+  const resultEl = document.getElementById('result');
+  if (!url) { resultEl.textContent = 'Paste a github.com SKILL.md link first.'; return; }
+  await runScan({ url }, document.getElementById('scanUrlBtn'));
+}
+
+async function doScan() {
+  const btn = document.getElementById('scanBtn');
+  const resultEl = document.getElementById('result');
+  const text = document.getElementById('input').value;
+  if (!text.trim()) { resultEl.textContent = 'Paste a SKILL.md first.'; return; }
+  if (!getApiKey()) { promptLogin(); return; }
+  await runScan({ text }, btn);
 }
 // SECURITY: everything rendered here can originate from an attacker-controlled
 // SKILL.md (name, parse_error, lint/finding messages). Never use innerHTML with

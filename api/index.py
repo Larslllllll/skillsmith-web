@@ -13,6 +13,7 @@ vercel.json routes /api/scan, /api/scan_pro, and /api/signup here.
 import json
 import re
 import time
+import urllib.error
 import urllib.request
 
 import yaml
@@ -226,10 +227,49 @@ def _client_api_key(environ, payload):
     return api_key
 
 
+GITHUB_BLOB_RE = re.compile(r"^https://github\.com/([^/]+)/([^/]+)/blob/([^/]+)/(.+)$")
+GITHUB_RAW_RE = re.compile(r"^https://raw\.githubusercontent\.com/[^/]+/[^/]+/[^/]+/.+$")
+MAX_URL_FETCH_BYTES = 200_000
+
+
+def _github_url_to_raw(url):
+    """Normalize a github.com/.../blob/... URL (or an already-raw URL) to a
+    raw.githubusercontent.com URL we can safely fetch. Rejects anything else
+    to avoid this becoming an open server-side-request-forgery proxy."""
+    m = GITHUB_BLOB_RE.match(url)
+    if m:
+        owner, repo, ref, path = m.groups()
+        return "https://raw.githubusercontent.com/%s/%s/%s/%s" % (owner, repo, ref, path)
+    if GITHUB_RAW_RE.match(url):
+        return url
+    raise ValueError(
+        "url must be a github.com '.../blob/...' link or a raw.githubusercontent.com link to a SKILL.md"
+    )
+
+
+def _fetch_skill_url(url):
+    raw_url = _github_url_to_raw(url)
+    req = urllib.request.Request(raw_url, headers={"User-Agent": "skillsmith-web"})
+    with urllib.request.urlopen(req, timeout=10) as resp:
+        data = resp.read(MAX_URL_FETCH_BYTES + 1)
+    if len(data) > MAX_URL_FETCH_BYTES:
+        raise ValueError("file at url is larger than %d bytes" % MAX_URL_FETCH_BYTES)
+    return data.decode("utf-8", errors="replace")
+
+
 def handle_scan(environ, start_response):
     try:
         payload = _read_json(environ)
         text = payload.get("text", "")
+        url = payload.get("url", "")
+
+        if url and not text:
+            try:
+                text = _fetch_skill_url(url)
+            except (ValueError, urllib.error.URLError, TimeoutError) as e:
+                start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
+                return [json.dumps({"error": "could not fetch url: %s" % e}).encode()]
+
         if not isinstance(text, str) or len(text) > 100_000:
             raise ValueError("text must be a string under 100,000 chars")
 
