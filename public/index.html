@@ -6,8 +6,7 @@
 <title>skillsmith — lint &amp; security-scan a Claude Agent Skill, live</title>
 <meta name="description" content="Paste a SKILL.md and instantly see lint issues and a static security scan: prompt-injection phrasing, dangerous code patterns. Free, no signup, no data stored.">
 <meta name="google-adsense-account" content="ca-pub-4465607676285389">
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4465607676285389"
-     crossorigin="anonymous"></script>
+<!-- AdSense script is loaded dynamically from JS only after ad-cookie consent, see consent banner below -->
 <style>
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
@@ -91,7 +90,55 @@ curl -X POST https://skillsmith-web.vercel.app/api/scan-pro \
   Built with <a href="https://github.com/Larslllllll/skillsmith">skillsmith</a>,
   validated against 13 real Prime Agent skills, 2,095 live marketplace listings,
   and 400 real public SKILL.md files sampled from GitHub.
+  <br><br>
+  <a href="/privacy-policy.html">Privacy Policy</a> ·
+  <a href="/terms.html">Terms of Service</a> ·
+  <a href="#" onclick="showConsentBanner(); return false;">Cookie / ad consent settings</a>
 </footer>
+
+<div id="consentBanner" style="display:none; position:fixed; left:0; right:0; bottom:0; background:#11151c; border-top:1px solid #2a3140; padding:1rem 1.5rem; z-index:1000; font-size:.85rem;">
+  <div style="max-width:900px; margin:0 auto; display:flex; flex-wrap:wrap; gap:.8rem; align-items:center; justify-content:space-between;">
+    <span style="color:#9aa5b1; max-width:60ch;">
+      This site uses Google AdSense, which may use cookies to serve ads and measure their
+      performance. See our <a href="/privacy-policy.html">Privacy Policy</a>. You can accept
+      or decline ad cookies; declining still lets you use the scanner, you'll just see
+      non-personalized or no ads.
+    </span>
+    <span style="white-space:nowrap;">
+      <button onclick="setConsent(true)" style="margin-top:0;">Accept</button>
+      <button onclick="setConsent(false)" style="margin-top:0; background:none; border:1px solid #2a3140; color:#9aa5b1;">Decline</button>
+    </span>
+  </div>
+</div>
+<script>
+function loadAdsense() {
+  if (document.getElementById('adsbygoogle-script')) return;
+  var s = document.createElement('script');
+  s.id = 'adsbygoogle-script';
+  s.async = true;
+  s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4465607676285389';
+  s.crossOrigin = 'anonymous';
+  document.head.appendChild(s);
+}
+function setConsent(accepted) {
+  localStorage.setItem('ad-consent', accepted ? 'accepted' : 'declined');
+  document.getElementById('consentBanner').style.display = 'none';
+  if (accepted) loadAdsense();
+}
+function showConsentBanner() {
+  document.getElementById('consentBanner').style.display = 'block';
+}
+(function initConsent() {
+  var choice = localStorage.getItem('ad-consent');
+  if (choice === 'accepted') {
+    loadAdsense();
+  } else if (choice === 'declined') {
+    // respected: do not load the ads script
+  } else {
+    showConsentBanner();
+  }
+})();
+</script>
 <script>
 const EXAMPLES = {
   clean: `---

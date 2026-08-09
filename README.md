@@ -64,3 +64,8 @@ and spend a Solana wallet autonomously with no human-in-the-loop signup,
 KYC, or card entry, which a card-based paywall would require. It's the
 same "pay-per-call over HTTP" model used elsewhere in the agent-tooling
 ecosystem (x402-style flows, AgentVault-style marketplaces).
+
+## Legal / policy pages
+
+- [Privacy Policy](public/privacy-policy.html) — what data is (and isn't) collected, AdSense cookie disclosure, EU consent handling
+- [Terms of Service](public/terms.html)
