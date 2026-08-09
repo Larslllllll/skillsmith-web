@@ -36,6 +36,7 @@ FREE_DAILY_LIMIT = 5
 PRO_DAILY_LIMIT = 100
 PRO_PRICE_USDC = 5.0
 PRO_DURATION_DAYS = 30
+PAY_PER_USE_PRICE_USDC = 0.02  # buy a single extra scan without a Pro subscription
 
 # GitHub user IDs (numeric, stable even if the username changes) that get
 # unlimited scans, no payment. Intentionally a short hardcoded list, not a
@@ -84,6 +85,16 @@ def _blob_put(path: str, data: dict) -> None:
     # (skillsmith-accounts): objects 403 for anonymous requests and only
     # resolve for requests carrying our BLOB_READ_WRITE_TOKEN, same as any
     # other server-side secret.
+    #
+    # Reliability fix: Vercel Blob's "uploadedAt" metadata only has
+    # 1-SECOND resolution, so two writes to the same logical path within
+    # the same second (very possible: e.g. check_and_consume_quota then
+    # add_pay_per_use_credit in the same request) could tie, and picking
+    # "the latest by uploadedAt" would then non-deterministically return
+    # either version. Every record now carries its own nanosecond-resolution
+    # "_v" field; _blob_get compares that instead of relying on blob
+    # metadata timestamps.
+    data = {**data, "_v": time.time_ns()}
     body = json.dumps(data).encode()
     url = f"{BLOB_API_BASE}/{path}"
     headers = {
@@ -120,15 +131,24 @@ def _blob_get(path: str) -> dict | None:
     blobs = [b for b in listing.get("blobs", []) if b.get("pathname") == path]
     if not blobs:
         return None
-    latest = max(blobs, key=lambda b: b.get("uploadedAt", ""))
-    try:
-        # Private-store blob URLs 403 without auth (that's the point -- see
-        # _blob_put); the download itself needs the same bearer token.
-        dl_req = urllib.request.Request(latest["url"], headers=_blob_headers(), method="GET")
-        with urllib.request.urlopen(dl_req, timeout=10) as resp:
-            return json.loads(resp.read().decode())
-    except urllib.error.URLError:
-        return None
+    # uploadedAt has only 1s resolution (see _blob_put docstring), so when
+    # more than one candidate exists we download every one of them (small
+    # numbers in practice -- old versions aren't pruned yet, but a given
+    # path rarely accumulates many writes in this project's traffic) and
+    # pick by the nanosecond "_v" field embedded in the JSON itself.
+    blobs.sort(key=lambda b: b.get("uploadedAt", ""), reverse=True)
+    candidates = blobs[:5]
+    best = None
+    for b in candidates:
+        try:
+            dl_req = urllib.request.Request(b["url"], headers=_blob_headers(), method="GET")
+            with urllib.request.urlopen(dl_req, timeout=10) as resp:
+                doc = json.loads(resp.read().decode())
+        except urllib.error.URLError:
+            continue
+        if best is None or doc.get("_v", 0) > best.get("_v", 0):
+            best = doc
+    return best
 
 
 def _identity_path(provider: str, external_id: str) -> str:
@@ -185,6 +205,24 @@ def create_account() -> tuple[str, dict]:
 
 def get_account(api_key: str) -> dict | None:
     return _blob_get(_blob_path(api_key))
+
+
+def add_pay_per_use_credit(api_key: str, payment_detail: str) -> dict:
+    """Buy a single extra scan for PAY_PER_USE_PRICE_USDC, no subscription.
+
+    Credits are consumed by check_and_consume_quota before the account is
+    ever blocked, so they work for both signed-up accounts that hit the
+    5/day free limit and want exactly one more scan today, without forcing
+    a $5 Pro commitment.
+    """
+    record = get_account(api_key) or {
+        "created_at": time.time(), "free_used_date": "", "free_used_count": 0,
+        "pro_expires_at": 0, "pro_used_date": "", "pro_used_count": 0,
+    }
+    record["bonus_credits"] = record.get("bonus_credits", 0) + 1
+    record.setdefault("credit_purchases", []).append({"at": time.time(), "payment": payment_detail})
+    _blob_put(_blob_path(api_key), record)
+    return record
 
 
 def activate_pro(api_key: str, payment_detail: str) -> dict:
@@ -248,10 +286,14 @@ def check_and_consume_quota(api_key: str | None) -> tuple[bool, dict]:
         record["free_used_date"] = today
         record["free_used_count"] = 0
     if record["free_used_count"] >= FREE_DAILY_LIMIT:
+        if record.get("bonus_credits", 0) > 0:
+            record["bonus_credits"] -= 1
+            _blob_put(_blob_path(api_key), record)
+            return True, {"tier": "pay-per-use", "credits_remaining": record["bonus_credits"]}
         return False, {
             "tier": "free", "limit": FREE_DAILY_LIMIT, "used": record["free_used_count"],
-            "error": "daily free limit reached, upgrade to Pro for $%.2f (100/day for %d days)"
-            % (PRO_PRICE_USDC, PRO_DURATION_DAYS),
+            "error": "daily free limit reached: buy one more scan for $%.2f, or upgrade to Pro for $%.2f (100/day for %d days)"
+            % (PAY_PER_USE_PRICE_USDC, PRO_PRICE_USDC, PRO_DURATION_DAYS),
         }
     record["free_used_count"] += 1
     _blob_put(_blob_path(api_key), record)

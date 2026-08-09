@@ -36,78 +36,199 @@
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4465607676285389"
      crossorigin="anonymous"></script>
 <style>
-  :root { color-scheme: dark; }
+  :root {
+    --bg: #0B0E14; --surface: #151921; --surface-hover: #1E2430; --border: #2A3140;
+    --text: #D8DEE9; --text-muted: #9AA5B1; --accent: #7EE3C3; --accent-hover: #5EBAA0;
+  }
   * { box-sizing: border-box; }
   body {
-    margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    background: #0b0e14; color: #d8dee9; line-height: 1.5;
+    margin: 0; font-family: "SF Mono", SFMono-Regular, ui-monospace, "Fira Code", Menlo, Consolas, monospace;
+    background: var(--bg); color: var(--text); line-height: 1.6; font-size: 14px;
+    -webkit-font-smoothing: antialiased; position: relative;
   }
-  header { padding: 2rem 1.5rem 1rem; max-width: 900px; margin: 0 auto; }
-  h1 { font-size: 1.6rem; margin: 0 0 .4rem; color: #7ee3c3; }
-  p.sub { color: #9aa5b1; margin: 0 0 .5rem; }
-  main { max-width: 900px; margin: 0 auto; padding: 0 1.5rem 3rem; }
-  textarea {
-    width: 100%; min-height: 280px; background: #11151c; color: #d8dee9;
-    border: 1px solid #2a3140; border-radius: 8px; padding: 1rem; font-size: .9rem;
-    font-family: inherit; resize: vertical;
+  a { color: inherit; text-decoration: none; }
+  code { background: rgba(126,227,195,.1); border: 1px solid rgba(126,227,195,.2); color: var(--accent); padding: .1rem .35rem; border-radius: 4px; }
+
+  .bg-grid {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-size: 40px 40px;
+    background-image: linear-gradient(to right, rgba(42,49,64,.15) 1px, transparent 1px),
+                       linear-gradient(to bottom, rgba(42,49,64,.15) 1px, transparent 1px);
+    -webkit-mask-image: radial-gradient(ellipse at top, black 20%, transparent 80%);
+            mask-image: radial-gradient(ellipse at top, black 20%, transparent 80%);
   }
-  button {
-    margin-top: .8rem; background: #7ee3c3; color: #0b0e14; border: none;
-    padding: .7rem 1.4rem; border-radius: 6px; font-weight: 700; cursor: pointer;
-    font-family: inherit; font-size: .95rem;
-  }
-  button:disabled { opacity: .5; cursor: default; }
-  #result { margin-top: 1.5rem; white-space: pre-wrap; }
-  .badge { display: inline-block; padding: .15rem .5rem; border-radius: 4px; font-weight: 700; font-size: .8rem; }
-  .clean { background: #1f3d2f; color: #7ee3c3; }
+  .glow { position: fixed; top: -20%; left: 50%; transform: translateX(-50%); width: 800px; height: 400px;
+    background: rgba(126,227,195,.05); filter: blur(120px); border-radius: 999px; z-index: 0; pointer-events: none; }
+
+  header { border-bottom: 1px solid var(--border); background: rgba(11,14,20,.8); backdrop-filter: blur(10px);
+    position: sticky; top: 0; z-index: 40; }
+  header::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 1px;
+    background: linear-gradient(to right, transparent, rgba(126,227,195,.5), transparent); }
+  .header-inner { max-width: 1400px; margin: 0 auto; padding: 0 1.5rem; height: 4rem; display: flex;
+    align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .6rem; position: relative; }
+  .brand { display: flex; align-items: center; gap: .6rem; }
+  .brand-icon { background: rgba(126,227,195,.1); padding: .4rem; border-radius: 6px; display: flex; }
+  .brand h1 { font-size: .95rem; font-weight: 700; margin: 0; letter-spacing: .02em; }
+  .live-dot { width: 6px; height: 6px; border-radius: 999px; background: var(--accent); display: inline-block;
+    animation: pulse 1.6s ease-in-out infinite; margin-right: .4rem; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+  .header-right { display: flex; align-items: center; gap: 1rem; }
+
+  main { max-width: 1400px; margin: 0 auto; padding: 1.5rem; display: grid; grid-template-columns: 1fr; gap: 1.5rem;
+    position: relative; z-index: 1; }
+  @media (min-width: 1100px) { main { grid-template-columns: 7fr 5fr; } }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    box-shadow: 0 10px 40px -10px rgba(0,0,0,.5); overflow: hidden; }
+  .panel-toolbar { display: flex; align-items: center; justify-content: space-between; padding: .8rem 1rem;
+    border-bottom: 1px solid var(--border); background: rgba(11,14,20,.8); }
+  .mac-dots { display: inline-flex; gap: 6px; margin-right: .8rem; opacity: .8; }
+  .mac-dots span { width: 10px; height: 10px; border-radius: 999px; display: block; }
+  .mac-dots span:nth-child(1) { background: #EF4444; }
+  .mac-dots span:nth-child(2) { background: #F59E0B; }
+  .mac-dots span:nth-child(3) { background: #10B981; }
+  .toolbar-label { color: var(--text-muted); font-size: .7rem; letter-spacing: .05em; }
+
+  .url-row { display: flex; gap: .6rem; padding: 1rem; flex-wrap: wrap; }
+  #urlInput { flex: 1; min-width: 240px; background: var(--bg); color: var(--text); border: 1px solid var(--border);
+    border-radius: 6px; padding: .7rem .9rem; font-family: inherit; font-size: .82rem; }
+  #urlInput:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 0 15px rgba(126,227,195,.15); }
+
+  #input { width: 100%; min-height: 320px; background: transparent; color: var(--text); border: none;
+    padding: 1rem; font-size: .82rem; font-family: inherit; resize: vertical; display: block; }
+  #input:focus { outline: none; }
+  #input:disabled { opacity: .5; }
+
+  .example-row { display: flex; gap: .5rem; padding: 0 1rem 1rem; }
+  .example-btn { background: var(--surface); border: 1px solid var(--border); color: var(--text-muted);
+    padding: .4rem .8rem; border-radius: 4px; font-size: .72rem; cursor: pointer; font-family: inherit;
+    transition: all .15s; }
+  .example-btn:hover { color: var(--accent); border-color: rgba(126,227,195,.5); }
+
+  button { font-family: inherit; cursor: pointer; }
+  .btn-primary { background: var(--accent); color: var(--bg); font-weight: 700; padding: .75rem 1.4rem;
+    border: none; border-radius: 6px; box-shadow: 0 0 30px rgba(126,227,195,.1); transition: all .15s; }
+  .btn-primary:hover:not(:disabled) { background: var(--accent-hover); box-shadow: 0 0 15px rgba(126,227,195,.3); }
+  .btn-primary:disabled { opacity: .5; cursor: default; }
+  .btn-ghost { background: var(--surface); color: var(--text); border: 1px solid var(--border); padding: .6rem 1.1rem;
+    border-radius: 6px; font-weight: 600; transition: all .15s; }
+  .btn-ghost:hover { background: var(--surface-hover); }
+
+  .footer-toolbar { display: flex; justify-content: space-between; align-items: center; padding: .8rem 1rem;
+    border-top: 1px solid var(--border); background: rgba(11,14,20,.8); flex-wrap: wrap; gap: .6rem; }
+
+  .terminal { background: #05070A; border-radius: 8px; border: 1px solid var(--border); min-height: 280px;
+    display: flex; flex-direction: column; box-shadow: 0 10px 40px -10px rgba(0,0,0,.5); }
+  .terminal-head { padding: .6rem 1rem; border-bottom: 1px solid var(--border); background: rgba(21,25,33,.8);
+    display: flex; justify-content: space-between; align-items: center; font-size: .7rem; text-transform: uppercase;
+    letter-spacing: .08em; color: var(--text-muted); }
+  .terminal-body { padding: 1.1rem; font-size: .82rem; flex: 1; overflow-y: auto; }
+  .badge { display: inline-block; padding: .15rem .55rem; border-radius: 4px; font-weight: 700; font-size: .72rem; }
+  .clean { background: rgba(126,227,195,.12); color: var(--accent); }
   .low { background: #3d3a1f; color: #e3d17e; }
   .medium { background: #3d2c1f; color: #e39e7e; }
   .high { background: #3d1f1f; color: #ff8080; }
-  .row { margin: .3rem 0; }
-  footer { max-width: 900px; margin: 0 auto; padding: 0 1.5rem 3rem; color: #6b7280; font-size: .85rem; }
-  a { color: #7ee3c3; }
-  .example-btn { background: none; border: 1px solid #2a3140; color: #9aa5b1; margin-right: .5rem; padding: .3rem .6rem; font-size: .8rem; }
+  .row { margin: .4rem 0; }
+  .tab-btn { flex: 1; background: transparent; border: none; color: var(--text-muted); padding: .6rem .5rem;
+    font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; font-weight: 600; cursor: pointer;
+    border-bottom: 2px solid transparent; font-family: inherit; }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .kv { display: flex; justify-content: space-between; padding: .3rem 0; border-bottom: 1px dashed var(--border); font-size: .78rem; }
+  .kv:last-child { border-bottom: none; }
+  .safe-skill-row { display: flex; justify-content: space-between; padding: .4rem 0; border-bottom: 1px solid var(--border); }
+  .safe-skill-row:last-child { border-bottom: none; }
+
+  .account-bar { border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; margin: 1.2rem 1.5rem 0;
+    background: var(--surface); position: relative; z-index: 1; max-width: 1400px; margin-left: auto; margin-right: auto; }
+  .oauth-btn { display: inline-flex; align-items: center; gap: .5rem; background: var(--text); color: var(--bg);
+    padding: .6rem 1.1rem; border-radius: 6px; font-weight: 700; text-decoration: none; font-size: .82rem; }
+
+  .sub { color: var(--text-muted); max-width: 62ch; }
+
+  footer { border-top: 1px solid var(--border); margin-top: 2rem; position: relative; z-index: 1; }
+  .footer-inner { max-width: 1400px; margin: 0 auto; padding: 1.5rem; display: flex; justify-content: space-between;
+    align-items: center; flex-wrap: wrap; gap: 1rem; font-size: .78rem; color: var(--text-muted); }
+  .footer-inner a:hover { color: var(--accent); }
+
+  .cookie-pill { position: fixed; bottom: 1.2rem; right: 1.2rem; z-index: 1000; max-width: 380px;
+    background: rgba(21,25,33,.95); backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: 999px;
+    padding: .6rem .5rem .6rem 1.1rem; display: none; align-items: center; gap: 1rem;
+    box-shadow: 0 10px 40px -10px rgba(0,0,0,.8); font-size: .72rem; }
+  .cookie-pill.show { display: flex; }
+  .cookie-pill .actions { display: flex; gap: .4rem; flex-shrink: 0; }
+  .cookie-pill button { padding: .4rem .8rem; border-radius: 999px; font-size: .72rem; font-weight: 600; border: none; }
+  .cookie-decline { background: transparent; color: var(--text-muted); }
+  .cookie-decline:hover { background: var(--bg); color: var(--text); }
+  .cookie-accept { background: rgba(126,227,195,.12); color: var(--accent); border: 1px solid rgba(126,227,195,.2); }
+  .cookie-accept:hover { background: var(--accent); color: var(--bg); }
 </style>
 </head>
 <body>
-<header>
-  <h1>skillsmith — live SKILL.md scanner</h1>
-  <p class="sub">Paste a Claude Agent Skill's <code>SKILL.md</code> below. We lint it and run a static
-  security scan (prompt-injection phrasing, dangerous code patterns) — right here, nothing is stored.
-  <a href="https://github.com/Larslllllll/skillsmith">Source / CLI / library on GitHub →</a></p>
+<div class="bg-grid"></div>
+<div class="glow"></div>
 
-  <div id="accountBar" style="border:1px solid #2a3140;border-radius:8px;padding:.8rem 1rem;margin-top:1rem;font-size:.85rem;">
-    <div id="accountLoggedOut">
-      <p style="color:#9aa5b1;margin:0 0 .7rem;">Sign in to scan — free, 5 scans/day, syncs across your devices. Or upgrade to Pro (100/day for $5).</p>
-      <div style="display:flex;flex-wrap:wrap;gap:.6rem;">
-        <a href="/api/auth/github/start" style="display:inline-flex;align-items:center;gap:.5rem;background:#f1f5f9;color:#0b0e14;padding:.6rem 1.1rem;border-radius:6px;font-weight:700;text-decoration:none;">
-          <svg height="18" width="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-          Sign in with GitHub
-        </a>
-        <a href="#" onclick="doSignup(); return false;" style="display:inline-flex;align-items:center;background:none;border:1px solid #2a3140;color:#9aa5b1;padding:.6rem 1.1rem;border-radius:6px;text-decoration:none;">
-          Skip sign-in, get an anonymous key
-        </a>
-      </div>
+<header>
+  <div class="header-inner">
+    <div class="brand">
+      <span class="brand-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--accent)"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3M13 15h4"/></svg>
+      </span>
+      <h1>skillsmith</h1>
+      <span style="color:var(--text-muted);display:none;" class="hide-sm">
+        <span class="live-dot"></span>live SKILL.md scanner
+      </span>
     </div>
-    <div id="accountLoggedIn" style="display:none;">
-      <span id="quotaLine" style="color:#9aa5b1;"></span> ·
-      <a href="#" onclick="showKey(); return false;">show my key</a> ·
-      <a href="#" onclick="logout(); return false;">sign out on this device</a>
-      <span id="proUpsell"></span>
+    <div class="header-right">
+      <a href="https://github.com/Larslllllll/skillsmith" style="color:var(--text-muted);font-size:.82rem;">Source / CLI / library on GitHub →</a>
     </div>
   </div>
 </header>
-<main>
-  <button class="example-btn" onclick="loadExample('clean')">Load clean example</button>
-  <button class="example-btn" onclick="loadExample('risky')">Load risky example</button>
 
-  <div style="display:flex;gap:.5rem;margin:0 0 .6rem;flex-wrap:wrap;">
-    <input id="urlInput" type="text" placeholder="or paste a github.com/.../blob/.../SKILL.md link"
-      style="flex:1;min-width:280px;background:#11151c;color:#d8dee9;border:1px solid #2a3140;border-radius:6px;padding:.6rem .8rem;font-family:inherit;font-size:.85rem;">
-    <button id="scanUrlBtn" onclick="doScanUrl()" style="margin-top:0;">Scan URL</button>
+<div class="account-bar" id="accountBar">
+  <div id="accountLoggedOut">
+    <p class="sub" style="margin:0 0 .7rem;">Sign in to scan — free, 5 scans/day, syncs across your devices. Or upgrade to Pro (100/day for $5).</p>
+    <div style="display:flex;flex-wrap:wrap;gap:.6rem;">
+      <a href="/api/auth/github/start" class="oauth-btn">
+        <svg height="16" width="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        Sign in with GitHub
+      </a>
+      <a href="#" onclick="doSignup(); return false;" class="btn-ghost" style="display:inline-flex;align-items:center;">
+        Skip sign-in, get an anonymous key
+      </a>
+    </div>
   </div>
+  <div id="accountLoggedIn" style="display:none;">
+    <span id="quotaLine" class="sub"></span> ·
+    <a href="#" onclick="showKey(); return false;" style="color:var(--accent);">show my key</a> ·
+    <a href="#" onclick="logout(); return false;" style="color:var(--text-muted);">sign out on this device</a>
+    <span id="proUpsell"></span>
+  </div>
+</div>
 
-  <textarea id="input" placeholder="---
+<main>
+  <section>
+    <div class="panel" style="margin-bottom:1.2rem;">
+      <div style="padding:1rem;">
+        <p class="sub" style="margin:0;">Paste a Claude Agent Skill's <code>SKILL.md</code> below, or scan a GitHub link. We lint it and run a static security scan (prompt-injection phrasing, dangerous code patterns) — nothing is stored.</p>
+      </div>
+      <div class="url-row">
+        <input id="urlInput" type="text" placeholder="https://github.com/.../blob/.../SKILL.md">
+        <button id="scanUrlBtn" class="btn-primary" onclick="doScanUrl()">Scan URL</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-toolbar">
+        <div style="display:flex;align-items:center;">
+          <span class="mac-dots"><span></span><span></span><span></span></span>
+          <span class="toolbar-label">~/workspace/SKILL.md</span>
+        </div>
+        <div class="example-row" style="padding:0;">
+          <button class="example-btn" onclick="loadExample('clean')">Load Clean</button>
+          <button class="example-btn" onclick="loadExample('risky')">Load Risky</button>
+        </div>
+      </div>
+      <textarea id="input" spellcheck="false" placeholder="---
 name: my-skill
 description: One-line description of what this skill does and when to use it.
 ---
@@ -115,63 +236,116 @@ description: One-line description of what this skill does and when to use it.
 # My Skill
 
 Body markdown describing usage."></textarea>
-  <br>
-  <button id="scanBtn" onclick="doScan()">Scan</button>
-  <div id="result"></div>
-</main>
-<section id="pro" style="max-width:900px;margin:2rem auto 0;padding:0 1.5rem;">
-  <div style="border:1px solid #2a3140;border-radius:8px;padding:1.2rem;">
-    <h2 style="margin:0 0 .3rem;color:#7ee3c3;font-size:1.1rem;">Pricing: 5 free scans/day, Pro = 100/day for $5 (30 days)</h2>
-    <p style="color:#9aa5b1;margin:.2rem 0 .8rem;font-size:.9rem;">
-      One account, any device: sign up above to get an API key, use it from your phone and your
-      laptop, and the same 5/day free quota (or Pro allowance) is shared — no double-paying because
-      you switched devices. Batch-scan up to 25 files per call once Pro is active.
-      Pay in USDC on Solana, no card, no subscription-billing surprise (Pro just expires after 30 days).
-      Full API docs: <a href="https://github.com/Larslllllll/skillsmith-web#pro-api">GitHub</a>.
-    </p>
-    <pre style="background:#11151c;border:1px solid #2a3140;border-radius:6px;padding:.8rem;font-size:.78rem;overflow:auto;margin:0;">curl -X POST https://skillsmith-web.vercel.app/api/signup
-&#8594; {"api_key": "sk_...", "free_daily_limit": 5, "pro_price_usdc": 5.0, "pro_daily_limit": 100}
+      <div class="footer-toolbar">
+        <span class="toolbar-label">Markdown · UTF-8</span>
+        <button id="scanBtn" class="btn-primary" onclick="doScan()">▶ Run Analysis</button>
+      </div>
+    </div>
+  </section>
 
-curl -X POST https://skillsmith-web.vercel.app/api/scan \
-  -H "Content-Type: application/json" \
+  <section style="display:flex;flex-direction:column;gap:1.2rem;">
+    <details style="border:1px solid #e39e7e;background:rgba(227,158,126,.08);border-radius:8px;padding:.7rem 1rem;">
+      <summary style="cursor:pointer;color:#e39e7e;font-weight:700;font-size:.8rem;">⚠ Not 100% accurate — read before trusting a result</summary>
+      <p class="sub" style="font-size:.78rem;margin:.6rem 0 0;">
+        skillsmith is a <b>static heuristic scanner</b>. It never runs the code, it just pattern-matches.
+        A <span class="badge clean" style="font-size:.68rem;">CLEAN</span> result means our current ruleset found nothing —
+        it is <b>not a guarantee</b> the skill is safe. A skill can still be malicious in ways this scanner
+        doesn't (yet) detect, and a <span class="badge high" style="font-size:.68rem;">HIGH</span> result can be a false positive.
+        Always read code you didn't write before running it, especially anything with a <code>python_import</code>.
+      </p>
+    </details>
+
+    <div class="terminal">
+      <div class="terminal-head">
+        <span>Scan Output</span>
+        <span class="mac-dots" style="margin:0;"><span style="background:var(--border)"></span><span style="background:var(--border)"></span><span style="background:var(--border)"></span></span>
+      </div>
+      <div style="display:flex;border-bottom:1px solid var(--border);" id="resultTabs">
+        <button class="tab-btn active" data-tab="overview" onclick="switchTab('overview')">Overview</button>
+        <button class="tab-btn" data-tab="details" onclick="switchTab('details')">Details</button>
+        <button class="tab-btn" data-tab="db" onclick="switchTab('db')">Database</button>
+      </div>
+      <div class="terminal-body" id="result">
+        <div id="tab-overview" class="tab-content">
+          <div style="color:var(--text-muted);">Initialize skillsmith engine...</div>
+          <div style="color:var(--text-muted);">Awaiting payload injection.</div>
+        </div>
+        <div id="tab-details" class="tab-content" style="display:none;"></div>
+        <div id="tab-db" class="tab-content" style="display:none;"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-toolbar">
+        <span style="font-weight:700;color:var(--text);font-size:.85rem;">✓ Safe Skills Database</span>
+        <a href="#" onclick="loadRegistry(); return false;" style="color:var(--text-muted);font-size:.72rem;">refresh →</a>
+      </div>
+      <div style="padding:.8rem 1.1rem;">
+        <p class="sub" style="font-size:.72rem;margin:0 0 .6rem;">
+          Skills that scanned <span class="badge clean" style="font-size:.65rem;">CLEAN</span> before, by anyone.
+          Automated heuristic result only — not a manual audit. See the disclaimer above.
+        </p>
+        <div id="safeSkillsList" style="font-size:.78rem;color:var(--text-muted);">Loading…</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-toolbar">
+        <span style="font-weight:700;color:var(--text);font-size:.85rem;">⚡ API &amp; Pricing</span>
+        <a href="https://github.com/Larslllllll/skillsmith-web#pro-api" style="color:var(--text-muted);font-size:.72rem;">Docs →</a>
+      </div>
+      <div style="padding:1.1rem;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin-bottom:1rem;">
+          <div style="background:var(--bg);border:1px solid var(--border);padding:.7rem;border-radius:6px;">
+            <div class="toolbar-label">Free Tier</div>
+            <div style="color:var(--text);font-weight:700;margin-top:.2rem;">5 Scans <span style="color:var(--text-muted);font-weight:400;font-size:.75rem;">/ day</span></div>
+          </div>
+          <div style="background:rgba(126,227,195,.05);border:1px solid rgba(126,227,195,.2);padding:.7rem;border-radius:6px;">
+            <div style="color:var(--accent);font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;">★ Pro Tier</div>
+            <div style="color:var(--text);font-weight:700;margin-top:.2rem;">100 Scans <span style="color:var(--text-muted);font-weight:400;font-size:.75rem;">for $5</span></div>
+          </div>
+        </div>
+        <p class="sub" style="font-size:.78rem;border-left:2px solid var(--border);padding-left:.7rem;">
+          One account, any device. Sign up to get an API key. Pay in USDC on Solana, no subscription surprises. Quota is shared across your devices.
+        </p>
+        <pre style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:.8rem;font-size:.72rem;overflow:auto;margin:1rem 0 0;color:var(--text-muted);">curl -X POST https://skillsmith.ch/api/signup
+&#8594; {"api_key": "sk_...", "free_daily_limit": 5}
+
+curl -X POST https://skillsmith.ch/api/scan \
   -d '{"api_key":"sk_...","text":"..."}'
 
-# upgrade: send 5 USDC to 2esJogvKTYDuxZaB9PEuEaHvz4U6TuQnTx3pkLcdH34N, then:
-curl -X POST https://skillsmith-web.vercel.app/api/scan_pro \
-  -H "Content-Type: application/json" \
-  -d '{"api_key":"sk_...","activate_payment_signature":"&lt;tx signature&gt;"}'
-&#8594; {"activated": true, "pro_daily_limit": 100}
+# Pro: send 5 USDC to 2esJogvKTYDuxZaB9PEuEaHvz4U6TuQnTx3pkLcdH34N, then:
+curl -X POST https://skillsmith.ch/api/scan_pro \
+  -d '{"api_key":"sk_...","activate_payment_signature":"&lt;tx&gt;"}'</pre>
+      </div>
+    </div>
+  </section>
+</main>
 
-curl -X POST https://skillsmith-web.vercel.app/api/scan_pro \
-  -H "Content-Type: application/json" \
-  -d '{"api_key":"sk_...","files":[{"name":"a/SKILL.md","text":"..."},{"name":"b/SKILL.md","text":"..."}]}'</pre>
-  </div>
-</section>
 <footer>
-  Static heuristic scanner, no sandbox, no substitute for reading the code.
-  Built with <a href="https://github.com/Larslllllll/skillsmith">skillsmith</a>,
-  validated against 13 real Prime Agent skills, 2,095 live marketplace listings,
-  and 400 real public SKILL.md files sampled from GitHub.
-  <br><br>
-  <a href="/privacy-policy.html">Privacy Policy</a> ·
-  <a href="/terms.html">Terms of Service</a> ·
-  <a href="#" onclick="showConsentBanner(); return false;">Cookie / ad consent settings</a>
+  <div class="footer-inner">
+    <p style="max-width:62ch;margin:0;">🛡 Static heuristic scanner, no sandbox, no substitute for reading the code. Built with <a href="https://github.com/Larslllllll/skillsmith" style="color:var(--accent);">skillsmith</a>, validated against 13 real Prime Agent skills, 2,095 live marketplace listings, and 400 real public SKILL.md files from GitHub.</p>
+    <div style="display:flex;gap:1.2rem;text-transform:uppercase;letter-spacing:.05em;font-size:.72rem;flex-shrink:0;">
+      <a href="/privacy-policy.html">Privacy</a>
+      <a href="/terms.html">Terms</a>
+      <a href="#" onclick="showConsentBanner(); return false;">Cookies</a>
+      <a href="https://github.com/Larslllllll/skillsmith-web">GitHub</a>
+    </div>
+  </div>
 </footer>
 
-<div id="consentBanner" style="display:none; position:fixed; left:0; right:0; bottom:0; background:#11151c; border-top:1px solid #2a3140; padding:1rem 1.5rem; z-index:1000; font-size:.85rem;">
-  <div style="max-width:900px; margin:0 auto; display:flex; flex-wrap:wrap; gap:.8rem; align-items:center; justify-content:space-between;">
-    <span style="color:#9aa5b1; max-width:60ch;">
-      This site uses Google AdSense, which may use cookies to serve ads and measure their
-      performance. See our <a href="/privacy-policy.html">Privacy Policy</a>. You can accept
-      or decline ad cookies; declining still lets you use the scanner, you'll just see
-      non-personalized or no ads.
-    </span>
-    <span style="white-space:nowrap;">
-      <button onclick="setConsent(true)" style="margin-top:0;">Accept</button>
-      <button onclick="setConsent(false)" style="margin-top:0; background:none; border:1px solid #2a3140; color:#9aa5b1;">Decline</button>
-    </span>
+<div id="consentBanner" class="cookie-pill">
+  <div style="flex:1;color:var(--text-muted);">
+    This site uses Google AdSense, which may use cookies to serve ads. See our
+    <a href="/privacy-policy.html" style="color:var(--accent);">Privacy Policy</a>. You can accept or decline;
+    declining still lets you use the scanner.
+  </div>
+  <div class="actions">
+    <button class="cookie-decline" onclick="setConsent(false)">Decline</button>
+    <button class="cookie-accept" onclick="setConsent(true)">Accept</button>
   </div>
 </div>
+
 <script>
 function setConsent(accepted) {
   localStorage.setItem('skillsmith-ad-consent', accepted ? 'accepted' : 'declined');
@@ -294,6 +468,31 @@ async function activatePro() {
   }
 }
 
+async function buyOneCredit() {
+  const key = getApiKey();
+  if (!key) { alert('Sign up first.'); return; }
+  const sig = prompt(
+    'Buy one extra scan for $0.02 USDC (no subscription).\n\n' +
+    '1) Send 0.02 USDC (Solana mainnet, mint EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v) to:\n' +
+    '   2esJogvKTYDuxZaB9PEuEaHvz4U6TuQnTx3pkLcdH34N\n' +
+    '2) Paste the finalized transaction signature below.\n\n' +
+    '(Testing? Use any value starting with test_signature_ to try this flow for free.)'
+  );
+  if (!sig) return;
+  const res = await fetch('/api/buy_credit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ api_key: key, payment_signature: sig }),
+  });
+  const data = await res.json();
+  if (data.credited) {
+    alert('Credited! You have ' + data.bonus_credits + ' extra scan(s) available.');
+    refreshAccountBar();
+  } else {
+    alert('Purchase failed: ' + (data.detail || data.error || 'unknown error'));
+  }
+}
+
 async function refreshAccountBar() {
   const key = getApiKey();
   const loggedOut = document.getElementById('accountLoggedOut');
@@ -315,6 +514,7 @@ async function refreshAccountBar() {
       document.getElementById('quotaLine').textContent =
         'Free: ' + data.used + '/' + data.limit + ' scans used today';
       document.getElementById('proUpsell').innerHTML =
+        ' · <a href="#" onclick="buyOneCredit(); return false;">buy 1 scan ($0.02)</a>' +
         ' · <a href="#" onclick="activatePro(); return false;">upgrade to Pro ($5, 100/day)</a>';
     }
   } catch (e) {
@@ -405,26 +605,89 @@ function badge(text, cls) {
   return span;
 }
 
+function bold(text) { const b = document.createElement('b'); b.textContent = text; return b; }
+
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  document.querySelectorAll('.tab-content').forEach(c => c.style.display = (c.id === 'tab-' + name) ? 'block' : 'none');
+}
+
 function render(data) {
-  const el = document.getElementById('result');
-  el.innerHTML = ''; // safe: clearing, not inserting untrusted content
+  const overview = document.getElementById('tab-overview');
+  const details = document.getElementById('tab-details');
+  const db = document.getElementById('tab-db');
+  overview.innerHTML = ''; details.innerHTML = ''; db.innerHTML = ''; // safe: clearing, not inserting untrusted content
 
   if (!data.parse_ok) {
-    addRow(el, [badge('PARSE ERROR', 'high'), ' ' + (data.parse_error || '')]);
+    addRow(overview, [badge('PARSE ERROR', 'high'), ' ' + (data.parse_error || '')]);
+    switchTab('overview');
     return;
   }
 
-  addRow(el, [(() => { const b = document.createElement('b'); b.textContent = 'name:'; return b; })(), ' ' + (data.name || '(missing)')]);
-  addRow(el, [(() => { const b = document.createElement('b'); b.textContent = 'Lint:'; return b; })(), ' ', badge(data.lint_ok ? 'OK' : 'ISSUES', data.lint_ok ? 'clean' : 'high')]);
-  (data.lint_issues || []).forEach(i => addRow(el, [`  [${i.level}] ${i.code}: ${i.message}`]));
-
-  addRow(el, [
-    (() => { const b = document.createElement('b'); b.textContent = 'Security scan:'; return b; })(),
-    ' ',
+  // --- Overview tab: quick summary ---
+  addRow(overview, [bold('name:'), ' ' + (data.name || '(missing)')]);
+  addRow(overview, [bold('Lint:'), ' ', badge(data.lint_ok ? 'OK' : 'ISSUES', data.lint_ok ? 'clean' : 'high')]);
+  addRow(overview, [
+    bold('Security scan:'), ' ',
     badge(`${(data.risk_level || '').toUpperCase()} (score ${data.risk_score})`, data.risk_level || 'low'),
   ]);
-  (data.findings || []).forEach(f => addRow(el, [`  [${f.source}] ${f.message} (+${f.weight})`]));
+  addRow(overview, [`${(data.findings || []).length} finding(s), ${(data.lint_issues || []).length} lint issue(s) -- see Details tab.`]);
+  if (data.quota) {
+    const q = data.quota;
+    addRow(overview, [`quota: ${q.tier}${q.limit ? ' ' + q.used + '/' + q.limit : ''}`]);
+  }
+
+  // --- Details tab: full technical findings ---
+  addRow(details, [bold('Lint issues:')]);
+  if (!(data.lint_issues || []).length) addRow(details, ['  none']);
+  (data.lint_issues || []).forEach(i => addRow(details, [`  [${i.level}] ${i.code}: ${i.message}`]));
+  addRow(details, ['']);
+  addRow(details, [bold('Security findings:')]);
+  if (!(data.findings || []).length) addRow(details, ['  none']);
+  (data.findings || []).forEach(f => addRow(details, [`  [${f.source}] ${f.message} (+${f.weight})`]));
+
+  // --- Database tab: hash lookup / scan history ---
+  if (data.sha256) {
+    addRow(db, [bold('SHA-256:'), ' ' + data.sha256]);
+  }
+  if (data.scan_history) {
+    const h = data.scan_history;
+    addRow(db, [h.seen_before
+      ? `Seen before: this exact file has been scanned ${h.seen_count} time(s), first seen ${new Date(h.first_seen_at * 1000).toLocaleString()}.`
+      : 'First time this exact file has been scanned.']);
+  }
+  addRow(db, ['']);
+  addRow(db, ['Look up any hash directly: GET /api/lookup?sha256=<hash>']);
+
+  switchTab('overview');
 }
+
+async function loadRegistry() {
+  const el = document.getElementById('safeSkillsList');
+  el.textContent = 'Loading…';
+  try {
+    const res = await fetch('/api/registry?limit=20');
+    const data = await res.json();
+    el.innerHTML = '';
+    if (!data.skills || !data.skills.length) {
+      el.textContent = 'No entries yet -- scan something clean to be the first.';
+      return;
+    }
+    data.skills.forEach(s => {
+      const row = document.createElement('div');
+      row.className = 'safe-skill-row';
+      const left = document.createElement('span');
+      left.textContent = (s.name || '(unnamed)') + '  ';
+      const rightBadge = badge('seen ' + (s.seen_count || 1) + 'x', 'clean');
+      row.appendChild(left);
+      row.appendChild(rightBadge);
+      el.appendChild(row);
+    });
+  } catch (e) {
+    el.textContent = 'Could not load registry.';
+  }
+}
+loadRegistry();
 </script>
 </body>
 </html>

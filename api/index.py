@@ -27,29 +27,45 @@ try:
         PRO_PRICE_USDC,
         PRO_DURATION_DAYS,
         PRO_DAILY_LIMIT,
+        PAY_PER_USE_PRICE_USDC,
         activate_pro,
+        add_pay_per_use_credit,
         check_and_consume_quota,
         create_account,
         get_account,
         get_or_create_account_by_identity,
         pseudo_key_for_ip,
     )
+    from .scans import sha256_of, get_scan_record, record_scan, list_safe_registry
 except ImportError:  # local/script execution without package context
     from account import (
         PRO_PRICE_USDC,
         PRO_DURATION_DAYS,
         PRO_DAILY_LIMIT,
+        PAY_PER_USE_PRICE_USDC,
         activate_pro,
+        add_pay_per_use_credit,
         check_and_consume_quota,
         create_account,
         get_account,
         get_or_create_account_by_identity,
         pseudo_key_for_ip,
     )
+    from scans import sha256_of, get_scan_record, record_scan, list_safe_registry
 
 GITHUB_CLIENT_ID = os.environ.get("GITHUB_CLIENT_ID", "")
 GITHUB_CLIENT_SECRET = os.environ.get("GITHUB_CLIENT_SECRET", "")
 SITE_URL = os.environ.get("SITE_URL", "https://skillsmith-web.vercel.app")
+
+DISCLAIMER = (
+    "skillsmith is a static heuristic scanner. It has no sandbox and does not "
+    "execute the skill. A 'clean' result means our current ruleset found "
+    "nothing suspicious -- it is NOT a guarantee of safety, and a skill can "
+    "still be malicious in ways this scanner does not (yet) detect. A 'high "
+    "risk' result can also be a false positive. Always read code you did not "
+    "write yourself before running it, especially anything with a "
+    "python_import."
+)
 
 _CORS_HEADERS = [
     ("Access-Control-Allow-Origin", "*"),
@@ -67,29 +83,83 @@ REQUIRED_KEYS = ("name", "description")
 RECOMMENDED_MAX_DESCRIPTION_CHARS = 500
 FRONTMATTER_RE = re.compile(r"^---\s*\n(.*?\n)---\s*\n?(.*)$", re.DOTALL)
 
+# ---------------------------------------------------------------------------
+# Detection engine v2 -- substantially expanded ruleset.
+#
+# Categories: dangerous code execution, credential/secret access, network
+# exfiltration, persistence mechanisms, obfuscation techniques, and prompt
+# injection / instruction-override phrasing. Weighted 1-10 by how strong a
+# standalone signal each pattern is. This is still a static heuristic
+# scanner -- see the disclaimer shown in the UI -- but the ruleset is far
+# broader than a first pass.
+# ---------------------------------------------------------------------------
+
 _CODE_PATTERNS = [
+    # --- direct code execution ---
     (re.compile(r"\bos\.system\s*\("), 8, "shells out via os.system"),
     (re.compile(r"\bsubprocess\.(Popen|call|run|check_output)\s*\("), 6, "spawns a subprocess"),
+    (re.compile(r"\bsubprocess\.\w+\([^)]*shell\s*=\s*True"), 9, "subprocess with shell=True (shell injection risk)"),
     (re.compile(r"\beval\s*\("), 9, "calls eval() on dynamic input"),
     (re.compile(r"\bexec\s*\("), 9, "calls exec() on dynamic input"),
+    (re.compile(r"\bcompile\s*\([^)]*['\"]exec['\"]"), 8, "compiles code for exec at runtime"),
     (re.compile(r"\bpickle\.(loads|load)\s*\("), 7, "deserializes with pickle (arbitrary code execution risk)"),
+    (re.compile(r"\bmarshal\.(loads|load)\s*\("), 7, "deserializes with marshal (arbitrary code execution risk)"),
+    (re.compile(r"\byaml\.(load|unsafe_load)\s*\((?!.*Loader=yaml\.SafeLoader)"), 6, "yaml.load without SafeLoader (arbitrary code execution risk)"),
     (re.compile(r"\b__import__\s*\("), 5, "dynamically imports modules"),
+    (re.compile(r"\bimportlib\.import_module\s*\([^)]*\+"), 6, "dynamically imports a module built from a variable/expression"),
+    (re.compile(r"\bctypes\."), 6, "uses ctypes (direct memory/native code access)"),
+    (re.compile(r"\bgetattr\s*\([^,]+,\s*[a-zA-Z_]\w*\s*\)\s*\("), 4, "calls a dynamically-resolved attribute (reflection-based execution)"),
+
+    # --- credential / secret access ---
+    (re.compile(r"os\.environ(\.get)?\s*\[?['\"](\w*(KEY|TOKEN|SECRET|PASSWORD|CREDENTIAL|PRIVATE)\w*)['\"]"), 6, "reads an environment variable that looks like a credential"),
+    (re.compile(r"\bopen\s*\([^)]*['\"]\.ssh"), 8, "reads from ~/.ssh"),
+    (re.compile(r"\bopen\s*\([^)]*['\"]\.aws"), 8, "reads from ~/.aws credentials"),
+    (re.compile(r"\bopen\s*\([^)]*['\"]\.gnupg"), 8, "reads from ~/.gnupg"),
+    (re.compile(r"\bopen\s*\([^)]*(id_rsa|id_ed25519|\.npmrc|\.netrc|\.git-credentials)"), 8, "reads a known credential/secret file"),
+    (re.compile(r"\bkeyring\.(get_password|get_credential)\s*\("), 6, "reads from the OS keyring/credential store"),
+    (re.compile(r"\bwallet\.json|\bprivate[_-]?key\s*[:=]"), 7, "references a wallet file or private key variable"),
+
+    # --- network exfiltration ---
     (re.compile(r"\brequests\.(post|put|get)\s*\("), 3, "makes outbound network requests"),
     (re.compile(r"\burllib\.request\.urlopen\s*\("), 3, "makes outbound network requests"),
     (re.compile(r"\bsocket\.socket\s*\("), 4, "opens raw sockets"),
+    (re.compile(r"requests\.(post|put)\s*\([^)]*(environ|getenv|os\.environ)"), 8, "sends an environment variable in an outbound HTTP request (possible exfiltration)"),
+    (re.compile(r"\bsmtplib\.SMTP\s*\("), 4, "sends email (possible exfiltration channel)"),
+    (re.compile(r"\bdns\.resolver\.|\bsocket\.gethostbyname\s*\([^)]*\+"), 5, "builds a DNS lookup from a variable (possible DNS exfiltration)"),
+
+    # --- destructive / persistence ---
     (re.compile(r"(?i)\brm\s+-rf\b"), 8, "contains a destructive shell command (rm -rf)"),
-    (re.compile(r"os\.environ(\.get)?\s*\[?['\"](\w*(KEY|TOKEN|SECRET|PASSWORD)\w*)['\"]"), 6, "reads an environment variable that looks like a credential"),
-    (re.compile(r"\bopen\s*\([^)]*['\"]\.ssh"), 8, "reads from ~/.ssh"),
-    (re.compile(r"\bopen\s*\([^)]*['\"]\.aws"), 8, "reads from ~/.aws credentials"),
+    (re.compile(r"(?i)\b(curl|wget)\b[^\n]*\|\s*(sh|bash|zsh)\b"), 9, "pipes a downloaded script directly into a shell (classic dropper pattern)"),
+    (re.compile(r"(?i)iex\s*\(\s*new-object\s+net\.webclient"), 9, "PowerShell download-and-execute cradle"),
+    (re.compile(r"(?i)\bcrontab\b|/etc/cron|systemd/system/.*\.service"), 6, "modifies scheduled tasks / system services (persistence)"),
+    (re.compile(r"(?i)\.(bash_profile|bashrc|zshrc|profile)['\"]?\s*,\s*['\"]a"), 6, "appends to a shell startup file (persistence)"),
+    (re.compile(r"(?i)LaunchAgents|LaunchDaemons|HKCU\\\\.*\\\\Run"), 7, "writes to a known OS auto-start location (persistence)"),
+    (re.compile(r"\bchmod\s+\+x\b"), 3, "makes a file executable"),
+
+    # --- obfuscation ---
+    (re.compile(r"base64\.b64decode\s*\([^)]*\)\s*\)?\s*(#.*)?\n[^\n]*\bexec\s*\("), 9, "decodes base64 then executes the result (classic obfuscated payload)"),
+    (re.compile(r"[A-Za-z0-9+/]{200,}={0,2}"), 4, "contains a very long base64-like blob (possible obfuscated payload)"),
+    (re.compile(r"(?:\\x[0-9a-fA-F]{2}){20,}"), 5, "contains a long run of hex-escaped bytes (possible obfuscated payload)"),
+    (re.compile(r"[\u200b\u200c\u200d\ufeff]"), 7, "contains zero-width/invisible unicode characters (common prompt-injection hiding technique)"),
+    (re.compile(r"[а-яА-Я].*[a-zA-Z]|[a-zA-Z].*[а-яА-Я]"), 2, "mixes Latin and Cyrillic characters (possible homoglyph obfuscation)"),
 ]
 
 _PROMPT_INJECTION_PATTERNS = [
     (re.compile(r"(?i)ignore (all|any|the) (previous|prior|above) instructions"), 10, "'ignore previous instructions' phrasing"),
-    (re.compile(r"(?i)you are now (in )?(developer|debug|jailbreak|dan) mode"), 10, "jailbreak/mode-override phrasing"),
-    (re.compile(r"(?i)do not (tell|inform|mention (this )?to) the user"), 8, "instructs the agent to hide actions from the user"),
-    (re.compile(r"(?i)send (the|this|your) (api[- ]?key|token|password|secret|private key) to"), 10, "instructs exfiltration of credentials"),
     (re.compile(r"(?i)disregard (your|any) (safety|previous) (guidelines|instructions)"), 10, "safety-override phrasing"),
+    (re.compile(r"(?i)you are now (in )?(developer|debug|jailbreak|dan|god) mode"), 10, "jailbreak/mode-override phrasing"),
+    (re.compile(r"(?i)\bjailbroken\b|\bunrestricted (ai|assistant|mode)\b"), 9, "jailbreak-framing phrasing"),
+    (re.compile(r"(?i)do not (tell|inform|mention (this )?to) the user"), 8, "instructs the agent to hide actions from the user"),
+    (re.compile(r"(?i)without (telling|informing|alerting) the user"), 8, "instructs the agent to hide actions from the user"),
+    (re.compile(r"(?i)send (the|this|your) (api[- ]?key|token|password|secret|private key|seed phrase|wallet) to"), 10, "instructs exfiltration of credentials"),
+    (re.compile(r"(?i)(reveal|print|output|show) your (system prompt|instructions|guidelines)"), 8, "prompt-extraction phrasing"),
+    (re.compile(r"(?i)act as (an?|the) (unrestricted|uncensored|amoral)"), 9, "unrestricted-persona jailbreak phrasing"),
+    (re.compile(r"(?i)\bnew instructions?\s*:"), 6, "'new instructions:' phrasing that reads as an instruction override"),
+    (re.compile(r"(?i)this (overrides|supersedes) (all|any) (previous|prior|other) (rules|instructions|policies)"), 9, "explicit instruction-override phrasing"),
+    (re.compile(r"<!--[^>]*(ignore|instruction|system|override)[^>]*-->", re.IGNORECASE), 7, "hidden HTML comment containing instruction-like phrasing"),
+    (re.compile(r"(?i)\bsudo mode\b|\broot access granted\b"), 6, "privilege-escalation framing phrasing"),
 ]
+
 
 
 def parse_skill_md(text: str):
@@ -145,6 +215,7 @@ def analyze(text: str) -> dict:
         "findings": findings,
         "risk_score": risk_score,
         "risk_level": risk_level,
+        "disclaimer": DISCLAIMER,
     }
 
 
@@ -294,8 +365,21 @@ def handle_scan(environ, start_response):
             start_response("429 Too Many Requests", [("Content-Type", "application/json")] + _CORS_HEADERS)
             return [json.dumps({"error": "quota_exceeded", "quota": quota_info}).encode()]
 
+        digest = sha256_of(text)
+        cached = get_scan_record(digest)
         result = analyze(text)
+        try:
+            history = record_scan(digest, result, name=result.get("name") or "")
+        except Exception:  # noqa: BLE001
+            history = None  # DB is best-effort; never fail a scan because history logging failed
+
         result["quota"] = quota_info
+        result["sha256"] = digest
+        result["scan_history"] = {
+            "seen_before": cached is not None,
+            "seen_count": (history or {}).get("seen_count", 1),
+            "first_seen_at": (history or {}).get("first_seen_at"),
+        }
         start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps(result).encode()]
     except Exception as e:  # noqa: BLE001
@@ -371,6 +455,73 @@ def handle_scan_pro(environ, start_response):
 
         start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({"quota": quota_info, "results": results}).encode()]
+    except Exception as e:  # noqa: BLE001
+        start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
+        return [json.dumps({"error": str(e)}).encode()]
+
+
+def handle_buy_credit(environ, start_response):
+    """POST {api_key, payment_signature} -> verifies PAY_PER_USE_PRICE_USDC
+    and grants exactly one extra scan (consumed before the account is
+    blocked, see account.check_and_consume_quota). No subscription, no
+    Pro commitment -- pay for exactly the scans you actually need."""
+    try:
+        payload = _read_json(environ)
+        api_key = payload.get("api_key", "")
+        signature = payload.get("payment_signature", "")
+        if not api_key:
+            start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": "api_key required, sign in first"}).encode()]
+        if not signature:
+            start_response("402 Payment Required", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({
+                "error": "payment_required",
+                "price_usdc": PAY_PER_USE_PRICE_USDC,
+                "pay_to": PAYOUT_WALLET,
+                "mint": USDC_MINT,
+                "network": "solana-mainnet",
+            }).encode()]
+        ok, detail = verify_payment(signature, PAY_PER_USE_PRICE_USDC)
+        if not ok:
+            start_response("402 Payment Required", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": "payment_not_verified", "detail": detail}).encode()]
+        record = add_pay_per_use_credit(api_key, detail)
+        start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
+        return [json.dumps({"credited": True, "payment": detail, "bonus_credits": record.get("bonus_credits", 0)}).encode()]
+    except Exception as e:  # noqa: BLE001
+        start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
+        return [json.dumps({"error": str(e)}).encode()]
+
+
+def handle_registry(environ, start_response):
+    try:
+        qs = urllib.parse.parse_qs(environ.get("QUERY_STRING", ""))
+        limit = int((qs.get("limit") or ["50"])[0])
+        entries = list_safe_registry(limit=limit)
+        start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
+        return [json.dumps({
+            "disclaimer": DISCLAIMER,
+            "count": len(entries),
+            "skills": entries,
+        }).encode()]
+    except Exception as e:  # noqa: BLE001
+        start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
+        return [json.dumps({"error": str(e)}).encode()]
+
+
+def handle_lookup(environ, start_response):
+    """GET /api/lookup?sha256=... -- VirusTotal-style hash lookup, read-only,
+    does not consume any quota (you're asking "has this exact file been seen
+    before", not asking us to re-scan it)."""
+    try:
+        qs = urllib.parse.parse_qs(environ.get("QUERY_STRING", ""))
+        digest = (qs.get("sha256") or [""])[0].lower()
+        if len(digest) != 64:
+            start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": "sha256 query param must be a 64-char hex digest"}).encode()]
+        record = get_scan_record(digest)
+        start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
+        return [json.dumps({"disclaimer": DISCLAIMER, "found": record is not None, "record": record}).encode()]
     except Exception as e:  # noqa: BLE001
         start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({"error": str(e)}).encode()]
@@ -540,6 +691,24 @@ def app(environ, start_response):
         return handle_github_start(environ, start_response)
     if path.rstrip("/").endswith("/auth/github/callback"):
         return handle_github_callback(environ, start_response)
+
+    if path.rstrip("/").endswith("/registry"):
+        if method != "GET":
+            start_response("405 Method Not Allowed", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": "GET only"}).encode()]
+        return handle_registry(environ, start_response)
+
+    if path.rstrip("/").endswith("/lookup"):
+        if method != "GET":
+            start_response("405 Method Not Allowed", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": "GET only"}).encode()]
+        return handle_lookup(environ, start_response)
+
+    if path.rstrip("/").endswith("/buy_credit") or path.rstrip("/").endswith("/buy-credit"):
+        if method != "POST":
+            start_response("405 Method Not Allowed", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": "POST only"}).encode()]
+        return handle_buy_credit(environ, start_response)
 
     if path.rstrip("/").endswith("/scan_pro") or path.rstrip("/").endswith("/scan-pro"):
         if method != "POST":

@@ -107,3 +107,33 @@ An external review flagged several real issues, all fixed same-day:
 
 Google sign-in was removed (not configured / not wanted) — GitHub and an
 anonymous key are the two ways to get an account.
+
+
+## VirusTotal-style features
+
+- **Hash-based scan history:** every scan is indexed by SHA-256 (we never
+  store the raw text). Re-scanning identical content shows "seen before,
+  N times". Look up any hash directly: `GET /api/lookup?sha256=<hash>`.
+- **Safe skills database:** `GET /api/registry` lists skills that scanned
+  clean + lint-ok, newest-first. Explicitly labeled as automated-heuristic
+  only, not a manual security audit -- see the disclaimer shown in the UI
+  and returned in every API response.
+- **Pay-per-use:** `POST /api/buy_credit` buys exactly one extra scan for
+  $0.02 USDC, no Pro subscription required -- for the occasional overflow
+  scan without committing to 100/day.
+- **Tabs in the UI:** Overview / Details / Database, matching a
+  malware-scanner-style results view.
+
+## Detection engine v2
+
+Significantly expanded ruleset beyond the original pass: dynamic code
+execution (`eval`/`exec`/`pickle`/`marshal`/unsafe `yaml.load`/`ctypes`),
+credential/secret file access (SSH keys, AWS/GCP creds, wallet files),
+network exfiltration (env vars sent in outbound requests, DNS exfil
+patterns), persistence mechanisms (cron, shell startup files, OS
+auto-start locations), obfuscation techniques (long base64/hex blobs,
+zero-width unicode characters, Latin/Cyrillic homoglyph mixing), and a
+much broader prompt-injection phrasing list (jailbreak framing,
+instruction-override phrasing, hidden HTML-comment instructions,
+prompt-extraction phrasing). Still a static heuristic scanner -- see the
+disclaimer in the UI and in every scan response.
