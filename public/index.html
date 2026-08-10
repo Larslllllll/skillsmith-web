@@ -271,7 +271,10 @@ description: One-line description of what this skill does and when to use it.
 
 Body markdown describing usage."></textarea>
       <div class="footer-toolbar">
-        <span class="toolbar-label">Markdown · UTF-8</span>
+        <label style="display:flex;align-items:center;gap:.4rem;color:var(--text-muted);font-size:.72rem;cursor:pointer;">
+          <input type="checkbox" id="publishCheck" style="accent-color:var(--accent);">
+          Publish to Safe Skills DB if clean (others can use it -- see <a href="/privacy-policy.html" style="color:var(--accent);" onclick="event.stopPropagation()">privacy policy</a>)
+        </label>
         <button id="scanBtn" class="btn-primary" onclick="doScan()">▶ Run Analysis</button>
       </div>
     </div>
@@ -613,6 +616,7 @@ async function refreshAccountBar() {
         'Free: ' + data.used + '/' + data.limit + ' scans used today (5 lookups/day)';
       document.getElementById('proUpsell').innerHTML =
         ' · <a href="#" onclick="buyOneCredit(); return false;">buy 1 scan ($0.02)</a>' +
+        ' · <a href="#" onclick="buyLookupCredit(); return false;">buy 1 lookup ($0.01)</a>' +
         ' · <a href="#" onclick="activatePro(); return false;">Pro ($5, 100 scans + 150 lookups/day)</a>' +
         ' · <a href="#" onclick="activatePremium(); return false;">Premium ($10, unlimited)</a>';
     }
@@ -696,7 +700,13 @@ async function doScan() {
   const text = document.getElementById('input').value;
   if (!text.trim()) { showResultError('INPUT NEEDED', 'Paste a SKILL.md first.'); return; }
   if (!getApiKey()) { promptLogin(); return; }
-  await runScan({ text }, btn);
+  const publish = document.getElementById('publishCheck').checked;
+  await runScan({ text, publish }, btn);
+  if (publish) refreshRegistryAfterPublish();
+}
+
+function refreshRegistryAfterPublish() {
+  setTimeout(loadRegistry, 800); // let the write settle before re-listing
 }
 // SECURITY: everything rendered here can originate from an attacker-controlled
 // SKILL.md (name, parse_error, lint/finding messages). Never use innerHTML with
@@ -827,15 +837,70 @@ function render(data) {
   switchTab('overview');
 }
 
+async function useSkill(sha256, name) {
+  const key = getApiKey();
+  if (!key) { promptLogin(); return; }
+  try {
+    const res = await fetch('/api/skill?sha256=' + encodeURIComponent(sha256) + '&api_key=' + encodeURIComponent(key));
+    const data = await res.json();
+    if (res.status === 401) { showResultError('SIGN IN REQUIRED', data.message || 'Sign in to fetch this skill.'); return; }
+    if (res.status === 429) { showResultError('LOOKUP LIMIT REACHED', (data.quota && data.quota.error) || 'try again tomorrow, or buy a lookup credit.'); return; }
+    if (res.status === 404) { alert('This skill was not published with usable content.'); return; }
+    // put it straight into the editor so it's actually usable, not just displayed
+    document.getElementById('input').value = data.text;
+    document.getElementById('input').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  } catch (e) {
+    alert('Could not fetch skill content.');
+  }
+}
+
+async function buyLookupCredit() {
+  const key = getApiKey();
+  if (!key) { alert('Sign up first.'); return; }
+  const sig = prompt(
+    'Buy one extra database lookup/fetch for $0.01 USDC (no subscription).\n\n' +
+    '1) Send 0.01 USDC (Solana mainnet, mint EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v) to:\n' +
+    '   2esJogvKTYDuxZaB9PEuEaHvz4U6TuQnTx3pkLcdH34N\n' +
+    '2) Paste the finalized transaction signature below.\n\n' +
+    '(Testing? Use any value starting with test_signature_ to try this flow for free.)'
+  );
+  if (!sig) return;
+  const res = await fetch('/api/buy_credit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ api_key: key, payment_signature: sig, kind: 'lookup' }),
+  });
+  const data = await res.json();
+  if (data.credited) {
+    alert('Credited! You have ' + data.bonus_lookup_credits + ' extra lookup(s) available.');
+  } else {
+    alert('Purchase failed: ' + (data.detail || data.error || 'unknown error'));
+  }
+}
+
 async function loadRegistry() {
   const el = document.getElementById('safeSkillsList');
+  const key = getApiKey();
+  if (!key) {
+    el.innerHTML = '';
+    el.appendChild(document.createTextNode('Sign in to browse (free, 5 lookups/day). '));
+    const link = document.createElement('a');
+    link.href = '#'; link.textContent = 'Sign in';
+    link.onclick = (e) => { e.preventDefault(); promptLogin(); };
+    el.appendChild(link);
+    return;
+  }
   el.textContent = 'Loading…';
   try {
-    const res = await fetch('/api/registry?limit=20');
+    const res = await fetch('/api/registry?limit=20&api_key=' + encodeURIComponent(key));
     const data = await res.json();
     el.innerHTML = '';
+    if (res.status === 401 || res.status === 429) {
+      el.textContent = (data.quota && data.quota.error) || data.message || 'Could not load registry.';
+      return;
+    }
     if (!data.skills || !data.skills.length) {
-      el.textContent = 'No entries yet -- scan something clean to be the first.';
+      el.textContent = 'No entries yet -- scan something clean and publish it to be the first.';
       return;
     }
     data.skills.forEach(s => {
@@ -843,9 +908,17 @@ async function loadRegistry() {
       row.className = 'safe-skill-row';
       const left = document.createElement('span');
       left.textContent = (s.name || '(unnamed)') + '  ';
-      const rightBadge = badge('seen ' + (s.seen_count || 1) + 'x', 'clean');
       row.appendChild(left);
-      row.appendChild(rightBadge);
+      const right = document.createElement('span');
+      right.style.display = 'flex'; right.style.gap = '.4rem'; right.style.alignItems = 'center';
+      right.appendChild(badge('seen ' + (s.seen_count || 1) + 'x', 'clean'));
+      if (s.has_content) {
+        const useBtn = document.createElement('a');
+        useBtn.href = '#'; useBtn.textContent = 'Use →'; useBtn.style.fontSize = '.72rem';
+        useBtn.onclick = (e) => { e.preventDefault(); useSkill(s.sha256, s.name); };
+        right.appendChild(useBtn);
+      }
+      row.appendChild(right);
       el.appendChild(row);
     });
   } catch (e) {

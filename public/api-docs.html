@@ -33,15 +33,23 @@
 <table>
 <tr><th>Tier</th><th>Scans/day</th><th>DB lookups/day</th><th>Price</th></tr>
 <tr><td>Free</td><td>5</td><td>5</td><td>$0</td></tr>
-<tr><td>Pay-per-use</td><td>+1 per purchase</td><td>-</td><td>$0.02 USDC / scan</td></tr>
+<tr><td>Pay-as-you-go (additive)</td><td>+1 per purchase</td><td>+1 per purchase</td><td>$0.02 / scan, $0.01 / lookup</td></tr>
 <tr><td>Pro</td><td>100</td><td>150</td><td>$5 USDC / 30 days</td></tr>
 <tr><td>Premium</td><td>Unlimited</td><td>Unlimited</td><td>$10 USDC / 30 days</td></tr>
 </table>
 <p>All paid tiers are activated by sending USDC (SPL token, Solana mainnet,
 mint <code>EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v</code>) to
 <code>2esJogvKTYDuxZaB9PEuEaHvz4U6TuQnTx3pkLcdH34N</code>, then submitting
-the finalized transaction signature. No card, no subscription billing
-surprises -- tiers simply expire after 30 days.</p>
+the finalized transaction signature. Pay-as-you-go always requires an
+existing account (<code>api_key</code>) and is additive to whatever tier
+you're on -- it never replaces the free daily quota, it tops it up. No
+card, no subscription billing surprises -- Pro/Premium simply expire
+after 30 days.</p>
+<p><strong>"Database" here means the Safe Skills Database</strong> --
+looking up a hash's verdict (<code>/api/lookup</code>), browsing clean
+skills (<code>/api/registry</code>), or fetching a published skill's
+actual, usable content (<code>/api/skill</code>). All three share the
+same daily lookup quota.</p>
 
 <h2>Authentication</h2>
 <p>Every scan/lookup call needs an <code>api_key</code>, either as a JSON
@@ -82,11 +90,6 @@ curl -X POST https://skillsmith.ch/api/scan \
 <code>sha256</code>, <code>scan_history</code>, <code>disclaimer</code>, and
 <code>quota</code>.</p>
 
-<h3><span class="method post">POST</span><code>/api/buy_credit</code></h3>
-<p>Buy exactly one extra scan for $0.02 USDC, no subscription.</p>
-<pre>curl -X POST https://skillsmith.ch/api/buy_credit \
-  -d '{"api_key":"sk_...","payment_signature":"&lt;tx&gt;"}'</pre>
-
 <h3><span class="method post">POST</span><code>/api/scan_pro</code></h3>
 <p>Two things, based on what you send:</p>
 <p><strong>1. Activate Pro or Premium:</strong></p>
@@ -106,9 +109,30 @@ from the scan quota -- see pricing table above).</p>
 
 <h3><span class="method get">GET</span><code>/api/registry?api_key=...&amp;limit=50</code></h3>
 <p>Browse the public Safe Skills Database: skills that scanned clean +
-lint-ok, newest first. Also consumes 1 unit of your DB-lookup quota.
-Explicitly an automated-heuristic result, not a manual audit.</p>
+lint-ok, newest first. Each entry has a <code>has_content</code> flag --
+true if the submitter published the actual content (see below). Also
+consumes 1 unit of your DB-lookup quota. Explicitly an automated-heuristic
+result, not a manual audit.</p>
 <pre>curl "https://skillsmith.ch/api/registry?api_key=sk_..."</pre>
+
+<h3><span class="method get">GET</span><code>/api/skill?sha256=...&amp;api_key=...</code></h3>
+<p>Fetch the actual, usable SKILL.md content for a hash -- the "use the
+skill" endpoint, distinct from <code>/api/lookup</code> (verdict/metadata
+only). Only works if the submitter explicitly published it by ticking
+"Publish to Safe Skills DB" on a clean scan (<code>POST /api/scan</code>
+with <code>"publish": true</code>). Returns 404 if not published.
+Consumes 1 unit of your DB-lookup quota.</p>
+<pre>curl "https://skillsmith.ch/api/skill?sha256=4807c1a3de60...&api_key=sk_..."</pre>
+<pre>{"sha256": "...", "text": "---\nname: date-formatter\n...", "quota": {...}}</pre>
+
+<h3><span class="method post">POST</span><code>/api/buy_credit</code> (pay-as-you-go, additive)</h3>
+<p>Buy one extra scan or lookup without a Pro/Premium subscription. Always
+requires an existing account and on-chain USDC payment; tops up whatever
+tier you're already on, never replaces it.</p>
+<pre>curl -X POST https://skillsmith.ch/api/buy_credit \
+  -d '{"api_key":"sk_...","payment_signature":"&lt;tx&gt;","kind":"scan"}'    # $0.02, +1 scan
+curl -X POST https://skillsmith.ch/api/buy_credit \
+  -d '{"api_key":"sk_...","payment_signature":"&lt;tx&gt;","kind":"lookup"}'  # $0.01, +1 lookup</pre>
 
 <h2>Errors</h2>
 <table>

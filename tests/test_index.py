@@ -157,3 +157,15 @@ def test_scan_pro_tier_field_defaults_to_pro():
     src = inspect.getsource(webapp.handle_scan_pro)
     assert 'activation_tier = payload.get("tier", "pro")' in src
     assert "premium" in src
+
+
+# --- publish/use content + lookup pay-per-use ---
+
+def test_publish_content_constants_and_wiring():
+    from account import LOOKUP_PAY_PER_USE_PRICE_USDC
+    assert LOOKUP_PAY_PER_USE_PRICE_USDC > 0
+    import inspect
+    src = inspect.getsource(webapp.handle_get_skill)
+    assert "get_published_content" in src
+    src2 = inspect.getsource(webapp.handle_scan)
+    assert 'payload.get("publish")' in src2

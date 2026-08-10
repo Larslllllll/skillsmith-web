@@ -58,17 +58,26 @@ rent, or share this data with third parties beyond the infrastructure
 providers named in "Where this is hosted" below.</p>
 
 <h2>Scan history &amp; the public Safe Skills Database</h2>
-<p>Every scan is indexed by the SHA-256 hash of its content (never the
-content itself), together with the skill's declared <code>name</code>
-field, the lint/security result, and how many times that exact hash has
-been scanned. <code>GET /api/lookup?sha256=...</code> lets anyone look up
-a hash directly. Scans that come back clean and lint-valid are also listed
-in the public "Safe Skills Database" (<code>GET /api/registry</code>),
-showing the skill's declared name and how many times it was seen --
-explicitly labeled in the product as an automated heuristic result, not a
-manual audit. If a skill's own <code>name</code> field happens to contain
-something you consider personal data, you can ask us to remove that hash
-record (see "Your rights" below).</p>
+<p>Every scan is indexed by the SHA-256 hash of its content, together with
+the skill's declared <code>name</code> field, the lint/security result,
+and how many times that exact hash has been scanned. By default the
+content itself is <strong>not</strong> stored -- only the hash and the
+result. <code>GET /api/lookup?sha256=...</code> lets a signed-in user look
+up a hash's verdict directly. Scans that come back clean and lint-valid
+are also listed in the public "Safe Skills Database"
+(<code>GET /api/registry</code>), showing the skill's declared name and
+how many times it was seen -- explicitly labeled in the product as an
+automated heuristic result, not a manual audit.</p>
+<p><strong>Publishing (opt-in, explicit action, separate from scanning):</strong>
+if you tick "Publish to Safe Skills DB" before running a scan, and the
+result comes back clean and lint-valid, we additionally store the actual
+SKILL.md content you submitted, and make it fetchable by anyone (signed
+in, subject to their own lookup quota) via <code>GET /api/skill?sha256=...</code>
+-- this is what makes the database actually usable, not just a safety
+verdict. Only ever your own submission, only if you explicitly opt in,
+and only for content that scanned clean. If you published something and
+want it removed, contact us (see "Your rights" below) with the hash or
+the skill's declared name.</p>
 
 <h2>Where this is hosted (international data transfer)</h2>
 <p>This site and its data run on infrastructure operated by:</p>

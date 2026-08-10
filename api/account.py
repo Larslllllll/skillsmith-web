@@ -42,6 +42,7 @@ PAY_PER_USE_PRICE_USDC = 0.02  # buy a single extra scan without a Pro subscript
 # from the scan quota, same tier structure: free/Pro/Premium/unlimited.
 LOOKUP_FREE_DAILY_LIMIT = 5
 LOOKUP_PRO_DAILY_LIMIT = 150
+LOOKUP_PAY_PER_USE_PRICE_USDC = 0.01  # buy a single extra DB lookup, no subscription
 
 PREMIUM_PRICE_USDC = 10.0
 PREMIUM_DURATION_DAYS = 30  # unlimited scans AND unlimited DB lookups for 30 days
@@ -264,6 +265,24 @@ def add_pay_per_use_credit(api_key: str, payment_detail: str) -> dict:
     return record
 
 
+def add_lookup_pay_per_use_credit(api_key: str, payment_detail: str) -> dict:
+    """Buy a single extra database lookup (GET /api/lookup or /api/registry)
+    for LOOKUP_PAY_PER_USE_PRICE_USDC, no subscription -- same pattern as
+    add_pay_per_use_credit() for scans, just a separate credit counter so
+    buying scan credits and lookup credits don't interfere with each other.
+    Requires an existing account (api_key); consumed by
+    check_and_consume_lookup_quota() before the account is blocked.
+    """
+    record = get_account(api_key) or {
+        "created_at": time.time(), "free_used_date": "", "free_used_count": 0,
+        "pro_expires_at": 0, "pro_used_date": "", "pro_used_count": 0,
+    }
+    record["bonus_lookup_credits"] = record.get("bonus_lookup_credits", 0) + 1
+    record.setdefault("lookup_credit_purchases", []).append({"at": time.time(), "payment": payment_detail})
+    _blob_put(_blob_path(api_key), record)
+    return record
+
+
 def activate_pro(api_key: str, payment_detail: str) -> dict:
     record = get_account(api_key) or {
         "created_at": time.time(), "free_used_date": "", "free_used_count": 0,
@@ -402,10 +421,14 @@ def check_and_consume_lookup_quota(api_key: str | None) -> tuple[bool, dict]:
         record["free_lookup_date"] = today
         record["free_lookup_count"] = 0
     if record.get("free_lookup_count", 0) >= LOOKUP_FREE_DAILY_LIMIT:
+        if record.get("bonus_lookup_credits", 0) > 0:
+            record["bonus_lookup_credits"] -= 1
+            _blob_put(_blob_path(api_key), record)
+            return True, {"tier": "pay-per-use", "credits_remaining": record["bonus_lookup_credits"]}
         return False, {
             "tier": "free", "limit": LOOKUP_FREE_DAILY_LIMIT, "used": record["free_lookup_count"],
-            "error": "daily free database-lookup limit reached: upgrade to Pro ($%.2f, 150/day) or Premium ($%.2f, unlimited)"
-            % (PRO_PRICE_USDC, PREMIUM_PRICE_USDC),
+            "error": "daily free database-lookup limit reached: buy one more lookup for $%.2f, upgrade to Pro ($%.2f, 150/day), or Premium ($%.2f, unlimited)"
+            % (LOOKUP_PAY_PER_USE_PRICE_USDC, PRO_PRICE_USDC, PREMIUM_PRICE_USDC),
         }
     record["free_lookup_count"] = record.get("free_lookup_count", 0) + 1
     _blob_put(_blob_path(api_key), record)

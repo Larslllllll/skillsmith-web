@@ -28,6 +28,7 @@ try:
         PRO_DURATION_DAYS,
         PRO_DAILY_LIMIT,
         PAY_PER_USE_PRICE_USDC,
+        LOOKUP_PAY_PER_USE_PRICE_USDC,
         PREMIUM_PRICE_USDC,
         PREMIUM_DURATION_DAYS,
         LOOKUP_FREE_DAILY_LIMIT,
@@ -35,6 +36,7 @@ try:
         activate_pro,
         activate_premium,
         add_pay_per_use_credit,
+        add_lookup_pay_per_use_credit,
         check_and_consume_quota,
         check_and_consume_lookup_quota,
         check_and_consume_signup_quota,
@@ -43,13 +45,14 @@ try:
         get_or_create_account_by_identity,
         pseudo_key_for_ip,
     )
-    from .scans import sha256_of, get_scan_record, record_scan, list_safe_registry
+    from .scans import sha256_of, get_scan_record, record_scan, list_safe_registry, get_published_content
 except ImportError:  # local/script execution without package context
     from account import (
         PRO_PRICE_USDC,
         PRO_DURATION_DAYS,
         PRO_DAILY_LIMIT,
         PAY_PER_USE_PRICE_USDC,
+        LOOKUP_PAY_PER_USE_PRICE_USDC,
         PREMIUM_PRICE_USDC,
         PREMIUM_DURATION_DAYS,
         LOOKUP_FREE_DAILY_LIMIT,
@@ -57,6 +60,7 @@ except ImportError:  # local/script execution without package context
         activate_pro,
         activate_premium,
         add_pay_per_use_credit,
+        add_lookup_pay_per_use_credit,
         check_and_consume_quota,
         check_and_consume_lookup_quota,
         check_and_consume_signup_quota,
@@ -65,7 +69,7 @@ except ImportError:  # local/script execution without package context
         get_or_create_account_by_identity,
         pseudo_key_for_ip,
     )
-    from scans import sha256_of, get_scan_record, record_scan, list_safe_registry
+    from scans import sha256_of, get_scan_record, record_scan, list_safe_registry, get_published_content
 
 GITHUB_CLIENT_ID = os.environ.get("GITHUB_CLIENT_ID", "")
 GITHUB_CLIENT_SECRET = os.environ.get("GITHUB_CLIENT_SECRET", "")
@@ -387,8 +391,9 @@ def handle_scan(environ, start_response):
         digest = sha256_of(text)
         cached = get_scan_record(digest)
         result = analyze(text)
+        publish = bool(payload.get("publish"))
         try:
-            history = record_scan(digest, result, name=result.get("name") or "")
+            history = record_scan(digest, result, name=result.get("name") or "", publish=publish, text=text)
         except Exception:  # noqa: BLE001
             history = None  # DB is best-effort; never fail a scan because history logging failed
 
@@ -398,6 +403,7 @@ def handle_scan(environ, start_response):
             "seen_before": cached is not None,
             "seen_count": (history or {}).get("seen_count", 1),
             "first_seen_at": (history or {}).get("first_seen_at"),
+            "published": bool((history or {}).get("has_content")),
         }
         start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps(result).encode()]
@@ -506,15 +512,60 @@ def handle_scan_pro(environ, start_response):
         return [json.dumps({"error": str(e)}).encode()]
 
 
+def handle_get_skill(environ, start_response):
+    """GET /api/skill?sha256=...&api_key=... -- fetch the actual, usable
+    SKILL.md content for a hash, if its submitter explicitly published it
+    (see POST /api/scan {"publish": true}). This is the "use the skill"
+    endpoint, distinct from /api/lookup (which only returns the safety
+    verdict/metadata, never the content). Consumes the same DB-lookup
+    quota as /api/lookup and /api/registry."""
+    try:
+        explicit_api_key = _get_qs_api_key(environ)
+        if not explicit_api_key:
+            start_response("401 Unauthorized", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({
+                "error": "sign_in_required",
+                "message": "Sign in (free) to fetch a published skill's content.",
+            }).encode()]
+        allowed, quota_info = check_and_consume_lookup_quota(explicit_api_key)
+        if not allowed:
+            status = "401 Unauthorized" if quota_info.get("error", "").startswith("unknown api_key") else "429 Too Many Requests"
+            start_response(status, [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": "quota_exceeded", "quota": quota_info}).encode()]
+
+        qs = urllib.parse.parse_qs(environ.get("QUERY_STRING", ""))
+        digest = (qs.get("sha256") or [""])[0].lower()
+        if len(digest) != 64:
+            start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": "sha256 query param must be a 64-char hex digest"}).encode()]
+
+        text = get_published_content(digest)
+        if text is None:
+            start_response("404 Not Found", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": "not_published", "message": "This hash has no publicly published content (either not scanned, not clean, or the submitter didn't opt in to publish it)."}).encode()]
+
+        start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
+        return [json.dumps({"sha256": digest, "text": text, "quota": quota_info}).encode()]
+    except Exception as e:  # noqa: BLE001
+        start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
+        return [json.dumps({"error": str(e)}).encode()]
+
+
 def handle_buy_credit(environ, start_response):
-    """POST {api_key, payment_signature} -> verifies PAY_PER_USE_PRICE_USDC
-    and grants exactly one extra scan (consumed before the account is
-    blocked, see account.check_and_consume_quota). No subscription, no
-    Pro commitment -- pay for exactly the scans you actually need."""
+    """POST {api_key, payment_signature, kind} -> pay-as-you-go, additive to
+    the free/Pro/Premium tiers, always tied to an existing account and
+    paid via on-chain USDC. kind="scan" (default) buys one extra scan for
+    PAY_PER_USE_PRICE_USDC; kind="lookup" buys one extra database lookup
+    (GET /api/lookup, /api/registry, /api/skill) for
+    LOOKUP_PAY_PER_USE_PRICE_USDC. Credits are consumed before the account
+    is ever blocked -- see account.check_and_consume_quota() /
+    check_and_consume_lookup_quota()."""
     try:
         payload = _read_json(environ)
         api_key = payload.get("api_key", "")
         signature = payload.get("payment_signature", "")
+        kind = payload.get("kind", "scan")
+        price = LOOKUP_PAY_PER_USE_PRICE_USDC if kind == "lookup" else PAY_PER_USE_PRICE_USDC
         if not api_key:
             start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
             return [json.dumps({"error": "api_key required, sign in first"}).encode()]
@@ -522,18 +573,23 @@ def handle_buy_credit(environ, start_response):
             start_response("402 Payment Required", [("Content-Type", "application/json")] + _CORS_HEADERS)
             return [json.dumps({
                 "error": "payment_required",
-                "price_usdc": PAY_PER_USE_PRICE_USDC,
+                "kind": kind,
+                "price_usdc": price,
                 "pay_to": PAYOUT_WALLET,
                 "mint": USDC_MINT,
                 "network": "solana-mainnet",
             }).encode()]
-        ok, detail = verify_payment(signature, PAY_PER_USE_PRICE_USDC)
+        ok, detail = verify_payment(signature, price)
         if not ok:
             start_response("402 Payment Required", [("Content-Type", "application/json")] + _CORS_HEADERS)
             return [json.dumps({"error": "payment_not_verified", "detail": detail}).encode()]
+        if kind == "lookup":
+            record = add_lookup_pay_per_use_credit(api_key, detail)
+            start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"credited": True, "kind": "lookup", "payment": detail, "bonus_lookup_credits": record.get("bonus_lookup_credits", 0)}).encode()]
         record = add_pay_per_use_credit(api_key, detail)
         start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
-        return [json.dumps({"credited": True, "payment": detail, "bonus_credits": record.get("bonus_credits", 0)}).encode()]
+        return [json.dumps({"credited": True, "kind": "scan", "payment": detail, "bonus_credits": record.get("bonus_credits", 0)}).encode()]
     except Exception as e:  # noqa: BLE001
         start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({"error": str(e)}).encode()]
@@ -793,6 +849,12 @@ def app(environ, start_response):
             start_response("405 Method Not Allowed", [("Content-Type", "application/json")] + _CORS_HEADERS)
             return [json.dumps({"error": "GET only"}).encode()]
         return handle_lookup(environ, start_response)
+
+    if path.rstrip("/").endswith("/skill"):
+        if method != "GET":
+            start_response("405 Method Not Allowed", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": "GET only"}).encode()]
+        return handle_get_skill(environ, start_response)
 
     if path.rstrip("/").endswith("/buy_credit") or path.rstrip("/").endswith("/buy-credit"):
         if method != "POST":
