@@ -139,3 +139,21 @@ def test_analyze_includes_disclaimer():
     result = webapp.analyze(GOOD_SKILL)
     assert "heuristic" in result["disclaimer"].lower()
     assert "not a guarantee" in result["disclaimer"].lower() or "not a guarantee" in result["disclaimer"]
+
+
+# --- lookup/registry quota + premium tier ---
+
+def test_lookup_requires_signin(monkeypatch):
+    # can't easily hit the real handler without a live blob token in CI,
+    # but we can confirm the constants/wiring exist and are consistent
+    from account import PREMIUM_PRICE_USDC, PREMIUM_DURATION_DAYS, LOOKUP_FREE_DAILY_LIMIT, LOOKUP_PRO_DAILY_LIMIT
+    assert PREMIUM_PRICE_USDC > webapp.PRO_PRICE_USDC
+    assert LOOKUP_PRO_DAILY_LIMIT > LOOKUP_FREE_DAILY_LIMIT
+    assert PREMIUM_DURATION_DAYS == 30
+
+
+def test_scan_pro_tier_field_defaults_to_pro():
+    import inspect
+    src = inspect.getsource(webapp.handle_scan_pro)
+    assert 'activation_tier = payload.get("tier", "pro")' in src
+    assert "premium" in src

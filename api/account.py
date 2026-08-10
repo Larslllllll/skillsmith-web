@@ -38,6 +38,14 @@ PRO_PRICE_USDC = 5.0
 PRO_DURATION_DAYS = 30
 PAY_PER_USE_PRICE_USDC = 0.02  # buy a single extra scan without a Pro subscription
 
+# Database (hash lookup / safe-registry browse) quota -- separate counters
+# from the scan quota, same tier structure: free/Pro/Premium/unlimited.
+LOOKUP_FREE_DAILY_LIMIT = 5
+LOOKUP_PRO_DAILY_LIMIT = 150
+
+PREMIUM_PRICE_USDC = 10.0
+PREMIUM_DURATION_DAYS = 30  # unlimited scans AND unlimited DB lookups for 30 days
+
 # GitHub user IDs (numeric, stable even if the username changes) that get
 # unlimited scans, no payment. Intentionally a short hardcoded list, not a
 # config surface -- this is "the project owner's own account", not a
@@ -267,6 +275,21 @@ def activate_pro(api_key: str, payment_detail: str) -> dict:
     return record
 
 
+def activate_premium(api_key: str, payment_detail: str) -> dict:
+    """$10 USDC / 30 days: unlimited scans AND unlimited DB lookups.
+    Strictly a superset of Pro (Pro is 100 scans + 150 lookups/day) --
+    checked first in check_and_consume_quota / check_and_consume_lookup_quota.
+    """
+    record = get_account(api_key) or {
+        "created_at": time.time(), "free_used_date": "", "free_used_count": 0,
+        "pro_expires_at": 0, "pro_used_date": "", "pro_used_count": 0,
+    }
+    record["premium_expires_at"] = time.time() + PREMIUM_DURATION_DAYS * 86400
+    record["premium_activated_via"] = payment_detail
+    _blob_put(_blob_path(api_key), record)
+    return record
+
+
 def check_and_consume_quota(api_key: str | None) -> tuple[bool, dict]:
     """Returns (allowed, info). Consumes one unit of quota if allowed.
 
@@ -296,6 +319,9 @@ def check_and_consume_quota(api_key: str | None) -> tuple[bool, dict]:
 
     if record.get("unlimited"):
         return True, {"tier": "unlimited"}
+
+    if record.get("premium_expires_at", 0) > time.time():
+        return True, {"tier": "premium"}
 
     today = _today()
     is_pro = record.get("pro_expires_at", 0) > time.time()
@@ -329,3 +355,58 @@ def check_and_consume_quota(api_key: str | None) -> tuple[bool, dict]:
     record["free_used_count"] += 1
     _blob_put(_blob_path(api_key), record)
     return True, {"tier": "free", "limit": FREE_DAILY_LIMIT, "used": record["free_used_count"]}
+
+
+def check_and_consume_lookup_quota(api_key: str | None) -> tuple[bool, dict]:
+    """Same shape as check_and_consume_quota(), but for database access
+    (GET /api/lookup, GET /api/registry) instead of scanning: separate
+    daily counters, same tier structure (free 5/day, Pro 150/day,
+    Premium/unlimited-owner unmetered).
+    """
+    if not api_key:
+        return True, {"tier": "anonymous", "note": "sign up to get a synced quota across devices"}
+
+    record = get_account(api_key)
+    if record is None:
+        if api_key.startswith("ip_"):
+            record = {
+                "created_at": time.time(), "free_used_date": "", "free_used_count": 0,
+                "pro_expires_at": 0, "pro_used_date": "", "pro_used_count": 0,
+            }
+        else:
+            return False, {"error": "unknown api_key, sign in again"}
+
+    if record.get("unlimited"):
+        return True, {"tier": "unlimited"}
+
+    if record.get("premium_expires_at", 0) > time.time():
+        return True, {"tier": "premium"}
+
+    today = _today()
+    is_pro = record.get("pro_expires_at", 0) > time.time()
+
+    if is_pro:
+        if record.get("pro_lookup_date") != today:
+            record["pro_lookup_date"] = today
+            record["pro_lookup_count"] = 0
+        if record.get("pro_lookup_count", 0) >= LOOKUP_PRO_DAILY_LIMIT:
+            return False, {
+                "tier": "pro", "limit": LOOKUP_PRO_DAILY_LIMIT, "used": record["pro_lookup_count"],
+                "error": "daily Pro database-lookup limit reached",
+            }
+        record["pro_lookup_count"] = record.get("pro_lookup_count", 0) + 1
+        _blob_put(_blob_path(api_key), record)
+        return True, {"tier": "pro", "limit": LOOKUP_PRO_DAILY_LIMIT, "used": record["pro_lookup_count"]}
+
+    if record.get("free_lookup_date") != today:
+        record["free_lookup_date"] = today
+        record["free_lookup_count"] = 0
+    if record.get("free_lookup_count", 0) >= LOOKUP_FREE_DAILY_LIMIT:
+        return False, {
+            "tier": "free", "limit": LOOKUP_FREE_DAILY_LIMIT, "used": record["free_lookup_count"],
+            "error": "daily free database-lookup limit reached: upgrade to Pro ($%.2f, 150/day) or Premium ($%.2f, unlimited)"
+            % (PRO_PRICE_USDC, PREMIUM_PRICE_USDC),
+        }
+    record["free_lookup_count"] = record.get("free_lookup_count", 0) + 1
+    _blob_put(_blob_path(api_key), record)
+    return True, {"tier": "free", "limit": LOOKUP_FREE_DAILY_LIMIT, "used": record["free_lookup_count"]}

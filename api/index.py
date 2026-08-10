@@ -28,9 +28,15 @@ try:
         PRO_DURATION_DAYS,
         PRO_DAILY_LIMIT,
         PAY_PER_USE_PRICE_USDC,
+        PREMIUM_PRICE_USDC,
+        PREMIUM_DURATION_DAYS,
+        LOOKUP_FREE_DAILY_LIMIT,
+        LOOKUP_PRO_DAILY_LIMIT,
         activate_pro,
+        activate_premium,
         add_pay_per_use_credit,
         check_and_consume_quota,
+        check_and_consume_lookup_quota,
         check_and_consume_signup_quota,
         create_account,
         get_account,
@@ -44,9 +50,15 @@ except ImportError:  # local/script execution without package context
         PRO_DURATION_DAYS,
         PRO_DAILY_LIMIT,
         PAY_PER_USE_PRICE_USDC,
+        PREMIUM_PRICE_USDC,
+        PREMIUM_DURATION_DAYS,
+        LOOKUP_FREE_DAILY_LIMIT,
+        LOOKUP_PRO_DAILY_LIMIT,
         activate_pro,
+        activate_premium,
         add_pay_per_use_credit,
         check_and_consume_quota,
+        check_and_consume_lookup_quota,
         check_and_consume_signup_quota,
         create_account,
         get_account,
@@ -413,21 +425,48 @@ def handle_scan_pro(environ, start_response):
             }).encode()]
 
         activation_sig = payload.get("activate_payment_signature")
+        activation_tier = payload.get("tier", "pro")  # "pro" or "premium"
         if activation_sig:
-            ok, detail = verify_payment(activation_sig, PRO_PRICE_USDC)
+            price = PREMIUM_PRICE_USDC if activation_tier == "premium" else PRO_PRICE_USDC
+            ok, detail = verify_payment(activation_sig, price)
             if not ok:
                 start_response("402 Payment Required", [("Content-Type", "application/json")] + _CORS_HEADERS)
                 return [json.dumps({"error": "payment_not_verified", "detail": detail}).encode()]
+            if activation_tier == "premium":
+                record = activate_premium(api_key, detail)
+                start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
+                return [json.dumps({
+                    "activated": True, "tier": "premium", "payment": detail,
+                    "premium_expires_at": record["premium_expires_at"],
+                }).encode()]
             record = activate_pro(api_key, detail)
             start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
             return [json.dumps({
-                "activated": True, "payment": detail,
+                "activated": True, "tier": "pro", "payment": detail,
                 "pro_expires_at": record["pro_expires_at"],
                 "pro_daily_limit": PRO_DAILY_LIMIT,
             }).encode()]
 
         record = get_account(api_key)
+        is_premium = bool(record) and record.get("premium_expires_at", 0) > time.time()
         is_pro = bool(record) and record.get("pro_expires_at", 0) > time.time()
+        if is_premium or (bool(record) and record.get("unlimited")):
+            allowed, quota_info = check_and_consume_quota(api_key)
+            files = payload.get("files", [])
+            if not isinstance(files, list) or not files:
+                raise ValueError("files must be a non-empty list of {name, text}")
+            if len(files) > MAX_FILES:
+                raise ValueError(f"max {MAX_FILES} files per batch call")
+            results = []
+            for f in files:
+                name = str(f.get("name", "SKILL.md"))[:200]
+                text = f.get("text", "")
+                if not isinstance(text, str) or len(text) > 100_000:
+                    results.append({"name": name, "error": "text must be a string under 100,000 chars"})
+                    continue
+                results.append({"name": name, **analyze(text)})
+            start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"quota": quota_info, "results": results}).encode()]
         if not is_pro:
             start_response("402 Payment Required", [("Content-Type", "application/json")] + _CORS_HEADERS)
             return [json.dumps({
@@ -500,14 +539,37 @@ def handle_buy_credit(environ, start_response):
         return [json.dumps({"error": str(e)}).encode()]
 
 
+def _get_qs_api_key(environ):
+    qs = urllib.parse.parse_qs(environ.get("QUERY_STRING", ""))
+    api_key = (qs.get("api_key") or [""])[0]
+    auth_header = environ.get("HTTP_AUTHORIZATION", "")
+    if not api_key and auth_header.startswith("Bearer "):
+        api_key = auth_header[len("Bearer "):].strip()
+    return api_key
+
+
 def handle_registry(environ, start_response):
     try:
+        explicit_api_key = _get_qs_api_key(environ)
+        if not explicit_api_key:
+            start_response("401 Unauthorized", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({
+                "error": "sign_in_required",
+                "message": "Sign in (free) to browse the database. 5 lookups/day free, 150/day Pro, unlimited Premium.",
+            }).encode()]
+        allowed, quota_info = check_and_consume_lookup_quota(explicit_api_key)
+        if not allowed:
+            status = "401 Unauthorized" if quota_info.get("error", "").startswith("unknown api_key") else "429 Too Many Requests"
+            start_response(status, [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": "quota_exceeded", "quota": quota_info}).encode()]
+
         qs = urllib.parse.parse_qs(environ.get("QUERY_STRING", ""))
         limit = int((qs.get("limit") or ["50"])[0])
         entries = list_safe_registry(limit=limit)
         start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({
             "disclaimer": DISCLAIMER,
+            "quota": quota_info,
             "count": len(entries),
             "skills": entries,
         }).encode()]
@@ -517,10 +579,24 @@ def handle_registry(environ, start_response):
 
 
 def handle_lookup(environ, start_response):
-    """GET /api/lookup?sha256=... -- VirusTotal-style hash lookup, read-only,
-    does not consume any quota (you're asking "has this exact file been seen
-    before", not asking us to re-scan it)."""
+    """GET /api/lookup?sha256=...&api_key=... -- VirusTotal-style hash
+    lookup. Requires sign-in and consumes the same DB-lookup quota as
+    /api/registry (free 5/day, Pro 150/day, Premium/unlimited-owner
+    unmetered) -- see account.check_and_consume_lookup_quota."""
     try:
+        explicit_api_key = _get_qs_api_key(environ)
+        if not explicit_api_key:
+            start_response("401 Unauthorized", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({
+                "error": "sign_in_required",
+                "message": "Sign in (free) to look up a hash. 5 lookups/day free, 150/day Pro, unlimited Premium.",
+            }).encode()]
+        allowed, quota_info = check_and_consume_lookup_quota(explicit_api_key)
+        if not allowed:
+            status = "401 Unauthorized" if quota_info.get("error", "").startswith("unknown api_key") else "429 Too Many Requests"
+            start_response(status, [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": "quota_exceeded", "quota": quota_info}).encode()]
+
         qs = urllib.parse.parse_qs(environ.get("QUERY_STRING", ""))
         digest = (qs.get("sha256") or [""])[0].lower()
         if len(digest) != 64:
@@ -528,7 +604,7 @@ def handle_lookup(environ, start_response):
             return [json.dumps({"error": "sha256 query param must be a 64-char hex digest"}).encode()]
         record = get_scan_record(digest)
         start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
-        return [json.dumps({"disclaimer": DISCLAIMER, "found": record is not None, "record": record}).encode()]
+        return [json.dumps({"disclaimer": DISCLAIMER, "quota": quota_info, "found": record is not None, "record": record}).encode()]
     except Exception as e:  # noqa: BLE001
         start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({"error": str(e)}).encode()]
