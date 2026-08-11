@@ -169,3 +169,28 @@ def test_publish_content_constants_and_wiring():
     assert "get_published_content" in src
     src2 = inspect.getsource(webapp.handle_scan)
     assert 'payload.get("publish")' in src2
+
+
+# --- MCP server ---
+
+def test_mcp_tools_list_registered():
+    import mcp as mcp_mod
+    names = {t["name"] for t in mcp_mod.TOOLS}
+    assert names == {"scan_skill", "lookup_hash", "get_skill_content", "list_safe_skills", "skillsmith_signup", "whoami"}
+
+
+def test_mcp_initialize_and_unknown_method():
+    import mcp as mcp_mod
+    status, body = mcp_mod.handle_jsonrpc({"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}})
+    assert status == 200
+    assert body["result"]["serverInfo"]["name"] == "skillsmith-mcp"
+
+    status2, body2 = mcp_mod.handle_jsonrpc({"jsonrpc": "2.0", "id": 2, "method": "nonexistent", "params": {}})
+    assert status2 == 200
+    assert body2["error"]["code"] == -32601
+
+
+def test_mcp_route_wired_in_app():
+    import inspect
+    src = inspect.getsource(webapp.app)
+    assert '"/mcp"' in src or "endswith(\"/mcp\")" in src

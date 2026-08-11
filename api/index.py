@@ -160,6 +160,16 @@ _CODE_PATTERNS = [
     (re.compile(r"(?:\\x[0-9a-fA-F]{2}){20,}"), 5, "contains a long run of hex-escaped bytes (possible obfuscated payload)"),
     (re.compile(r"[\u200b\u200c\u200d\ufeff]"), 7, "contains zero-width/invisible unicode characters (common prompt-injection hiding technique)"),
     (re.compile(r"[а-яА-Я].*[a-zA-Z]|[a-zA-Z].*[а-яА-Я]"), 2, "mixes Latin and Cyrillic characters (possible homoglyph obfuscation)"),
+
+    # --- Patterns below adapted from NVIDIA SkillSpector (Apache-2.0) ---
+    # https://github.com/NVIDIA/SkillSpector -- see THIRD_PARTY_NOTICES.md
+    (re.compile(r"requests\s*\.\s*(?:post|put)\s*\([^)]*json\s*="), 6, "NVIDIA E1: requests.post/put with a json= body (possible exfiltration)"),
+    (re.compile(r"httpx\s*\.\s*(?:post|put)\s*\(\s*['\"]https?://"), 5, "NVIDIA E1: httpx POST/PUT to an external URL"),
+    (re.compile(r"https?://(?:api\.|data\.|collect\.|telemetry\.|analytics\.)[\w.-]+/"), 4, "NVIDIA E1: URL to a telemetry/collect/analytics-style subdomain"),
+    (re.compile(r"for\s+\w+\s*,\s*\w+\s+in\s+os\s*\.\s*environ\s*\.\s*items\s*\(\s*\)"), 7, "NVIDIA E2: iterates the entire environment (os.environ.items())"),
+    (re.compile(r"dict\s*\(\s*os\s*\.\s*environ\s*\)"), 7, "NVIDIA E2: dumps the entire environment (dict(os.environ))"),
+    (re.compile(r"env\s*\|\s*grep\s+(?:-i\s+)?(?:key|secret|token|password)"), 8, "NVIDIA E2: greps env output for credential-shaped names"),
+    (re.compile(r"glob\s*\.\s*glob\s*\([^)]*(?:\.env|\.ssh|\.aws|\.config|credentials)"), 8, "NVIDIA E3: globs for .env/.ssh/.aws/credentials files"),
 ]
 
 _PROMPT_INJECTION_PATTERNS = [
@@ -176,6 +186,30 @@ _PROMPT_INJECTION_PATTERNS = [
     (re.compile(r"(?i)this (overrides|supersedes) (all|any) (previous|prior|other) (rules|instructions|policies)"), 9, "explicit instruction-override phrasing"),
     (re.compile(r"<!--[^>]*(ignore|instruction|system|override)[^>]*-->", re.IGNORECASE), 7, "hidden HTML comment containing instruction-like phrasing"),
     (re.compile(r"(?i)\bsudo mode\b|\broot access granted\b"), 6, "privilege-escalation framing phrasing"),
+
+    # --- Patterns below adapted from NVIDIA SkillSpector (Apache-2.0) ---
+    # https://github.com/NVIDIA/SkillSpector -- SPDX-FileCopyrightText: Copyright (c) 2026
+    # NVIDIA CORPORATION & AFFILIATES. Original confidence scores (0-1 float) converted
+    # to this project's 1-10 integer weight scale; rule IDs (P1/P3/P4) kept for traceability.
+    # See THIRD_PARTY_NOTICES.md for the full license text and attribution.
+    (re.compile(r"(?i)ignore\s+(?:all\s+)?previous\s+instructions?"), 8, "P1 instruction override: 'ignore previous instructions'"),
+    (re.compile(r"(?i)ignore\s+(?:all\s+)?(?:safety|security)\s+(?:rules?|constraints?|guidelines?)"), 9, "P1 instruction override: ignore safety/security rules"),
+    (re.compile(r"(?i)override\s+(?:safety|security|system)"), 9, "P1 instruction override: override safety/security/system"),
+    (re.compile(r"(?i)bypass\s+(?:safety|security|restrictions?|constraints?)"), 9, "P1 instruction override: bypass safety/security"),
+    (re.compile(r"(?i)disregard\s+(?:all\s+)?(?:previous|safety|security)"), 8, "P1 instruction override: disregard previous/safety"),
+    (re.compile(r"(?i)forget\s+(?:all\s+)?(?:previous|your)\s+instructions?"), 8, "P1 instruction override: forget previous instructions"),
+    (re.compile(r"(?i)you\s+are\s+now\s+(?:in\s+)?(?:jailbreak|unrestricted|unfiltered)\s+mode"), 10, "P1 instruction override: jailbreak/unrestricted mode framing"),
+    (re.compile(r"(?i)enable\s+(?:developer|debug|admin|root)\s+mode"), 7, "P1 instruction override: enable developer/debug/admin/root mode"),
+    (re.compile(r"(?i)your\s+new\s+(?:instructions?|rules?)\s+are"), 6, "P1 instruction override: 'your new instructions are'"),
+    (re.compile(r"(?i)do\s+not\s+follow\s+(?:any|your|the)\s+(?:rules?|guidelines?)"), 9, "P1 instruction override: 'do not follow the rules'"),
+    (re.compile(r"(?i)you\s+must\s+(?:always\s+)?ignore"), 7, "P1 instruction override: 'you must ignore'"),
+    (re.compile(r"(?i)(?:send|transmit|upload|post|forward)\s+(?:the\s+)?(?:conversation|context|chat|history|messages?)\s+to"), 9, "P3 exfiltration command: send conversation/context to"),
+    (re.compile(r"(?i)(?:send|transmit|upload|post)\s+(?:all\s+)?(?:user\s+)?(?:data|information|input|files?)\s+to\s+(?:https?://|external)"), 9, "P3 exfiltration command: send data to external URL"),
+    (re.compile(r"(?i)(?:silently|quietly|secretly|covertly)\s+(?:send|transmit|log|record)"), 9, "P3 exfiltration command: silently/secretly send or log"),
+    (re.compile(r"(?i)without\s+(?:telling|informing|notifying)\s+(?:the\s+)?user.*?(?:send|transmit|upload)"), 9, "P3 exfiltration command: exfiltrate without telling the user"),
+    (re.compile(r"(?i)never\s+(?:recommend|suggest|mention|tell|warn|inform)\s+(?:the\s+)?(?:user|them)"), 7, "P4 behavior manipulation: 'never tell/warn the user'"),
+    (re.compile(r"(?i)(?:prioritize|prefer)\s+(?:\w+\s+){0,3}(?:over|above)\s+(?:user\s+)?(?:safety|security|privacy|preferences?)"), 8, "P4 behavior manipulation: prioritize something over user safety/privacy"),
+    (re.compile(r"(?i)(?:without\s+)?(?:the\s+)?user\s+(?:knowing|realizing|noticing).*?(?:change|modify|alter|influence)"), 8, "P4 behavior manipulation: act without the user knowing"),
 ]
 
 
@@ -825,6 +859,23 @@ def handle_github_callback(environ, start_response):
         return _redirect(start_response, f"{SITE_URL}/?login_error={urllib.parse.quote(str(e))}", [("Set-Cookie", clear_cookie)])
 
 
+def handle_mcp(environ, start_response):
+    try:
+        from . import mcp as _mcp
+    except ImportError:
+        import mcp as _mcp
+    try:
+        length = int(environ.get("CONTENT_LENGTH") or 0)
+        raw = environ["wsgi.input"].read(length) if length else b"{}"
+        req = json.loads(raw or b"{}")
+    except Exception:  # noqa: BLE001
+        start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
+        return [json.dumps({"jsonrpc": "2.0", "id": None, "error": {"code": -32700, "message": "Parse error"}}).encode()]
+    status, body = _mcp.handle_jsonrpc(req)
+    start_response(f"{status} OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
+    return [json.dumps(body).encode()]
+
+
 def app(environ, start_response):
     method = environ.get("REQUEST_METHOD", "GET")
     path = environ.get("PATH_INFO", "/")
@@ -832,6 +883,12 @@ def app(environ, start_response):
     if method == "OPTIONS":
         start_response("204 No Content", _CORS_HEADERS)
         return [b""]
+
+    if path.rstrip("/").endswith("/mcp"):
+        if method != "POST":
+            start_response("405 Method Not Allowed", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": "POST only (JSON-RPC 2.0)"}).encode()]
+        return handle_mcp(environ, start_response)
 
     if path.rstrip("/").endswith("/auth/github/start"):
         return handle_github_start(environ, start_response)

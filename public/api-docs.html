@@ -59,6 +59,45 @@ body field, a query param (<code>GET</code> requests), or an
 (<code>/api/auth/github/start</code>), which recovers the same key/quota
 on any device you sign in from again.</p>
 
+<h2>MCP server (for AI agents)</h2>
+<p>skillsmith runs an <a href="https://modelcontextprotocol.io">MCP</a>
+server at <code>https://skillsmith.ch/mcp</code> (JSON-RPC 2.0 over HTTP)
+so Claude Code, Cursor, Codex, or any MCP-compatible agent can scan and
+reuse skills directly, without shelling out to curl. Same detection
+engine, same accounts/quota as the REST API and the web UI -- one
+account works everywhere.</p>
+<h3>Connect your agent</h3>
+<pre>{
+  "mcpServers": {
+    "skillsmith": {
+      "type": "http",
+      "url": "https://skillsmith.ch/mcp"
+    }
+  }
+}</pre>
+<p>Claude Code: add the above to <code>.mcp.json</code>, run <code>/mcp</code>,
+select "skillsmith". Cursor/Codex/other MCP hosts: paste the same JSON
+into their MCP config panel.</p>
+<h3>Get an api_key first</h3>
+<p>Every tool call needs an <code>api_key</code> argument. Call the
+<code>skillsmith_signup</code> tool once (free, no email) and reuse the
+key for every other call -- or ask your agent to "sign up for skillsmith
+and remember the key."</p>
+<h3>Tools</h3>
+<table>
+<tr><th>Tool</th><th>Arguments</th><th>Does</th></tr>
+<tr><td><code>skillsmith_signup</code></td><td>(none)</td><td>Create an account, get an api_key</td></tr>
+<tr><td><code>scan_skill</code></td><td>api_key, text or url, publish?</td><td>Lint + security-scan a SKILL.md</td></tr>
+<tr><td><code>lookup_hash</code></td><td>api_key, sha256</td><td>Check if a hash was scanned before</td></tr>
+<tr><td><code>get_skill_content</code></td><td>api_key, sha256</td><td>Fetch a published skill's actual text</td></tr>
+<tr><td><code>list_safe_skills</code></td><td>api_key, limit?</td><td>Browse the Safe Skills Database</td></tr>
+<tr><td><code>whoami</code></td><td>api_key</td><td>Check tier/quota usage</td></tr>
+</table>
+<p>Raw JSON-RPC example (what your MCP host does under the hood):</p>
+<pre>curl -X POST https://skillsmith.ch/mcp \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"skillsmith_signup","arguments":{}}}'</pre>
+
 <h2>Endpoints</h2>
 
 <h3><span class="method post">POST</span><code>/api/signup</code></h3>
