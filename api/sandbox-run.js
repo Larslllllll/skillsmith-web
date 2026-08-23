@@ -87,28 +87,54 @@ function readBody(req) {
   });
 }
 
-function findOpencodeBin() {
-  const candidates = [
-    path.join(process.cwd(), "node_modules", "opencode-ai", "bin", "opencode.exe"),
-    path.join(process.cwd(), "node_modules", "opencode-ai", "bin", "opencode"),
-    path.join(process.cwd(), "node_modules", ".bin", "opencode"),
-  ];
-  for (const c of candidates) {
-    try { if (fs.existsSync(c)) return c; } catch {}
-  }
-  return null;
+// The opencode binary cannot ship inside the lambda bundle (the Python
+// framework preset skips npm install, and the 180MB binary would bloat it
+// anyway). Instead we download the pinned official release once per warm
+// container into /tmp and reuse it -- same isolation properties, no bundle
+// dependency on npm.
+const OC_VERSION = "v1.18.21";
+const OC_URL = `https://github.com/sst/opencode/releases/download/${OC_VERSION}/opencode-linux-x64.tar.gz`;
+const OC_DIR = "/tmp/opencode-bin";
+const OC_BIN = path.join(OC_DIR, "opencode");
+let _ocPromise = null;
+
+function execFileP(file, args, opts) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(file, args, { ...opts });
+    let out = "", err = "";
+    child.stdout.on("data", d => { out += d; });
+    child.stderr.on("data", d => { err += d; });
+    child.on("error", reject);
+    child.on("close", code => code === 0 ? resolve(out) : reject(new Error(`${file} exited ${code}: ${err.slice(0, 300)}`)));
+  });
 }
 
-function runOpencode(prompt, cwd, timeoutMs) {
+async function ensureOpencode() {
+  if (fs.existsSync(OC_BIN)) return OC_BIN;
+  if (!_ocPromise) {
+    _ocPromise = (async () => {
+      fs.mkdirSync(OC_DIR, { recursive: true });
+      const tgz = path.join(OC_DIR, "oc.tar.gz");
+      const resp = await fetch(OC_URL);
+      if (!resp.ok) throw new Error(`download failed: ${resp.status}`);
+      const buf = Buffer.from(await resp.arrayBuffer());
+      fs.writeFileSync(tgz, buf);
+      await execFileP("tar", ["-xzf", tgz, "-C", OC_DIR]);
+      fs.unlinkSync(tgz);
+      fs.chmodSync(OC_BIN, 0o755);
+      return OC_BIN;
+    })().catch(e => { _ocPromise = null; throw e; });
+  }
+  return _ocPromise;
+}
+
+async function runOpencode(prompt, cwd, timeoutMs) {
+  try {
+    var bin = await ensureOpencode();
+  } catch (e) {
+    return { ok: false, out: "", err: "binary setup failed: " + e.message };
+  }
   return new Promise((resolve) => {
-    const bin = findOpencodeBin();
-    if (!bin) {
-      let listing = "";
-      try { listing = fs.readdirSync(path.join(process.cwd(), "node_modules")).slice(0, 40).join(","); } catch {}
-      resolve({ ok: false, out: "", err: "opencode binary not found. node_modules: " + listing });
-      return;
-    }
-    try { fs.chmodSync(bin, 0o755); } catch {} // exec bit can be lost in bundling
     const child = spawn(bin, ["run", "--pure", "--format", "json", "-m", MODEL, prompt],
       { cwd, timeout: timeoutMs, env: { ...process.env, CI: "1" } });
     let out = "", err = "";
