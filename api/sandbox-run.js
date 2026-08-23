@@ -192,7 +192,9 @@ async function runOpencode(prompt, cwd, timeoutMs) {
   }
   return new Promise((resolve) => {
     const child = spawn(bin, ["run", "--pure", "--print-logs", "--format", "json", "-m", MODEL, prompt],
-      { cwd, timeout: timeoutMs, env: ocEnv() });
+      { cwd, timeout: timeoutMs, env: ocEnv(),
+        // stdin must be closed: opencode blocks waiting for pipe EOF
+        stdio: ["ignore", "pipe", "pipe"] });
     let out = "", err = "";
     child.stdout.on("data", d => { out += d; });
     child.stderr.on("data", d => { err = (err + d).slice(0, 4000); });
@@ -245,7 +247,8 @@ module.exports = async (req, res) => {
     catch (e) { return jsonResp(res, { probe: payload.probe, setup_error: e.message }, 200); }
     const probeDir = fs.mkdtempSync(path.join(os.tmpdir(), "probe-"));
     const presult = await new Promise((resolve) => {
-      const child = spawn(bin, payload.probe.split(" "), { cwd: probeDir, timeout: 120000, env: ocEnv() });
+      const child = spawn(bin, payload.probe.split(" "), { cwd: probeDir, timeout: 120000,
+        env: ocEnv(), stdio: ["ignore", "pipe", "pipe"] });
       let out = "", err = "";
       child.stdout.on("data", d => { out += d; });
       child.stderr.on("data", d => { err += d; });
