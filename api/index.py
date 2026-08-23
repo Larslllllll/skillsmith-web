@@ -40,6 +40,7 @@ try:
         check_and_consume_quota,
         check_and_consume_lookup_quota,
         check_and_consume_signup_quota,
+        check_public_scan_rate,
         create_account,
         get_account,
         get_or_create_account_by_identity,
@@ -64,6 +65,7 @@ except ImportError:  # local/script execution without package context
         check_and_consume_quota,
         check_and_consume_lookup_quota,
         check_and_consume_signup_quota,
+        check_public_scan_rate,
         create_account,
         get_account,
         get_or_create_account_by_identity,
@@ -343,15 +345,42 @@ def _read_json(environ):
     return json.loads(raw or b"{}")
 
 
+def _client_ip(environ):
+    """Best-effort client IP for rate limiting, spoofing-resistant.
+
+    Vercel sets `x-real-ip` at the edge from the actual TCP peer -- that is
+    the trustworthy source. X-Forwarded-For may also be present, but its
+    FIRST entry is fully client-controlled (anyone can send
+    "X-Forwarded-For: 1.2.3.4" to rotate fake identities and defeat IP rate
+    limits); only the LAST entry is appended by our own edge and can be
+    trusted when x-real-ip is missing (e.g. local dev)."""
+    real = environ.get("HTTP_X_REAL_IP", "")
+    if real:
+        return real.split(",")[0].strip()
+    forwarded = environ.get("HTTP_X_FORWARDED_FOR", "")
+    if forwarded:
+        return forwarded.split(",")[-1].strip()
+    return environ.get("REMOTE_ADDR", "")
+
+
 def _client_api_key(environ, payload):
-    api_key = payload.get("api_key") or ""
+    """Extract the caller's api key; always returns a short str or "".
+
+    Deliberately defensive about types/length: an attacker-controlled JSON
+    body ({"api_key": ["x"]}, a 2 MB string, nested objects...) must never
+    reach blob-store calls as anything but a plain bounded string, and must
+    not leak internal error details when it isn't."""
+    api_key = payload.get("api_key")
+    if not isinstance(api_key, str):
+        api_key = ""
+    api_key = api_key[:200]
     auth_header = environ.get("HTTP_AUTHORIZATION", "")
-    if not api_key and auth_header.startswith("Bearer "):
-        api_key = auth_header[len("Bearer "):].strip()
+    if isinstance(auth_header, str) and auth_header.startswith("Bearer "):
+        candidate = auth_header[len("Bearer "):].strip()[:200]
+        if not api_key:
+            api_key = candidate
     if not api_key:
-        forwarded = environ.get("HTTP_X_FORWARDED_FOR", "")
-        client_ip = forwarded.split(",")[0].strip() if forwarded else environ.get("REMOTE_ADDR", "")
-        api_key = pseudo_key_for_ip(client_ip)
+        api_key = pseudo_key_for_ip(_client_ip(environ))
     return api_key
 
 
@@ -401,10 +430,11 @@ def handle_scan(environ, start_response):
         if not isinstance(text, str) or len(text) > 100_000:
             raise ValueError("text must be a string under 100,000 chars")
 
-        explicit_api_key = payload.get("api_key") or ""
+        explicit_api_key = payload.get("api_key") if isinstance(payload.get("api_key"), str) else ""
+        explicit_api_key = explicit_api_key[:200]
         auth_header = environ.get("HTTP_AUTHORIZATION", "")
-        if not explicit_api_key and auth_header.startswith("Bearer "):
-            explicit_api_key = auth_header[len("Bearer "):].strip()
+        if isinstance(auth_header, str) and not explicit_api_key and auth_header.startswith("Bearer "):
+            explicit_api_key = auth_header[len("Bearer "):].strip()[:200]
         if not explicit_api_key:
             start_response("401 Unauthorized", [("Content-Type", "application/json")] + _CORS_HEADERS)
             return [json.dumps({
@@ -727,8 +757,7 @@ def handle_signup(environ, start_response, method):
         start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps(body).encode()]
 
-    forwarded = environ.get("HTTP_X_FORWARDED_FOR", "")
-    client_ip = forwarded.split(",")[0].strip() if forwarded else environ.get("REMOTE_ADDR", "")
+    client_ip = _client_ip(environ)
     allowed, rl_error = check_and_consume_signup_quota(client_ip)
     if not allowed:
         start_response("429 Too Many Requests", [("Content-Type", "application/json")] + _CORS_HEADERS)
@@ -871,6 +900,11 @@ def handle_mcp(environ, start_response):
     except Exception:  # noqa: BLE001
         start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({"jsonrpc": "2.0", "id": None, "error": {"code": -32700, "message": "Parse error"}}).encode()]
+    if not isinstance(req, dict):
+        # JSON-RPC batching is deliberately unsupported: reject with a proper
+        # -32600 instead of crashing the function on a list payload.
+        start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
+        return [json.dumps({"jsonrpc": "2.0", "id": None, "error": {"code": -32600, "message": "Invalid Request: batch requests are not supported, send a single JSON object"}}).encode()]
     status, body = _mcp.handle_jsonrpc(req)
     start_response(f"{status} OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
     return [json.dumps(body).encode()]
@@ -944,7 +978,18 @@ def handle_badge(environ, start_response):
 
 def handle_public_scan(environ, start_response):
     """Public, key-less verdict lookup for one hash -- enough detail for the
-    badge landing page, deliberately less than the authenticated lookup."""
+    badge landing page, deliberately less than the authenticated lookup.
+
+    Rate limited per IP (soft cap): this endpoint exists so a shared badge
+    link works for anyone, but without a cap it would be a free unthrottled
+    alternative to the quota'd /api/lookup (pentest MEDIUM-03). The cap is
+    generous (200/day/IP) so normal humans following badge links are never
+    affected; scrapers are not the audience here.
+    """
+    allowed, rl_error = check_public_scan_rate(_client_ip(environ))
+    if not allowed:
+        start_response("429 Too Many Requests", [("Content-Type", "application/json")] + _CORS_HEADERS)
+        return [json.dumps({"error": rl_error}).encode()]
     qs = urllib.parse.parse_qs(environ.get("QUERY_STRING", ""))
     digest = (qs.get("sha256", [""])[0] or "").lower().strip()
     if len(digest) != 64 or not any(c.isalpha() or c.isdigit() for c in digest):
@@ -971,6 +1016,24 @@ def handle_public_scan(environ, start_response):
 
 
 def app(environ, start_response):
+    """Top-level guard: never leak internal error details to clients.
+
+    Any unhandled exception becomes an opaque 500 JSON body (pentest LOW-01);
+    the actual traceback goes to the platform logs via the raise/re-raise in
+    the except branch."""
+    try:
+        return _app_inner(environ, start_response)
+    except Exception:
+        import traceback
+        traceback.print_exc()
+        try:
+            start_response("500 Internal Server Error", [("Content-Type", "application/json")] + _CORS_HEADERS)
+        except Exception:  # noqa: BLE001 - headers may already have been sent
+            pass
+        return [json.dumps({"error": "internal server error"}).encode()]
+
+
+def _app_inner(environ, start_response):
     method = environ.get("REQUEST_METHOD", "GET")
     path = environ.get("PATH_INFO", "/")
 
@@ -1041,4 +1104,4 @@ def app(environ, start_response):
         return handle_scan(environ, start_response)
 
     start_response("404 Not Found", [("Content-Type", "application/json")] + _CORS_HEADERS)
-    return [json.dumps({"error": "not found", "routes": ["/api/scan", "/api/scan_pro", "/api/signup"]}).encode()]
+    return [json.dumps({"error": "not found"}).encode()]  # no route enumeration (pentest LOW-02)

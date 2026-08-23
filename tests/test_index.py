@@ -194,8 +194,8 @@ def test_mcp_initialize_and_unknown_method():
 
 def test_mcp_route_wired_in_app():
     import inspect
-    src = inspect.getsource(webapp.app)
-    assert '"/mcp"' in src or "endswith(\"/mcp\")" in src
+    mod_src = inspect.getsource(sys.modules[webapp.__name__])
+    assert 'endswith("/mcp")' in mod_src
 
 
 
@@ -240,6 +240,7 @@ def test_badge_unknown_hash_shows_not_scanned(monkeypatch):
 
 
 def test_public_scan_unknown_hash_404(monkeypatch):
+    monkeypatch.setattr(webapp, "check_public_scan_rate", lambda ip: (True, ""))
     monkeypatch.setattr(webapp, "get_scan_record", lambda d: None)
     status, data = _wsgi("GET", "/api/public_scan?sha256=" + "b" * 64)
     assert status == 404
@@ -247,6 +248,7 @@ def test_public_scan_unknown_hash_404(monkeypatch):
 
 
 def test_public_scan_and_badge_return_verdict(monkeypatch):
+    monkeypatch.setattr(webapp, "check_public_scan_rate", lambda ip: (True, ""))
     monkeypatch.setattr(webapp, "get_scan_record", lambda d: dict(FAKE_REC) if d == "c" * 64 else None)
     status, data = _wsgi("GET", "/api/public_scan?sha256=" + "c" * 64)
     rec = json.loads(data)
@@ -257,3 +259,46 @@ def test_public_scan_and_badge_return_verdict(monkeypatch):
     status2, svg = _wsgi("GET", "/badge?sha256=" + "c" * 64)
     assert status2 == 200
     assert b"clean" in svg and b"skillsmith.ch" in svg
+
+
+# --- Pentest fixes (2026-08-11 report) ---
+
+def test_mcp_batch_rejected_not_crash():
+    status, body = _wsgi("POST", "/mcp")
+    # _wsgi sends empty body; emulate a batch payload directly instead
+    captured = {}
+    def sr(s, h): captured['status'] = int(s.split()[0])
+    import io as _io
+    payload = json.dumps([{"jsonrpc": "2.0", "id": 0, "method": "tools/list", "params": {}}]).encode()
+    b = b"".join(webapp.app({"REQUEST_METHOD": "POST", "PATH_INFO": "/mcp",
+                             "CONTENT_LENGTH": str(len(payload)), "wsgi.input": _io.BytesIO(payload),
+                             "QUERY_STRING": ""}, sr))
+    assert captured['status'] == 200
+    err = json.loads(b)["error"]
+    assert err["code"] == -32600
+
+
+def test_404_does_not_leak_routes():
+    status, body = _wsgi("GET", "/api/nonexistent")
+    assert status == 404
+    data = json.loads(body)
+    assert data == {"error": "not found"}
+    assert "routes" not in data
+
+
+def test_client_api_key_rejects_non_string():
+    environ = {"HTTP_AUTHORIZATION": ""}
+    assert webapp._client_api_key(environ, {"api_key": ["x"]}) .startswith("anon") or len(webapp._client_api_key(environ, {"api_key": ["x"]})) <= 48
+    assert webapp._client_api_key(environ, {"api_key": "k" * 500}) == "k" * 200
+
+
+def test_app_never_leaks_tracebacks(monkeypatch):
+    def boom(environ, start_response):
+        raise RuntimeError("'list' object has no attribute 'encode'")
+    monkeypatch.setattr(webapp, "_app_inner", boom)
+    captured = {}
+    def sr(s, h): captured['status'] = int(s.split()[0])
+    body = b"".join(webapp.app({"REQUEST_METHOD": "GET", "PATH_INFO": "/", "CONTENT_LENGTH": "0",
+                                "QUERY_STRING": "", "wsgi.input": io.BytesIO(b"")}, sr))
+    assert captured['status'] == 500
+    assert json.loads(body) == {"error": "internal server error"}
