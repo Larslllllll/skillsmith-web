@@ -205,6 +205,46 @@ async function runOpencode(prompt, cwd, timeoutMs) {
   });
 }
 
+// Find the analysis object itself (it contains simulated_actions) instead
+// of trusting "last JSON wins": opencode streams NDJSON events, and a
+// transient {"type":"error"} can come AFTER the answer.
+function findAnalysis(text) {
+  let idx = 0;
+  while ((idx = text.indexOf('"simulated_actions"', idx)) !== -1) {
+    // walk backwards to the enclosing object start
+    let start = text.lastIndexOf("{", idx);
+    while (start !== -1) {
+      const cand = balancedFrom(text, start);
+      if (cand) {
+        try {
+          const obj = JSON.parse(cand);
+          if (obj && Array.isArray(obj.simulated_actions)) return obj;
+        } catch {}
+      }
+      start = text.lastIndexOf("{", start - 1);
+    }
+    idx += 1;
+  }
+  return null;
+}
+
+function balancedFrom(text, start) {
+  let depth = 0, inStr = false, esc = false;
+  for (let i = start; i < text.length; i++) {
+    const c = text[i];
+    if (esc) { esc = false; continue; }
+    if (c === "\\") { esc = true; continue; }
+    if (c === '"') inStr = !inStr;
+    if (inStr) continue;
+    if (c === "{") depth++;
+    else if (c === "}") {
+      depth--;
+      if (depth === 0) return text.slice(start, i + 1);
+    }
+  }
+  return null;
+}
+
 function lastJson(text) {
   // find the last balanced {...} block that parses
   for (let end = text.length - 1; end > 0; end--) {
@@ -240,7 +280,6 @@ module.exports = async (req, res) => {
 
   // diagnostic mode: payload {"probe": "...args..."} runs opencode directly
   // (e.g. ["--version"]) so we can see how far the binary gets in-lambda.
-  let result;
   if (payload && typeof payload.probe === "string") {
     let bin;
     try { bin = await ensureOpencode(); }
@@ -271,7 +310,7 @@ module.exports = async (req, res) => {
   }
 
   const id = crypto.createHash("sha256").update("sbx:" + text).digest("hex").slice(0, 16);
-  const workdir = fs.mkdtempSync(os.tmpdir() + "/sbx-");
+  const workdir = os.tmpdir() + "/sbx-" + id;
   // The ONLY file in the sandbox dir is the untrusted skill itself.
   fs.writeFileSync(path.join(workdir, "untrusted-skill.md"), text);
 
@@ -292,15 +331,23 @@ Produce ONE JSON object (and nothing after it) with exactly these keys:
 }`;
 
   const started = Date.now();
-  result = await runOpencode(prompt, workdir, 230000);
+  let result = null, parsed = null, attempt = 0;
+  const MAX_ATTEMPTS = 3;
+  while (!parsed && attempt < MAX_ATTEMPTS) {
+    attempt++;
+    result = await runOpencode(prompt, workdir + "-a" + attempt, 210000);
+    parsed = result.out ? findAnalysis(result.out) : null;
+    if (!parsed && attempt < MAX_ATTEMPTS) {
+      await new Promise(r => setTimeout(r, 3000));
+    }
+  }
   const duration_s = Math.round((Date.now() - started) / 1000);
-
-  const parsed = result.out ? lastJson(result.out) : null;
 
   const report = {
     analysis_id: id,
     sha256: crypto.createHash("sha256").update(text).digest("hex"),
     status: parsed ? "complete" : "failed",
+    attempts: attempt,
     engine: `opencode/${MODEL}`,
     runtime: "vercel-container",
     duration_s,
@@ -315,6 +362,9 @@ Produce ONE JSON object (and nothing after it) with exactly these keys:
     note: "Behavioral simulation by an LLM analyst in an isolated container. The skill was never executed against real systems.",
   };
 
+  for (let k = 1; k <= MAX_ATTEMPTS; k++) {
+    try { fs.rmSync(workdir + "-a" + k, { recursive: true, force: true }); } catch {}
+  }
   try { fs.rmSync(workdir, { recursive: true, force: true }); } catch {}
   await storeReport(id, report);
   return jsonResp(res, report, parsed ? 200 : 502);
