@@ -55,6 +55,13 @@ def extract_iocs(text: str) -> dict:
     for d in _DOMAIN_RE.findall(text):
         if "/" not in d and "@" not in d:
             domains.append(d)
+    # bare IPs without scheme (parity with sandbox-run.js IOC extraction)
+    for ip_s in _dedupe(re.findall(r"\b(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)\b", text)):
+        try:
+            ipaddress.ip_address(ip_s)
+            ips.append(ip_s)
+        except ValueError:
+            pass
     return {
         "urls": _dedupe(urls)[:20],
         "webhooks": _dedupe(webhooks)[:10],

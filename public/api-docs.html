@@ -189,5 +189,17 @@ curl -X POST https://skillsmith.ch/api/buy_credit \
 <p>Full implementation: <a href="https://github.com/Larslllllll/skillsmith-web">github.com/Larslllllll/skillsmith-web</a>
 (this web app) and <a href="https://github.com/Larslllllll/skillsmith">github.com/Larslllllll/skillsmith</a>
 (the underlying CLI/library and detection engine, also usable standalone or as a GitHub Action).</p>
+
+<section class="card" id="behavioral">
+<h2>Behavioral Analysis</h2>
+<p>Submit raw skill content and an AI analyst inside an isolated Vercel container simulates what an agent following it would do: capabilities, action trace, IOCs and a severity verdict ("any.run for agent skills"). The content is never executed against real systems.</p>
+<pre>POST /api/sandbox-run
+Content-Type: application/json
+
+{ "text": "--- name: my-skill ... (raw SKILL.md content, max 100 KB)" }</pre>
+<p><b>Response:</b> report with <code>analysis_id</code>, <code>static_iocs</code>, <code>ai_analysis</code> (simulated_actions, capabilities_summary, severity 0-10, recommendation). Rate limit: 10/day/IP.</p>
+<p>Shareable permalink: <code>GET /api/analysis?id=&lt;analysis_id&gt;</code></p>
+<p>Interactive UI: <a href="/analysis.html">/analysis.html</a></p>
+</section>
 </body>
 </html>
