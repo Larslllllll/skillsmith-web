@@ -156,7 +156,15 @@ async function runOpencode(prompt, cwd, timeoutMs) {
   }
   return new Promise((resolve) => {
     const child = spawn(bin, ["run", "--pure", "--format", "json", "-m", MODEL, prompt],
-      { cwd, timeout: timeoutMs, env: { ...process.env, CI: "1" } });
+      { cwd, timeout: timeoutMs, env: {
+        ...process.env,
+        CI: "1",
+        // lambda /home is read-only; keep ALL opencode state under /tmp
+        HOME: "/tmp/oc-home",
+        XDG_DATA_HOME: "/tmp/oc-home/.local/share",
+        XDG_CONFIG_HOME: "/tmp/oc-home/.config",
+        XDG_CACHE_HOME: "/tmp/oc-home/.cache",
+      } });
     let out = "", err = "";
     child.stdout.on("data", d => { out += d; });
     child.stderr.on("data", d => { err = (err + d).slice(0, 4000); });
