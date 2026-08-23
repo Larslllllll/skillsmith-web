@@ -834,6 +834,44 @@ function render(data) {
   searchWrap.appendChild(searchInput); searchWrap.appendChild(searchBtn);
   db.appendChild(searchWrap);
 
+  // --- Badge tab: embeddable trust badge for clean scans ---
+  const oldBadge = document.getElementById('tab-badge');
+  if (oldBadge) oldBadge.remove();
+  const oldBadgeBtn = document.getElementById('tabbtn-badge');
+  if (oldBadgeBtn) oldBadgeBtn.remove();
+  if (data.sha256 && data.risk_level === 'clean') {
+    const sha = data.sha256;
+    const badgeUrl = location.origin + '/badge?sha256=' + sha;
+    const landingUrl = location.origin + '/scan.html?sha256=' + sha;
+    const snippet = '[![skill check](' + badgeUrl + ')](' + landingUrl + ')';
+    const badgeTab = document.createElement('div');
+    badgeTab.id = 'tab-badge'; badgeTab.className = 'tab-content'; badgeTab.style.display = 'none';
+    const title = document.createElement('div');
+    title.textContent = 'Show it off: embed this verdict in your README';
+    title.style.cssText = 'margin-bottom:.6rem;font-size:.85rem;font-weight:700;';
+    const img = document.createElement('img');
+    img.src = badgeUrl; img.alt = 'skillsmith verdict badge';
+    img.style.cssText = 'display:block;margin:.4rem 0;max-width:100%;';
+    const pre = document.createElement('pre');
+    pre.textContent = snippet;
+    pre.style.cssText = 'background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:.7rem;font-size:.72rem;overflow-x:auto;white-space:pre-wrap;word-break:break-all;margin:.5rem 0;';
+    const copyBtn = document.createElement('button');
+    copyBtn.textContent = 'Copy markdown';
+    copyBtn.className = 'btn-ghost';
+    copyBtn.onclick = () => { navigator.clipboard.writeText(snippet); copyBtn.textContent = 'Copied!'; setTimeout(() => copyBtn.textContent = 'Copy markdown', 1500); };
+    const link = document.createElement('a');
+    link.href = landingUrl; link.textContent = 'public verdict page →';
+    link.style.cssText = 'margin-left:.8rem;font-size:.75rem;color:var(--accent);';
+    badgeTab.appendChild(title); badgeTab.appendChild(img); badgeTab.appendChild(pre);
+    badgeTab.appendChild(copyBtn); badgeTab.appendChild(link);
+    document.getElementById('result').appendChild(badgeTab);
+    const tabBar = document.getElementById('resultTabs');
+    const btn = document.createElement('button');
+    btn.id = 'tabbtn-badge'; btn.className = 'tab-btn'; btn.dataset.tab = 'badge';
+    btn.textContent = 'Badge'; btn.onclick = () => switchTab('badge');
+    tabBar.appendChild(btn);
+  }
+
   switchTab('overview');
 }
 

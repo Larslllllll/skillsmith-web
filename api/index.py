@@ -876,6 +876,100 @@ def handle_mcp(environ, start_response):
     return [json.dumps(body).encode()]
 
 
+def _badge_svg(left: str, right: str, color: str) -> str:
+    """Minimal shields.io-style flat SVG badge, no external deps."""
+    left_w = 11 * len(left) + 20
+    right_w = 11 * len(right) + 20
+    total = left_w + right_w
+    return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{total}" height="20" role="img" aria-label="{left}: {right}">
+  <title>{left}: {right}</title>
+  <linearGradient id="s" x2="0" y2="100%">
+    <stop offset="0" stop-color="#bbb" stop-opacity=".1"/>
+    <stop offset="1" stop-opacity=".1"/>
+  </linearGradient>
+  <clipPath id="r"><rect width="{total}" height="20" rx="3" fill="#fff"/></clipPath>
+  <g clip-path="url(#r)">
+    <rect width="{left_w}" height="20" fill="#1f2430"/>
+    <rect x="{left_w}" width="{right_w}" height="20" fill="{color}"/>
+    <rect width="{total}" height="20" fill="url(#s)"/>
+  </g>
+  <g fill="#fff" text-anchor="middle" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" font-size="11">
+    <text x="{left_w // 2}" y="14">{left}</text>
+    <text x="{left_w + right_w // 2}" y="14">{right}</text>
+  </g>
+</svg>"""
+
+
+_BADGE_COLORS = {
+    "clean": "#2ea043",
+    "low": "#9e6a03",
+    "medium": "#d29922",
+    "high": "#da3633",
+    "critical": "#a40626",
+}
+
+
+def _escape_svg(text: str) -> str:
+    return (str(text).replace("&", "&amp;").replace("<", "&lt;")
+            .replace(">", "&gt;").replace('"', "&quot;"))
+
+
+def handle_badge(environ, start_response):
+    qs = urllib.parse.parse_qs(environ.get("QUERY_STRING", ""))
+    digest = (qs.get("sha256", [""])[0] or "").lower().strip()
+    headers = [("Content-Type", "image/svg+xml"), ("Cache-Control", "public, max-age=300")] + _CORS_HEADERS
+
+    if len(digest) != 64 or not all(c in "0123456789abcdef" for c in digest):
+        svg = _badge_svg("skillsmith", "invalid hash", "#6e7681")
+        start_response("400 Bad Request", headers)
+        return [svg.encode()]
+
+    rec = get_scan_record(digest)
+    if rec is None:
+        svg = _badge_svg("skillsmith", "not scanned", "#6e7681")
+        start_response("200 OK", headers)
+        return [svg.encode()]
+
+    risk = rec.get("risk_level") or "unknown"
+    color = _BADGE_COLORS.get(risk, "#6e7681")
+    if risk == "clean":
+        right = "clean | skillsmith.ch"
+    else:
+        score = rec.get("risk_score")
+        right = f"{risk} ({score}) | skillsmith.ch" if score is not None else f"{risk} | skillsmith.ch"
+    svg = _badge_svg("skill check", _escape_svg(right), color)
+    start_response("200 OK", headers)
+    return [svg.encode()]
+
+
+def handle_public_scan(environ, start_response):
+    """Public, key-less verdict lookup for one hash -- enough detail for the
+    badge landing page, deliberately less than the authenticated lookup."""
+    qs = urllib.parse.parse_qs(environ.get("QUERY_STRING", ""))
+    digest = (qs.get("sha256", [""])[0] or "").lower().strip()
+    if len(digest) != 64 or not any(c.isalpha() or c.isdigit() for c in digest):
+        start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
+        return [json.dumps({"error": "sha256 must be a 64-char hex digest"}).encode()]
+    rec = get_scan_record(digest)
+    if rec is None:
+        start_response("404 Not Found", [("Content-Type", "application/json")] + _CORS_HEADERS)
+        return [json.dumps({"error": "unknown_hash"}).encode()]
+    start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
+    return [json.dumps({
+        "disclaimer": DISCLAIMER,
+        "sha256": digest,
+        "name": rec.get("name", ""),
+        "risk_level": rec.get("risk_level"),
+        "risk_score": rec.get("risk_score"),
+        "lint_ok": rec.get("lint_ok"),
+        "parse_ok": rec.get("parse_ok"),
+        "seen_count": rec.get("seen_count"),
+        "first_seen_at": rec.get("first_seen_at"),
+        "last_seen_at": rec.get("last_seen_at"),
+        "has_content": bool(rec.get("has_content")),
+    }).encode()]
+
+
 def app(environ, start_response):
     method = environ.get("REQUEST_METHOD", "GET")
     path = environ.get("PATH_INFO", "/")
@@ -883,6 +977,15 @@ def app(environ, start_response):
     if method == "OPTIONS":
         start_response("204 No Content", _CORS_HEADERS)
         return [b""]
+
+    if path.rstrip("/").endswith("/badge"):
+        return handle_badge(environ, start_response)
+
+    if path.rstrip("/").endswith("/api/public_scan"):
+        if method != "GET":
+            start_response("405 Method Not Allowed", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": "GET only"}).encode()]
+        return handle_public_scan(environ, start_response)
 
     if path.rstrip("/").endswith("/mcp"):
         if method != "POST":

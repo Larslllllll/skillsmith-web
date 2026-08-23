@@ -6,6 +6,8 @@ network-dependent pieces); this file covers what can run in CI with no
 network access: the lint/scan heuristics and the URL-allowlist logic for
 "scan by URL".
 """
+import io
+import json
 import sys
 from pathlib import Path
 
@@ -194,3 +196,64 @@ def test_mcp_route_wired_in_app():
     import inspect
     src = inspect.getsource(webapp.app)
     assert '"/mcp"' in src or "endswith(\"/mcp\")" in src
+
+
+
+# --- Trust badge + public scan verdict ---
+
+FAKE_REC = {
+    "sha256": "c" * 64,
+    "name": "badge-test-skill",
+    "risk_level": "clean",
+    "risk_score": 0,
+    "lint_ok": True,
+    "parse_ok": True,
+    "seen_count": 2,
+    "first_seen_at": 1755000000.0,
+    "last_seen_at": 1755100000.0,
+    "has_content": True,
+}
+
+
+def _wsgi(method, path):
+    captured = {}
+    def sr(status, headers_):
+        captured['status'] = int(status.split()[0])
+    p, _, q = path.partition("?")
+    b = b"".join(webapp.app({"REQUEST_METHOD": method, "PATH_INFO": p,
+                             "CONTENT_LENGTH": "0", "QUERY_STRING": q,
+                             "wsgi.input": io.BytesIO(b"")}, sr))
+    return captured['status'], b
+
+
+def test_badge_invalid_hash():
+    status, body = _wsgi("GET", "/badge?sha256=nope")
+    assert status == 400
+    assert b"<svg" in body
+
+
+def test_badge_unknown_hash_shows_not_scanned(monkeypatch):
+    monkeypatch.setattr(webapp, "get_scan_record", lambda d: None)
+    status, body = _wsgi("GET", "/badge?sha256=" + "a" * 64)
+    assert status == 200
+    assert b"not scanned" in body
+
+
+def test_public_scan_unknown_hash_404(monkeypatch):
+    monkeypatch.setattr(webapp, "get_scan_record", lambda d: None)
+    status, data = _wsgi("GET", "/api/public_scan?sha256=" + "b" * 64)
+    assert status == 404
+    assert json.loads(data)["error"] == "unknown_hash"
+
+
+def test_public_scan_and_badge_return_verdict(monkeypatch):
+    monkeypatch.setattr(webapp, "get_scan_record", lambda d: dict(FAKE_REC) if d == "c" * 64 else None)
+    status, data = _wsgi("GET", "/api/public_scan?sha256=" + "c" * 64)
+    rec = json.loads(data)
+    assert status == 200
+    assert rec["risk_level"] == "clean"
+    assert rec["has_content"] is True
+
+    status2, svg = _wsgi("GET", "/badge?sha256=" + "c" * 64)
+    assert status2 == 200
+    assert b"clean" in svg and b"skillsmith.ch" in svg

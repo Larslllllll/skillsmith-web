@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scan result — skillsmith</title>
+<meta name="description" content="Public security-scan verdict for a Claude Agent Skill (SKILL.md), by skillsmith.ch">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>
+:root{--bg:#0d1117;--panel:#161b27;--border:#2a3142;--text:#e6edf3;--text-muted:#8b949e;--accent:#58a6ff;--green:#2ea043;--yellow:#d29922;--red:#da3633;}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'SF Mono',ui-monospace,Menlo,Consolas,monospace;line-height:1.5;}
+main{max-width:720px;margin:0 auto;padding:1.5rem 1rem 4rem;}
+h1{font-size:1.15rem;} h1 span{color:var(--text-muted);}
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:1.25rem;margin-bottom:1rem;min-width:0;}
+.verdict{font-size:1.6rem;font-weight:700;margin:.2rem 0 .5rem;}
+.v-clean{color:var(--green);} .v-low,.v-medium{color:var(--yellow);} .v-high,.v-critical{color:var(--red);}
+dl{display:grid;grid-template-columns:auto 1fr;gap:.3rem 1.2rem;margin:0;font-size:.85rem;}
+dt{color:var(--text-muted);} dd{margin:0;word-break:break-all;min-width:0;}
+.badge-row{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;}
+pre.snippet{background:#0a0d13;border:1px solid var(--border);border-radius:6px;padding:.7rem;font-size:.75rem;overflow-x:auto;white-space:pre-wrap;word-break:break-all;}
+button{background:var(--accent);border:none;color:#04121f;font-family:inherit;font-weight:600;padding:.45rem .9rem;border-radius:6px;cursor:pointer;font-size:.8rem;}
+.disclaimer{color:var(--text-muted);font-size:.75rem;}
+a{color:var(--accent);}
+@media (max-width:520px){dl{grid-template-columns:1fr;} dt{margin-top:.4rem;}}
+</style>
+</head>
+<body>
+<main>
+<h1>skillsmith <span>/ scan verdict</span></h1>
+<div class="panel" id="result"><p class="disclaimer">Loading…</p></div>
+<div class="panel" id="badgePanel" style="display:none;">
+  <h2 style="font-size:.95rem;margin-top:0;">Embed this verdict</h2>
+  <div class="badge-row">
+    <div id="badgePreview"></div>
+    <a href="#snippet">get snippet ↓</a>
+  </div>
+</div>
+<div class="panel" id="snippetPanel" style="display:none;">
+  <h2 style="font-size:.95rem;margin-top:0;">Markdown for your README</h2>
+  <pre class="snippet" id="snippet"></pre>
+  <button onclick="copySnippet()">Copy</button> <span class="disclaimer" id="copyMsg"></span>
+</div>
+<p class="disclaimer">Heuristic static scan — not a security guarantee. Scan your own skill at
+<a href="/">skillsmith.ch</a>.</p>
+</main>
+<script>
+const params = new URLSearchParams(location.search);
+const sha = (params.get('sha256') || '').toLowerCase().trim();
+function esc(s){return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+(async () => {
+  const el = document.getElementById('result');
+  if (!/^[0-9a-f]{64}$/.test(sha)) { el.innerHTML = '<p class="disclaimer">Invalid or missing sha256 in URL.</p>'; return; }
+  try {
+    const res = await fetch('/api/public_scan?sha256=' + sha);
+    if (res.status === 404) { el.innerHTML = '<p class="disclaimer">This hash has never been scanned.</p>'; return; }
+    if (!res.ok) throw new Error(res.status);
+    const d = await res.json();
+    const risk = d.risk_level || 'unknown';
+    const when = d.last_seen_at ? new Date(d.last_seen_at * 1000).toISOString().slice(0, 10) : '?';
+    el.innerHTML =
+      '<p style="margin:0;color:var(--text-muted);font-size:.8rem;">' + esc(d.name || 'unnamed skill') + '</p>' +
+      '<div class="verdict v-' + esc(risk) + '">' + esc(risk).toUpperCase() +
+      (d.risk_score != null ? ' &middot; risk score ' + esc(d.risk_score) : '') + '</div>' +
+      '<dl>' +
+      '<dt>SHA-256</dt><dd><code>' + esc(sha) + '</code></dd>' +
+      '<dt>Lint</dt><dd>' + (d.lint_ok ? 'ok' : 'issues found') + '</dd>' +
+      '<dt>Parsed</dt><dd>' + (d.parse_ok ? 'yes' : 'no') + '</dd>' +
+      '<dt>Times seen</dt><dd>' + esc(d.seen_count) + '</dd>' +
+      '<dt>Last scanned</dt><dd>' + esc(when) + '</dd>' +
+      '</dl>';
+    const badgeUrl = location.origin + '/badge?sha256=' + sha;
+    document.getElementById('badgePanel').style.display = '';
+    document.getElementById('badgePreview').innerHTML = '<img alt="skillsmith verdict badge" src="' + badgeUrl + '">';
+    document.getElementById('snippetPanel').style.display = '';
+    document.getElementById('snippet').textContent =
+      '[![skill check](https://skillsmith.ch/badge?sha256=' + sha + ')](https://skillsmith.ch/scan.html?sha256=' + sha + ')';
+  } catch (e) {
+    el.innerHTML = '<p class="disclaimer">Lookup failed: ' + esc(e.message) + '</p>';
+  }
+})();
+function copySnippet(){
+  navigator.clipboard.writeText(document.getElementById('snippet').textContent)
+    .then(() => { document.getElementById('copyMsg').textContent = 'copied!'; });
+}
+</script>
+</body>
+</html>

@@ -6,7 +6,9 @@
     { "src": "/api/signup", "dest": "/api/index.py" },
     { "src": "/api/scan", "dest": "/api/index.py" },
     { "src": "/api/auth/(.*)", "dest": "/api/index.py" },
-    { "src": "/mcp", "dest": "/api/index.py" }
+    { "src": "/mcp", "dest": "/api/index.py" },
+    { "src": "/badge", "dest": "/api/index.py" },
+    { "src": "/api/public_scan", "dest": "/api/index.py" }
   ],
   "headers": [
     {
