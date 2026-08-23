@@ -232,8 +232,9 @@ module.exports = async (req, res) => {
     let bin;
     try { bin = await ensureOpencode(); }
     catch (e) { return jsonResp(res, { probe: payload.probe, setup_error: e.message }, 200); }
+    const probeDir = fs.mkdtempSync(path.join(os.tmpdir(), "probe-"));
     const presult = await new Promise((resolve) => {
-      const child = spawn(bin, payload.probe.split(" "), { cwd: workdir, timeout: 60000,
+      const child = spawn(bin, payload.probe.split(" "), { cwd: probeDir, timeout: 60000,
         env: { ...process.env, CI: "1", HOME: "/tmp/oc-home",
                XDG_DATA_HOME: "/tmp/oc-home/.local/share", XDG_CONFIG_HOME: "/tmp/oc-home/.config",
                XDG_CACHE_HOME: "/tmp/oc-home/.cache" } });
