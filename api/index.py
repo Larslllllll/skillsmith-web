@@ -485,11 +485,16 @@ def handle_scan(environ, start_response):
                 result["osv"] = {"checked": len(pins), "packages": query_osv(pins)}
                 vuln_count = sum(len(p.get("vulnerabilities", [])) for p in result["osv"]["packages"])
                 if vuln_count:
+                    # one finding per vulnerable PACKAGE (not per CVE): an old
+                    # pin often has a dozen GHSAs and one finding per CVE would
+                    # drown out everything else in the report.
                     result["findings"] = list(result.get("findings", [])) + [{
                         "source": "osv",
-                        "message": f"{vuln['id']}: known vulnerability in {p_['package']} {p_['version']}",
-                        "weight": 6,
-                    } for p_ in result["osv"]["packages"] for vuln in p_.get("vulnerabilities", [])]
+                        "message": f"known vulnerabilities in {p_['package']} {p_['version']}: " +
+                                   ", ".join(v["id"] for v in p_["vulnerabilities"][:4]) +
+                                   (" (+more)" if len(p_["vulnerabilities"]) > 4 else ""),
+                        "weight": 8,
+                    } for p_ in result["osv"]["packages"] if p_.get("vulnerabilities")]
                     # recompute risk score with the new findings included
                     new_score = min(100, sum(f.get("weight", 0) for f in result["findings"]))
                     result["risk_score"] = max(result.get("risk_score", 0), new_score)
