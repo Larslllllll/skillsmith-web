@@ -1,4 +1,7 @@
 User-agent: *
 Allow: /
+Disallow: /api/
+Disallow: /mcp
+Disallow: /health
 
 Sitemap: https://skillsmith.ch/sitemap.xml

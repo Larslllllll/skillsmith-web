@@ -404,10 +404,27 @@ def _github_url_to_raw(url):
     )
 
 
+class _SameHostRedirectHandler(urllib.request.HTTPRedirectHandler):
+    """Redirect handler that refuses to leave raw.githubusercontent.com.
+
+    urlopen follows redirects blindly by default; if anything ever coaxed a
+    redirect off-domain this would turn the scanner into a fetch-anything
+    proxy. Pinning the redirect target keeps the allowlist promise even
+    under redirect tricks."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        if not newurl.startswith("https://raw.githubusercontent.com/"):
+            raise ValueError("redirect to non-github host blocked")
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+_OPENER = urllib.request.build_opener(_SameHostRedirectHandler)
+
+
 def _fetch_skill_url(url):
     raw_url = _github_url_to_raw(url)
     req = urllib.request.Request(raw_url, headers={"User-Agent": "skillsmith-web"})
-    with urllib.request.urlopen(req, timeout=10) as resp:
+    with _OPENER.open(req, timeout=10) as resp:
         data = resp.read(MAX_URL_FETCH_BYTES + 1)
     if len(data) > MAX_URL_FETCH_BYTES:
         raise ValueError("file at url is larger than %d bytes" % MAX_URL_FETCH_BYTES)
@@ -455,6 +472,33 @@ def handle_scan(environ, start_response):
         digest = sha256_of(text)
         cached = get_scan_record(digest)
         result = analyze(text)
+
+        # OSV.dev dependency check (fail-open): pinned packages in the
+        # skill's code blocks get checked against known vulnerabilities.
+        try:
+            from .osv import extract_pins, query_osv
+        except ImportError:
+            from osv import extract_pins, query_osv
+        try:
+            pins = extract_pins(text)
+            if pins:
+                result["osv"] = {"checked": len(pins), "packages": query_osv(pins)}
+                vuln_count = sum(len(p.get("vulnerabilities", [])) for p in result["osv"]["packages"])
+                if vuln_count:
+                    result["findings"] = list(result.get("findings", [])) + [{
+                        "source": "osv",
+                        "message": f"{vuln['id']}: known vulnerability in {p_['package']} {p_['version']}",
+                        "weight": 6,
+                    } for p_ in result["osv"]["packages"] for vuln in p_.get("vulnerabilities", [])]
+                    # recompute risk score with the new findings included
+                    new_score = min(100, sum(f.get("weight", 0) for f in result["findings"]))
+                    result["risk_score"] = max(result.get("risk_score", 0), new_score)
+                    rs = result["risk_score"]
+                    result["risk_level"] = ("clean" if rs == 0 else "low" if rs < 8 else
+                                            "medium" if rs < 20 else "high")
+        except Exception:  # noqa: BLE001 - OSV must never break a scan
+            pass
+
         publish = bool(payload.get("publish"))
         try:
             history = record_scan(digest, result, name=result.get("name") or "", publish=publish, text=text)
@@ -1014,6 +1058,11 @@ def handle_public_scan(environ, start_response):
         "has_content": bool(rec.get("has_content")),
     }).encode()]
 
+def handle_health(environ, start_response):
+    """Cheap liveness probe for uptime monitors -- no blob/network calls."""
+    start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
+    return [json.dumps({"ok": True, "service": "skillsmith-web", "time": time.time()}).encode()]
+
 
 def app(environ, start_response):
     """Top-level guard: never leak internal error details to clients.
@@ -1040,6 +1089,9 @@ def _app_inner(environ, start_response):
     if method == "OPTIONS":
         start_response("204 No Content", _CORS_HEADERS)
         return [b""]
+
+    if path.rstrip("/").endswith("/health"):
+        return handle_health(environ, start_response)
 
     if path.rstrip("/").endswith("/badge"):
         return handle_badge(environ, start_response)

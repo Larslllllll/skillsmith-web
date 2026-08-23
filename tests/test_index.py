@@ -302,3 +302,75 @@ def test_app_never_leaks_tracebacks(monkeypatch):
                                 "QUERY_STRING": "", "wsgi.input": io.BytesIO(b"")}, sr))
     assert captured['status'] == 500
     assert json.loads(body) == {"error": "internal server error"}
+
+
+# --- Health endpoint & fetch hardening ---
+
+def test_health_endpoint():
+    status, body = _wsgi("GET", "/health")
+    assert status == 200
+    data = json.loads(body)
+    assert data["ok"] is True
+
+
+def test_github_url_to_raw_still_validates():
+    import pytest
+    with pytest.raises(ValueError):
+        webapp._github_url_to_raw("https://evil.com/SKILL.md")
+    raw = webapp._github_url_to_raw("https://github.com/owner/repo/blob/main/SKILL.md")
+    assert raw == "https://raw.githubusercontent.com/owner/repo/main/SKILL.md"
+
+
+def test_redirect_handler_blocks_offsite():
+    h = webapp._SameHostRedirectHandler()
+    try:
+        h.redirect_request(None, None, 302, "Found",
+                           {"Location": "https://evil.com/x"},
+                           "https://evil.com/x")
+        blocked = False
+    except ValueError:
+        blocked = True
+    assert blocked
+
+
+# --- OSV.dev dependency check ---
+
+def test_osv_extract_pins_python_and_npm():
+    from osv import extract_pins
+    text = """
+    ```python
+    # requirements
+    requests==2.19.0
+    pyyaml>=6.0
+    ```
+    ```json
+    {"lodash": "^4.17.20", "express": "4.15.0"}
+    ```
+    """
+    pins = extract_pins(text)
+    triples = {(p["ecosystem"], p["package"], p["version"]) for p in pins}
+    assert ("PyPI", "requests", "2.19.0") in triples
+    assert ("PyPI", "pyyaml", "6.0") in triples
+    assert ("npm", "lodash", "4.17.20") in triples
+    assert ("npm", "express", "4.15.0") in triples
+
+
+def test_osv_extract_pins_caps_and_empty():
+    from osv import extract_pins
+    assert extract_pins("no code here") == []
+    many = "\n".join(f"pkg{i}==1.0.0" for i in range(50))
+    assert len(extract_pins(many)) <= 25
+
+
+def test_osv_query_fail_open():
+    from osv import query_osv, _OSV_BATCH_URL
+    import os as _os, urllib.request as _ur
+    # unreachable endpoint -> must return error entries, never raise
+    import osv
+    old = osv._OSV_BATCH_URL
+    osv._OSV_BATCH_URL = "https://127.0.0.1:9/v1/querybatch"
+    try:
+        out = query_osv([{"ecosystem": "PyPI", "package": "requests", "version": "2.19.0"}], timeout=1)
+        assert out[0].get("error") == "osv_unavailable"
+    finally:
+        osv._OSV_BATCH_URL = old
