@@ -155,7 +155,7 @@ async function runOpencode(prompt, cwd, timeoutMs) {
     return { ok: false, out: "", err: "binary setup failed: " + e.message };
   }
   return new Promise((resolve) => {
-    const child = spawn(bin, ["run", "--pure", "--format", "json", "-m", MODEL, prompt],
+    const child = spawn(bin, ["run", "--pure", "--print-logs", "--format", "json", "-m", MODEL, prompt],
       { cwd, timeout: timeoutMs, env: {
         ...process.env,
         CI: "1",
@@ -254,7 +254,11 @@ Produce ONE JSON object (and nothing after it) with exactly these keys:
     duration_s,
     static_iocs: extractIocs(text),
     ai_analysis: parsed,
-    raw_output_tail: parsed ? undefined : (result.out || "").slice(-1500) || result.err.slice(-800),
+    debug: parsed ? undefined : {
+      out_len: (result.out || "").length,
+      out_tail: (result.out || "").slice(-1200),
+      err_tail: (result.err || "").slice(-1500),
+    },
     note: "Behavioral simulation by an LLM analyst in an isolated container. The skill was never executed against real systems.",
   };
 
