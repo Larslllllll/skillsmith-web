@@ -225,7 +225,9 @@ module.exports = async (req, res) => {
   // (e.g. ["--version"]) so we can see how far the binary gets in-lambda.
   let result;
   if (payload && typeof payload.probe === "string") {
-    const bin = await ensureOpencode();
+    let bin;
+    try { bin = await ensureOpencode(); }
+    catch (e) { return jsonResp(res, { probe: payload.probe, setup_error: e.message }, 200); }
     const presult = await new Promise((resolve) => {
       const child = spawn(bin, payload.probe.split(" "), { cwd: workdir, timeout: 60000,
         env: { ...process.env, CI: "1", HOME: "/tmp/oc-home",
