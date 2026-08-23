@@ -311,8 +311,6 @@ module.exports = async (req, res) => {
 
   const id = crypto.createHash("sha256").update("sbx:" + text).digest("hex").slice(0, 16);
   const workdir = os.tmpdir() + "/sbx-" + id;
-  // The ONLY file in the sandbox dir is the untrusted skill itself.
-  fs.writeFileSync(path.join(workdir, "untrusted-skill.md"), text);
 
   const prompt = `You are a SECURITY ANALYST in an isolated analysis container.
 The file untrusted-skill.md in your current directory contains an AI-agent skill submitted for behavioral review.
@@ -335,7 +333,11 @@ Produce ONE JSON object (and nothing after it) with exactly these keys:
   const MAX_ATTEMPTS = 3;
   while (!parsed && attempt < MAX_ATTEMPTS) {
     attempt++;
-    result = await runOpencode(prompt, workdir + "-a" + attempt, 210000);
+    const attemptDir = workdir + "-a" + attempt;
+    fs.mkdirSync(attemptDir, { recursive: true });
+    // The ONLY file in the sandbox dir is the untrusted skill itself.
+    fs.writeFileSync(path.join(attemptDir, "untrusted-skill.md"), text);
+    result = await runOpencode(prompt, attemptDir, 210000);
     parsed = result.out ? findAnalysis(result.out) : null;
     if (!parsed && attempt < MAX_ATTEMPTS) {
       await new Promise(r => setTimeout(r, 3000));
