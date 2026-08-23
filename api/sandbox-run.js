@@ -124,7 +124,29 @@ async function netProbe() {
   return probes;
 }
 
+function ocEnv() {
+  return {
+    ...process.env,
+    CI: "1",
+    OPENCODE_DISABLE_AUTOUPDATE: "true",
+    OPENCODE_DISABLE_TELEMETRY: "true",
+    DO_NOT_TRACK: "1",
+    // lambda /home is read-only; keep ALL opencode state under /tmp
+    HOME: "/tmp/oc-home",
+    XDG_DATA_HOME: "/tmp/oc-home/.local/share",
+    XDG_CONFIG_HOME: "/tmp/oc-home/.config",
+    XDG_CACHE_HOME: "/tmp/oc-home/.cache",
+    // run-mode boots an internal server; give it writable runtime state
+    // and a resolvable host name (container hostnames often don't resolve)
+    XDG_RUNTIME_DIR: "/tmp/oc-home/.runtime",
+    TMPDIR: "/tmp",
+    HOSTNAME: "localhost",
+    NO_COLOR: "1",
+  };
+}
+
 async function ensureOpencode() {
+  fs.mkdirSync("/tmp/oc-home/.runtime", { recursive: true });
   if (fs.existsSync(OC_BIN)) return OC_BIN;
   if (!_ocPromise) {
     _ocPromise = (async () => {
@@ -170,18 +192,7 @@ async function runOpencode(prompt, cwd, timeoutMs) {
   }
   return new Promise((resolve) => {
     const child = spawn(bin, ["run", "--pure", "--print-logs", "--format", "json", "-m", MODEL, prompt],
-      { cwd, timeout: timeoutMs, env: {
-        ...process.env,
-        CI: "1",
-        OPENCODE_DISABLE_AUTOUPDATE: "true",
-        OPENCODE_DISABLE_TELEMETRY: "true",
-        DO_NOT_TRACK: "1",
-        // lambda /home is read-only; keep ALL opencode state under /tmp
-        HOME: "/tmp/oc-home",
-        XDG_DATA_HOME: "/tmp/oc-home/.local/share",
-        XDG_CONFIG_HOME: "/tmp/oc-home/.config",
-        XDG_CACHE_HOME: "/tmp/oc-home/.cache",
-      } });
+      { cwd, timeout: timeoutMs, env: ocEnv() });
     let out = "", err = "";
     child.stdout.on("data", d => { out += d; });
     child.stderr.on("data", d => { err = (err + d).slice(0, 4000); });
@@ -234,10 +245,7 @@ module.exports = async (req, res) => {
     catch (e) { return jsonResp(res, { probe: payload.probe, setup_error: e.message }, 200); }
     const probeDir = fs.mkdtempSync(path.join(os.tmpdir(), "probe-"));
     const presult = await new Promise((resolve) => {
-      const child = spawn(bin, payload.probe.split(" "), { cwd: probeDir, timeout: 60000,
-        env: { ...process.env, CI: "1", HOME: "/tmp/oc-home",
-               XDG_DATA_HOME: "/tmp/oc-home/.local/share", XDG_CONFIG_HOME: "/tmp/oc-home/.config",
-               XDG_CACHE_HOME: "/tmp/oc-home/.cache" } });
+      const child = spawn(bin, payload.probe.split(" "), { cwd: probeDir, timeout: 120000, env: ocEnv() });
       let out = "", err = "";
       child.stdout.on("data", d => { out += d; });
       child.stderr.on("data", d => { err += d; });
