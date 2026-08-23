@@ -10,6 +10,7 @@ all endpoints live in one WSGI app here and dispatch on PATH_INFO:
 
 vercel.json routes /api/scan, /api/scan_pro, and /api/signup here.
 """
+import hashlib
 import json
 import re
 import time
@@ -46,7 +47,9 @@ try:
         get_or_create_account_by_identity,
         pseudo_key_for_ip,
     )
-    from .scans import sha256_of, get_scan_record, record_scan, list_safe_registry, get_published_content
+    from .scans import (sha256_of, get_scan_record, record_scan, list_safe_registry,
+                        get_published_content, add_report, get_reports, bump_stats, get_stats,
+                        create_watch, get_watch, update_watch, store_dna, find_similar_dna)
 except ImportError:  # local/script execution without package context
     from account import (
         PRO_PRICE_USDC,
@@ -71,7 +74,9 @@ except ImportError:  # local/script execution without package context
         get_or_create_account_by_identity,
         pseudo_key_for_ip,
     )
-    from scans import sha256_of, get_scan_record, record_scan, list_safe_registry, get_published_content
+    from scans import (sha256_of, get_scan_record, record_scan, list_safe_registry,
+                       get_published_content, add_report, get_reports, bump_stats, get_stats,
+                       create_watch, get_watch, update_watch, store_dna, find_similar_dna)
 
 GITHUB_CLIENT_ID = os.environ.get("GITHUB_CLIENT_ID", "")
 GITHUB_CLIENT_SECRET = os.environ.get("GITHUB_CLIENT_SECRET", "")
@@ -161,7 +166,6 @@ _CODE_PATTERNS = [
     (re.compile(r"[A-Za-z0-9+/]{200,}={0,2}"), 4, "contains a very long base64-like blob (possible obfuscated payload)"),
     (re.compile(r"(?:\\x[0-9a-fA-F]{2}){20,}"), 5, "contains a long run of hex-escaped bytes (possible obfuscated payload)"),
     (re.compile(r"[\u200b\u200c\u200d\ufeff]"), 7, "contains zero-width/invisible unicode characters (common prompt-injection hiding technique)"),
-    (re.compile(r"[а-яА-Я].*[a-zA-Z]|[a-zA-Z].*[а-яА-Я]"), 2, "mixes Latin and Cyrillic characters (possible homoglyph obfuscation)"),
 
     # --- Patterns below adapted from NVIDIA SkillSpector (Apache-2.0) ---
     # https://github.com/NVIDIA/SkillSpector -- see THIRD_PARTY_NOTICES.md
@@ -172,6 +176,25 @@ _CODE_PATTERNS = [
     (re.compile(r"dict\s*\(\s*os\s*\.\s*environ\s*\)"), 7, "NVIDIA E2: dumps the entire environment (dict(os.environ))"),
     (re.compile(r"env\s*\|\s*grep\s+(?:-i\s+)?(?:key|secret|token|password)"), 8, "NVIDIA E2: greps env output for credential-shaped names"),
     (re.compile(r"glob\s*\.\s*glob\s*\([^)]*(?:\.env|\.ssh|\.aws|\.config|credentials)"), 8, "NVIDIA E3: globs for .env/.ssh/.aws/credentials files"),
+]
+
+# --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
+# base64 split across chunks: strip whitespace/newlines then look for long runs
+_CHUNKED_B64_RE = re.compile(r"[A-Za-z0-9+/=]{60,}")
+# pipe-to-shell dropper
+_DROPPER_PATTERNS = [
+    (re.compile(r"curl[^|\n]{0,200}\|\s*(?:ba)?sh", re.I), 10, "pipes downloaded content straight into a shell (remote code execution dropper)"),
+    (re.compile(r"wget[^|\n]{0,200}\|\s*(?:ba)?sh", re.I), 10, "pipes downloaded content straight into a shell (dropper)"),
+    (re.compile(r"(?:iwr|iex|Invoke-Expression).{0,80}(?:http|DownloadString)", re.I), 10, "PowerShell download-and-execute pattern"),
+]
+# paraphrased instruction overrides (round-1 patterns missed these)
+_PARAPHRASE_PATTERNS = [
+    (re.compile(r"set\s+aside\s+(?:all\s+)?(?:earlier|previous|prior)", re.I), 8, "instruction override paraphrase: 'set aside earlier guidance'"),
+    (re.compile(r"(?:disregard|discard|drop|unlearn)\s+(?:all\s+)?(?:the\s+)?(?:earlier|previous|prior|above)", re.I), 8, "instruction override paraphrase: disregard/drop prior guidance"),
+    (re.compile(r"follow\s+the\s+(?:workflow|steps?|instructions?)\s+below\s+instead", re.I), 7, "'follow ... below instead' override phrasing"),
+    (re.compile(r"collect[^.\n]{0,50}(?:credentials?|api\s*keys?|tokens?|environment\s+details?)", re.I), 9, "instructs collection of credentials/environment details"),
+    (re.compile(r"h(?:xx)?ps?://[^\s]*\[(?:\.|,)\]", re.I), 5, "bracket-defanged URL (common obfuscation in malicious docs)"),
+    (re.compile(r"forward\s+(?:gathered|collected|all)\s+", re.I), 8, "'forward gathered data' exfiltration phrasing"),
 ]
 
 _PROMPT_INJECTION_PATTERNS = [
@@ -257,6 +280,28 @@ def analyze(text: str) -> dict:
     findings = []
     findings += _scan_text(body, "SKILL.md body", _PROMPT_INJECTION_PATTERNS)
     findings += _scan_text(text, "raw text (incl. code blocks)", _CODE_PATTERNS)
+
+    findings += _scan_text(text, "raw text (incl. code blocks)", _DROPPER_PATTERNS)
+    findings += _scan_text(text, "raw text (incl. code blocks)", _PARAPHRASE_PATTERNS)
+    # chunked-base64 check: join all base64-ish runs after removing line breaks,
+    # so splitting a payload across lines no longer evades the length threshold
+    squashed = re.sub(r"\s+", "", text)
+    if _CHUNKED_B64_RE.search(squashed):
+        findings.append({"source": "raw text",
+                         "message": "contains a long encoded blob even after joining wrapped lines (possible hidden payload)",
+                         "weight": 5})
+
+    # Homoglyph check, linear-time (pentest v2 F-07): the previous single
+    # regex "[а-яА-Я].*[a-zA-Z]|..." was quadratic on long lines and let a
+    # 100KB input burn ~68s of CPU. Two independent scans per line are O(n).
+    for li, line in enumerate(text.split("\n"), 1):
+        has_cyr = any("\u0400" <= ch <= "\u04FF" for ch in line)
+        has_lat = any(("a" <= ch.lower() <= "z") for ch in line)
+        if has_cyr and has_lat:
+            findings.append({"source": "raw text", "line": li,
+                             "message": "mixes Latin and Cyrillic characters (possible homoglyph obfuscation)",
+                             "weight": 2})
+            break  # one finding is enough
 
     risk_score = sum(f["weight"] for f in findings)
     risk_level = "clean" if risk_score == 0 else "low" if risk_score < 8 else "medium" if risk_score < 20 else "high"
@@ -551,6 +596,10 @@ def handle_scan_pro(environ, start_response):
             if not ok:
                 start_response("402 Payment Required", [("Content-Type", "application/json")] + _CORS_HEADERS)
                 return [json.dumps({"error": "payment_not_verified", "detail": detail}).encode()]
+            claimed, claim_detail = _claim_payment_signature(activation_sig, api_key, "activate_" + str(activation_tier))
+            if not claimed:
+                start_response("402 Payment Required", [("Content-Type", "application/json")] + _CORS_HEADERS)
+                return [json.dumps({"error": "signature_replayed", "detail": claim_detail}).encode()]
             if activation_tier == "premium":
                 record = activate_premium(api_key, detail)
                 start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
@@ -663,6 +712,28 @@ def handle_get_skill(environ, start_response):
         start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({"error": str(e)}).encode()]
 
+def _claim_payment_signature(signature: str, api_key: str, kind: str) -> tuple[bool, str]:
+    """Atomically-enough used-signature registry (pentest v2 F-03).
+
+    verify_payment is stateless: without this, one real $0.02 transaction
+    could buy unlimited credits and the same signature could activate Pro on
+    any number of accounts. A claimed signature is permanently bound to the
+    first account+kind that used it; replays are rejected. Blob writes are
+    not CAS-atomic, but two concurrent claims of the SAME signature both
+    writing still leaves a record -- the audit trail exists either way."""
+    try:
+        from .account import _blob_get, _blob_put
+    except ImportError:
+        from account import _blob_get, _blob_put
+    path = "payments/" + hashlib.sha256(signature.encode()).hexdigest() + ".json"
+    existing = _blob_get(path)
+    if existing:
+        return False, f"signature already used ({existing.get('kind')} on {existing.get('created_at_date', 'another account')})"
+    rec = {"signature_sha": path.split("/")[-1], "api_key_prefix": api_key[:10],
+           "kind": kind, "claimed_at": time.time(),
+           "created_at_date": time.strftime("%Y-%m-%d", time.gmtime())}
+    _blob_put(path, rec)
+    return True, ""
 
 def handle_buy_credit(environ, start_response):
     """POST {api_key, payment_signature, kind} -> pay-as-you-go, additive to
@@ -696,6 +767,10 @@ def handle_buy_credit(environ, start_response):
         if not ok:
             start_response("402 Payment Required", [("Content-Type", "application/json")] + _CORS_HEADERS)
             return [json.dumps({"error": "payment_not_verified", "detail": detail}).encode()]
+        claimed, claim_detail = _claim_payment_signature(signature, api_key, kind)
+        if not claimed:
+            start_response("402 Payment Required", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": "signature_replayed", "detail": claim_detail}).encode()]
         if kind == "lookup":
             record = add_lookup_pay_per_use_credit(api_key, detail)
             start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
@@ -733,7 +808,10 @@ def handle_registry(environ, start_response):
             return [json.dumps({"error": "quota_exceeded", "quota": quota_info}).encode()]
 
         qs = urllib.parse.parse_qs(environ.get("QUERY_STRING", ""))
-        limit = int((qs.get("limit") or ["50"])[0])
+        try:
+            limit = max(1, min(int((qs.get("limit") or ["50"])[0]), 200))
+        except (ValueError, TypeError):
+            limit = 50  # pentest v2: "limit=abc" leaked a Python error string
         entries = list_safe_registry(limit=limit)
         start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({
@@ -954,7 +1032,7 @@ def handle_mcp(environ, start_response):
         # -32600 instead of crashing the function on a list payload.
         start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({"jsonrpc": "2.0", "id": None, "error": {"code": -32600, "message": "Invalid Request: batch requests are not supported, send a single JSON object"}}).encode()]
-    status, body = _mcp.handle_jsonrpc(req)
+    status, body = _mcp.handle_jsonrpc(req, client_ip=_client_ip(environ))
     start_response(f"{status} OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
     return [json.dumps(body).encode()]
 
@@ -1000,7 +1078,10 @@ def _escape_svg(text: str) -> str:
 def handle_badge(environ, start_response):
     qs = urllib.parse.parse_qs(environ.get("QUERY_STRING", ""))
     digest = (qs.get("sha256", [""])[0] or "").lower().strip()
-    headers = [("Content-Type", "image/svg+xml"), ("Cache-Control", "public, max-age=300")] + _CORS_HEADERS
+    headers = [("Content-Type", "image/svg+xml; charset=utf-8"),
+               ("X-Content-Type-Options", "nosniff"),
+               ("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'"),
+               ("Cache-Control", "public, max-age=60")] + _CORS_HEADERS
 
     if len(digest) != 64 or not all(c in "0123456789abcdef" for c in digest):
         svg = _badge_svg("skillsmith", "invalid hash", "#6e7681")
@@ -1107,7 +1188,7 @@ def _app_inner(environ, start_response):
             return [json.dumps({"error": "GET only"}).encode()]
         return handle_public_scan(environ, start_response)
 
-    if path.rstrip("/").endswith("/mcp"):
+    if path.rstrip("/") in ("/mcp", "/api/mcp"):
         if method != "POST":
             start_response("405 Method Not Allowed", [("Content-Type", "application/json")] + _CORS_HEADERS)
             return [json.dumps({"error": "POST only (JSON-RPC 2.0)"}).encode()]

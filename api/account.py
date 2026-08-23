@@ -376,11 +376,25 @@ def check_and_consume_quota(api_key: str | None) -> tuple[bool, dict]:
             }
         record["pro_used_count"] += 1
         _blob_put(_blob_path(api_key), record)
+        if _confirm_over("pro_used_count", PRO_DAILY_LIMIT):
+            latest = _blob_get(_blob_path(api_key)) or record
+            latest["pro_used_count"] = max(0, int(latest.get("pro_used_count", 1)) - 1)
+            _blob_put(_blob_path(api_key), latest)
+            return False, {"tier": "pro", "limit": PRO_DAILY_LIMIT, "error": "daily Pro limit reached"}
         return True, {"tier": "pro", "limit": PRO_DAILY_LIMIT, "used": record["pro_used_count"]}
 
     if record.get("free_used_date") != today:
         record["free_used_date"] = today
         record["free_used_count"] = 0
+    # Race mitigation (pentest v2 F-04): blob read-modify-write is not atomic,
+    # so N parallel requests could each read the same count and all pass. After
+    # writing the incremented count we re-read it; if confirmation shows we're
+    # over the limit we roll our unit back and deny. Shrinks the race window
+    # from "always wins" to "needs precise timing", without a real lock service.
+    def _confirm_over(field, limit):
+        time.sleep(0.15)
+        check = _blob_get(_blob_path(api_key)) or {}
+        return int(check.get(field, 0) or 0) > limit
     if record["free_used_count"] >= FREE_DAILY_LIMIT:
         if record.get("bonus_credits", 0) > 0:
             record["bonus_credits"] -= 1
@@ -393,6 +407,13 @@ def check_and_consume_quota(api_key: str | None) -> tuple[bool, dict]:
         }
     record["free_used_count"] += 1
     _blob_put(_blob_path(api_key), record)
+    if _confirm_over("free_used_count", FREE_DAILY_LIMIT):
+        # lost the race: roll back our unit and deny
+        latest = _blob_get(_blob_path(api_key)) or record
+        latest["free_used_count"] = max(0, int(latest.get("free_used_count", 1)) - 1)
+        _blob_put(_blob_path(api_key), latest)
+        return False, {"tier": "free", "limit": FREE_DAILY_LIMIT, "used": FREE_DAILY_LIMIT,
+                       "error": "daily free limit reached"}
     return True, {"tier": "free", "limit": FREE_DAILY_LIMIT, "used": record["free_used_count"]}
 
 
@@ -435,6 +456,13 @@ def check_and_consume_lookup_quota(api_key: str | None) -> tuple[bool, dict]:
             }
         record["pro_lookup_count"] = record.get("pro_lookup_count", 0) + 1
         _blob_put(_blob_path(api_key), record)
+        time.sleep(0.15)
+        _chk = _blob_get(_blob_path(api_key)) or {}
+        if int(_chk.get("pro_lookup_count", 0) or 0) > LOOKUP_PRO_DAILY_LIMIT:
+            latest = _blob_get(_blob_path(api_key)) or record
+            latest["pro_lookup_count"] = max(0, int(latest.get("pro_lookup_count", 1)) - 1)
+            _blob_put(_blob_path(api_key), latest)
+            return False, {"tier": "pro", "limit": LOOKUP_PRO_DAILY_LIMIT, "error": "daily Pro database-lookup limit reached"}
         return True, {"tier": "pro", "limit": LOOKUP_PRO_DAILY_LIMIT, "used": record["pro_lookup_count"]}
 
     if record.get("free_lookup_date") != today:
@@ -452,4 +480,11 @@ def check_and_consume_lookup_quota(api_key: str | None) -> tuple[bool, dict]:
         }
     record["free_lookup_count"] = record.get("free_lookup_count", 0) + 1
     _blob_put(_blob_path(api_key), record)
+    time.sleep(0.15)
+    _chk = _blob_get(_blob_path(api_key)) or {}
+    if int(_chk.get("free_lookup_count", 0) or 0) > LOOKUP_FREE_DAILY_LIMIT:
+        latest = _blob_get(_blob_path(api_key)) or record
+        latest["free_lookup_count"] = max(0, int(latest.get("free_lookup_count", 1)) - 1)
+        _blob_put(_blob_path(api_key), latest)
+        return False, {"tier": "free", "limit": LOOKUP_FREE_DAILY_LIMIT, "error": "daily free database-lookup limit reached"}
     return True, {"tier": "free", "limit": LOOKUP_FREE_DAILY_LIMIT, "used": record["free_lookup_count"]}

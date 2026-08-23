@@ -111,11 +111,24 @@ def _tool_result(payload):
     return {"content": [{"type": "text", "text": json.dumps(payload)}]}
 
 
-def _call_tool(name, args):
+def _call_tool(name, args, client_ip: str = ""):
     api_key = args.get("api_key", "")
+    if not isinstance(api_key, str):
+        api_key = ""
+    api_key = api_key[:200]
     idx = _index_module()
 
     if name == "skillsmith_signup":
+        # Same per-IP daily cap as POST /api/signup -- without this the MCP
+        # route was an unlimited-signup bypass (pentest v2, F-01).
+        try:
+            from .account import check_and_consume_signup_quota
+        except ImportError:
+            from account import check_and_consume_signup_quota
+        allowed, rl_error = check_and_consume_signup_quota(client_ip)
+        if not allowed:
+            return _tool_result({"error": rl_error,
+                                 "tip": "sign in with GitHub at https://skillsmith.ch instead, it's not rate limited"})
         try:
             from .account import create_account
         except ImportError:
@@ -178,7 +191,10 @@ def _call_tool(name, args):
         allowed, quota_info = check_and_consume_lookup_quota(api_key or None)
         if not allowed:
             return _tool_result({"error": "quota_exceeded", "quota": quota_info})
-        limit = int(args.get("limit", 20))
+        try:
+            limit = max(1, min(int(args.get("limit", 20)), 200))
+        except (ValueError, TypeError):
+            limit = 20
         entries = list_safe_registry(limit=limit)
         return _tool_result({"disclaimer": idx.DISCLAIMER, "count": len(entries), "skills": entries, "quota": quota_info})
 
@@ -197,7 +213,7 @@ def _call_tool(name, args):
     return {"content": [{"type": "text", "text": json.dumps({"error": f"unknown tool: {name}"})}], "isError": True}
 
 
-def handle_jsonrpc(req: dict) -> tuple[int, dict]:
+def handle_jsonrpc(req: dict, client_ip: str = "") -> tuple[int, dict]:
     """Pure JSON-RPC 2.0 dispatch, no WSGI/HTTP plumbing -- this file is
     imported as a library from api/index.py (the project's single WSGI
     entrypoint; Vercel's Python builder only supports one per project),
@@ -217,7 +233,7 @@ def handle_jsonrpc(req: dict) -> tuple[int, dict]:
     elif rpc_method == "tools/list":
         result = {"tools": TOOLS}
     elif rpc_method == "tools/call":
-        result = _call_tool(params.get("name", ""), params.get("arguments") or {})
+        result = _call_tool(params.get("name", ""), params.get("arguments") or {}, client_ip=client_ip)
     elif rpc_method == "ping":
         result = {}
     else:

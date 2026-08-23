@@ -195,7 +195,7 @@ def test_mcp_initialize_and_unknown_method():
 def test_mcp_route_wired_in_app():
     import inspect
     mod_src = inspect.getsource(sys.modules[webapp.__name__])
-    assert 'endswith("/mcp")' in mod_src
+    assert '"/mcp"' in mod_src  # exact-path routing since pentest v2
 
 
 

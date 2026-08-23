@@ -133,3 +133,106 @@ def list_safe_registry(limit: int = 50) -> list[dict]:
 
     entries.sort(key=lambda e: e.get("last_seen_at", 0), reverse=True)
     return entries[:limit]
+
+
+# --- community reports (feature: crowd verdicts) ---
+
+def _reports_path(digest: str) -> str:
+    return f"reports/{digest}.json"
+
+
+def add_report(digest: str, entry: dict) -> dict:
+    """Append a user report (false_positive / malicious / note) for a hash."""
+    record = _blob_get(_reports_path(digest)) or {"sha256": digest, "reports": []}
+    entry = {k: str(v)[:500] for k, v in entry.items()}
+    entry["at"] = time.time()
+    record["reports"].append(entry)
+    record["tally"] = {}
+    for r_ in record["reports"]:
+        k_ = r_.get("verdict", "note")
+        record["tally"][k_] = record["tally"].get(k_, 0) + 1
+    _blob_put(_reports_path(digest), record)
+    return {"sha256": digest, "total": len(record["reports"]), "tally": record["tally"]}
+
+
+def get_reports(digest: str) -> dict:
+    return _blob_get(_reports_path(digest)) or {"sha256": digest, "reports": [], "tally": {}}
+
+
+# --- global stats counter (feature: public live stats) ---
+
+def _stats_path() -> str:
+    return "meta/stats.json"
+
+
+def bump_stats(risk_level: str) -> dict:
+    stats = _blob_get(_stats_path()) or {"total_scans": 0, "by_risk": {}, "started_at": time.time()}
+    stats["total_scans"] = int(stats.get("total_scans", 0)) + 1
+    by = stats.setdefault("by_risk", {})
+    by[risk_level] = int(by.get(risk_level, 0)) + 1
+    stats["updated_at"] = time.time()
+    _blob_put(_stats_path(), stats)
+    return stats
+
+
+def get_stats() -> dict:
+    return _blob_get(_stats_path()) or {"total_scans": 0, "by_risk": {}}
+
+
+# --- watch list / diff guard (feature: rug-pull detection) ---
+
+def _watch_path(watch_id: str) -> str:
+    return f"watch/{watch_id}.json"
+
+
+def create_watch(url: str, digest: str, webhook_url: str = "") -> dict:
+    import secrets as _secrets
+    wid = _secrets.token_urlsafe(12)
+    rec = {"watch_id": wid, "url": url[:300], "baseline_sha256": digest,
+           "created_at": time.time(), "webhook_url": webhook_url[:300] if webhook_url else "",
+           "checks": 0, "last_checked_at": 0}
+    _blob_put(_watch_path(wid), rec)
+    return rec
+
+
+def get_watch(watch_id: str) -> dict | None:
+    return _blob_get(_watch_path(watch_id))
+
+
+def update_watch(rec: dict) -> None:
+    _blob_put(_watch_path(rec["watch_id"]), rec)
+
+
+# --- skill DNA storage ---
+
+def store_dna(digest: str, dna: str, risk_level: str, name: str) -> None:
+    _blob_put(f"dna/{dna}_{digest[:12]}.json",
+              {"sha256": digest, "dna": dna, "risk_level": risk_level,
+               "name": name[:120], "at": time.time()})
+
+
+def find_similar_dna(dna: str, exclude_digest: str = "", max_results: int = 5) -> list[dict]:
+    """Scan stored DNA blobs; return entries within Hamming distance <= 12."""
+    url = f"{BLOB_API_BASE}/?prefix=dna/&limit=200"
+    req = urllib.request.Request(url, headers=_blob_headers(), method="GET")
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            listing = json.loads(resp.read().decode())
+    except Exception:  # noqa: BLE001
+        return []
+    out = []
+    for b in listing.get("blobs", []):
+        if exclude_digest and exclude_digest[:12] in b["pathname"]:
+            continue
+        try:
+            dl_req = urllib.request.Request(b["url"], headers=_blob_headers(), method="GET")
+            with urllib.request.urlopen(dl_req, timeout=10) as resp:
+                e = json.loads(resp.read().decode())
+        except Exception:  # noqa: BLE001
+            continue
+        dist = hamming_hex(dna, e.get("dna", ""))
+        if dist <= 12:
+            out.append({"sha256": e.get("sha256"), "name": e.get("name"),
+                        "risk_level": e.get("risk_level"), "distance": dist})
+    out.sort(key=lambda x: x["distance"])
+    return out[:max_results]
