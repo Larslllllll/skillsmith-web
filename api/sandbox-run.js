@@ -6,6 +6,7 @@
 // returning a web Response from here makes every request hang until the
 // runtime timeout (that was the original deploy bug).
 const crypto = require("crypto");
+const zlib = require("zlib");
 const os = require("os");
 const fs = require("fs");
 const path = require("path");
@@ -114,14 +115,33 @@ async function ensureOpencode() {
   if (!_ocPromise) {
     _ocPromise = (async () => {
       fs.mkdirSync(OC_DIR, { recursive: true });
-      const tgz = path.join(OC_DIR, "oc.tar.gz");
       const resp = await fetch(OC_URL);
       if (!resp.ok) throw new Error(`download failed: ${resp.status}`);
-      const buf = Buffer.from(await resp.arrayBuffer());
-      fs.writeFileSync(tgz, buf);
-      await execFileP("tar", ["-xzf", tgz, "-C", OC_DIR]);
-      fs.unlinkSync(tgz);
-      fs.chmodSync(OC_BIN, 0o755);
+      const tgzBuf = Buffer.from(await resp.arrayBuffer());
+      // Amazon Linux lambda images have no tar binary -> minimal ustar
+      // extraction with the built-in zlib module.
+      const tarBuf = zlib.gunzipSync(tgzBuf);
+      let offset = 0, extracted = 0;
+      while (offset + 512 <= tarBuf.length) {
+        const header = tarBuf.subarray(offset, offset + 512);
+        if (header.every(b => b === 0)) break;
+        const name = header.subarray(0, 100).toString("utf8").replace(/\0.*$/, "");
+        const sizeStr = header.subarray(124, 136).toString("utf8").replace(/\0.*$/, "").trim();
+        const size = parseInt(sizeStr || "0", 8) || 0;
+        const typeflag = String.fromCharCode(header[156] || 48);
+        offset += 512;
+        const content = tarBuf.subarray(offset, offset + size);
+        offset += Math.ceil(size / 512) * 512;
+        if (typeflag !== "0" && typeflag !== "\0") continue; // skip dirs/links/pax
+        const base = name.split("/").pop();
+        if (!base) continue;
+        fs.writeFileSync(path.join(OC_DIR, base), content);
+        fs.chmodSync(path.join(OC_DIR, base), 0o755);
+        extracted++;
+      }
+      if (!fs.existsSync(OC_BIN)) {
+        throw new Error(`opencode not found after extract (${extracted} files: ${fs.readdirSync(OC_DIR).join(",")})`);
+      }
       return OC_BIN;
     })().catch(e => { _ocPromise = null; throw e; });
   }
