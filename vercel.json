@@ -8,8 +8,14 @@
     { "src": "/api/auth/(.*)", "dest": "/api/index.py" },
     { "src": "/mcp", "dest": "/api/index.py" },
     { "src": "/health", "dest": "/api/index.py" },
+    { "src": "/api/sandbox-run", "dest": "/api/sandbox-run.js" },
     { "src": "/badge", "dest": "/api/index.py" },
-    { "src": "/api/public_scan", "dest": "/api/index.py" }
+    { "src": "/api/public_scan", "dest": "/api/index.py" },
+    { "src": "/api/analysis", "dest": "/api/index.py" },
+    { "src": "/api/lookup", "dest": "/api/index.py" },
+    { "src": "/api/registry", "dest": "/api/index.py" },
+    { "src": "/api/skill", "dest": "/api/index.py" },
+    { "src": "/api/buy_credit", "dest": "/api/index.py" }
   ],
   "headers": [
     {

@@ -52,7 +52,7 @@ def query_osv(pins: list[dict], timeout: float = 6.0) -> list[dict]:
             data = json.loads(resp.read().decode())
         results = data.get("results", [])
     except Exception:  # noqa: BLE001 - fail open
-        return [{"**pin": p, "error": "osv_unavailable"} for p in pins]
+        return [{**p, "error": "osv_unavailable"} for p in pins]
 
     out = []
     for p, r in zip(pins, results):

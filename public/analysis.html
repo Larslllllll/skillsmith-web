@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Behavioral Analysis — skillsmith sandbox</title>
+<meta property="og:title" content="skillsmith behavioral analysis — any.run for agent skills">
+<meta property="og:description" content="Submit an AI-agent skill and watch a simulated behavioral analysis: capabilities, IOCs, severity. Runs in an isolated container.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>
+:root{--bg:#0b0e14;--panel:#121722;--border:#232a3a;--text:#e6edf3;--muted:#8b949e;--accent:#58a6ff;--green:#2ea043;--yellow:#d29922;--red:#da3633;--darkred:#a40626;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'SF Mono',ui-monospace,Menlo,Consolas,monospace;line-height:1.5;font-size:14px}
+main{max-width:900px;margin:0 auto;padding:1.5rem 1rem 4rem}
+h1{font-size:1.2rem}h1 span,h2 span{color:var(--muted)}
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:1.1rem;margin-bottom:1rem;min-width:0}
+textarea{width:100%;min-height:180px;background:#080b10;color:var(--text);border:1px solid var(--border);border-radius:6px;padding:.7rem;font-family:inherit;font-size:.8rem;resize:vertical}
+button{background:var(--accent);border:none;color:#04121f;font-family:inherit;font-weight:700;padding:.55rem 1.2rem;border-radius:6px;cursor:pointer;font-size:.85rem}
+button:disabled{opacity:.5;cursor:wait}
+.gauge{display:flex;align-items:center;gap:1rem;margin:.5rem 0}
+.score-ring{width:84px;height:84px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-direction:column;font-weight:800;font-size:1.4rem;border:4px solid var(--border);flex-shrink:0}
+.cap{display:inline-block;background:#0a0d13;border:1px solid var(--border);border-radius:4px;padding:.15rem .5rem;margin:.15rem;font-size:.72rem}
+.cap.on{border-color:var(--red);color:var(--red)}
+table{width:100%;border-collapse:collapse;font-size:.78rem}
+td,th{text-align:left;padding:.35rem .5rem;border-bottom:1px solid var(--border);word-break:break-all}
+tr:hover td{background:#0a0d13}
+.step{border-left:2px solid var(--border);padding:.3rem 0 .3rem .8rem;margin:.4rem 0}
+.sev-benign{color:var(--green)}.sev-notable{color:var(--yellow)}.sev-suspicious,.sev-malicious{color:var(--red)}
+.muted{color:var(--muted);font-size:.75rem}
+pre{white-space:pre-wrap;word-break:break-word;background:#080b10;border:1px solid var(--border);border-radius:6px;padding:.7rem;font-size:.72rem;overflow-x:auto}
+@media(max-width:520px){.gauge{flex-direction:column;text-align:center}}
+</style>
+</head>
+<body>
+<main>
+<h1>behavioral sandbox <span>/ any.run for agent skills</span></h1>
+<p class="muted">Submit an AI-agent skill. An isolated analyst container reads it and simulates what would happen if an agent followed it — then rates severity. Nothing executes on real systems.</p>
+
+<div class="panel" id="submitPanel">
+  <textarea id="skillText" placeholder="Paste the full SKILL.md here..."></textarea>
+  <div style="margin-top:.6rem;display:flex;gap:.8rem;align-items:center;">
+    <button id="runBtn" onclick="runAnalysis()">Run behavioral analysis</button>
+    <span class="muted" id="status"></span>
+  </div>
+</div>
+
+<div id="loading" style="display:none;" class="panel">
+  <p>Analyst container is reading the skill... typically 60–150 s (free model).</p>
+  <div style="height:8px;background:var(--border);border-radius:4px;overflow:hidden"><div id="bar" style="height:100%;width:5%;background:var(--accent);transition:width 3s"></div></div>
+</div>
+
+<div id="report" style="display:none;"></div>
+<div id="permalink" style="display:none;" class="panel">
+  <span class="muted">Shareable report: </span><a id="plink" href="#"></a>
+</div>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+function esc(s){return String(s ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+async function runAnalysis(){
+  const text = $('skillText').value;
+  if(!text.trim()){ $('status').textContent='paste a SKILL.md first'; return; }
+  $('runBtn').disabled = true; $('status').textContent='';
+  $('loading').style.display=''; let pct=5;
+  const bar=$('bar'); const tick=setInterval(()=>{pct=Math.min(92,pct+2.2);bar.style.width=pct+'%'},3000);
+  try{
+    const r = await fetch('/api/sandbox-run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})});
+    const d = await r.json();
+    clearInterval(tick); $('loading').style.display='none';
+    if(d.status==='complete'){ renderReport(d); if(d.analysis_id){$('permalink').style.display='';const u=location.origin+'/analysis.html?id='+d.analysis_id;$('plink').href=u;$('plink').textContent=u;} }
+    else { $('status').textContent='analysis failed ('+(d.error||'engine error')+') - retry or use the static scanner'; }
+  }catch(e){
+    clearInterval(tick); $('loading').style.display='none';
+    $('status').textContent='request failed: '+esc(e.message)+' (timeout? free model may be busy - retry)';
+  }
+  $('runBtn').disabled=false;
+}
+
+function renderReport(d){
+  const ai=d.ai_analysis||{};
+  const sev=ai.severity||{};
+  const level=(sev.level||'unknown');
+  const color={benign:'var(--green)',notable:'var(--yellow)',suspicious:'var(--red)',malicious:'var(--darkred)'}[level]||'var(--muted)';
+  const caps=ai.capabilities_summary||{};
+  const capNames={network_out:'network out',filesystem_read:'fs read',filesystem_write:'fs write',env_access:'env vars',subprocess:'subprocess',credential_access:'credentials',persistence:'persistence',obfuscation:'obfuscation'};
+  let h='';
+  h+='<div class="panel"><div class="gauge">';
+  h+=`<div class="score-ring" style="border-color:${color};color:${color}">${sev.score??'?'}<span class="muted" style="font-size:.6rem">/100</span></div>`;
+  h+=`<div><div class="verdict sev-${esc(level)}" style="font-size:1.3rem;font-weight:800">${esc(level.toUpperCase())}</div>`;
+  h+=`<div class="muted">id ${esc(d.analysis_id)} · ${esc(d.duration_s||'?')}s · ${esc(d.engine)} · ${esc(d.runtime)}</div></div></div>`;
+  h+=`<p>${esc(sev.reasoning||'')}</p>`;
+  h+='<h2 style="font-size:.95rem">Capabilities <span>— what the skill would touch</span></h2>';
+  for(const [k,label] of Object.entries(capNames)){
+    const on=!!caps[k]; h+=`<span class="cap ${on?'on':''}">${on?'●':'○'} ${label}</span>`;
+  }
+  h+='</div>';
+
+  const acts=ai.simulated_actions||[];
+  if(acts.length){
+    h+='<div class="panel"><h2 style="font-size:.95rem;margin-top:0">Simulated action trace</h2>';
+    acts.forEach(a=>{
+      h+=`<div class="step"><strong>#${esc(a.step)} [${esc(a.capability)}]</strong> ${esc(a.action)}${a.target?' → <code>'+esc(a.target)+'</code>':''}</div>`;
+    });
+    h+='</div>';
+  }
+  const iocs=ai.iocs||{}; const si=d.static_iocs||{};
+  const urls=iocs.urls&&iocs.urls.length?iocs.urls:(si.urls||[]);
+  const ips=iocs.ips&&iocs.ips.length?iocs.ips:(si.ips||[]);
+  if(urls.length||ips.length||(si.webhooks||[]).length||(ai.iocs?.domains||[]).length){
+    h+='<div class="panel"><h2 style="font-size:.95rem;margin-top:0">Indicators of compromise</h2><table>';
+    urls.forEach(u=>h+=`<tr><td>url</td><td>${esc(u)}</td></tr>`);
+    (ai.iocs?.domains||[]).forEach(dm=>h+=`<tr><td>domain</td><td>${esc(dm)}</td></tr>`);
+    (si.webhooks||[]).forEach(w=>h+=`<tr><td>webhook</td><td>${esc(w)}</td></tr>`);
+    ips.forEach(ip=>h+=`<tr><td>ip</td><td>${esc(ip)}</td></tr>`);
+    h+='</table></div>';
+  }
+  if(ai.what_it_wants_me_to_do){
+    h+=`<div class="panel"><h2 style="font-size:.95rem;margin-top:0">Plain language</h2><p>${esc(ai.what_it_wants_me_to_do)}</p><p><strong>Recommendation:</strong> ${esc(ai.recommendation||'-')}</p></div>`;
+  }
+  h+=`<p class="muted">${esc(d.note||'')} Static IOCs + AI simulation can miss things. Also run the <a href="/">static scanner</a>.</p>`;
+  const rep=$('report'); rep.innerHTML=h; rep.style.display='';
+}
+// permalink support
+const params=new URLSearchParams(location.search);
+if(params.get('id') && /^[0-9a-f]{16}$/.test(params.get('id'))){
+  fetch('/api/analysis?id='+params.get('id')).then(r=>r.json()).then(d=>{
+    if(d.status==='complete'){renderReport(d);$('permalink').style.display='';const u=location.origin+'/analysis.html?id='+d.analysis_id;$('plink').href=u;$('plink').textContent=u;$('submitPanel').style.display='none';}
+  }).catch(()=>{});
+}
+</script>
+</body>
+</html>

@@ -21,7 +21,11 @@ def _hash64(s: str) -> int:
 
 
 def simhash(text: str) -> str:
-    """64-bit simhash as hex; near-duplicate skills get near-identical DNA."""
+    """64-bit simhash as hex; near-duplicate skills get near-identical DNA.
+    Returns "" for degenerate inputs (<3 words): an all-zero DNA would make
+    unrelated tiny skills look like distance-0 duplicates (audit L15)."""
+    if len(re.sub(r"[^a-z0-9\s]", " ", text.lower()).split()) < 3:
+        return ""
     v = [0] * 64
     n = 0
     for sh in _shingles(text):
@@ -84,15 +88,24 @@ def explain_findings(findings: list) -> list:
 
 # --- Verdict certificates ---------------------------------------------------
 
-def _cert_secret() -> bytes:
-    s = os.environ.get("SKILLSMITH_CERT_SECRET") or os.environ.get("BLOB_READ_WRITE_TOKEN") or "skillsmith-dev-secret"
+def _cert_secret() -> bytes | None:
+    """Certificates are only as trustworthy as this secret. With neither
+    SKILLSMITH_CERT_SECRET nor BLOB_READ_WRITE_TOKEN set (i.e. local dev),
+    return None and let callers refuse to issue/verify rather than sign with
+    a hardcoded constant (audit L16)."""
+    s = os.environ.get("SKILLSMITH_CERT_SECRET") or os.environ.get("BLOB_READ_WRITE_TOKEN")
+    if not s:
+        return None
     return hashlib.sha256(("cert:" + s).encode()).digest()
 
 
 def make_certificate(sha256: str, risk_level: str, security_score, ts=None) -> dict:
+    secret = _cert_secret()
+    if secret is None:
+        raise RuntimeError("certificate signing unavailable: no secret configured")
     ts = int(ts if ts is not None else time.time())
     payload = f"{sha256}|{risk_level}|{security_score}|{ts}"
-    sig = hmac.new(_cert_secret(), payload.encode(), hashlib.sha256).hexdigest()[:32]
+    sig = hmac.new(secret, payload.encode(), hashlib.sha256).hexdigest()[:32]
     return {"sha256": sha256, "risk_level": risk_level, "security_score": security_score,
             "issued_at": ts, "signature": sig}
 
@@ -102,8 +115,11 @@ def verify_certificate(cert: dict, max_age_days: int = 90) -> bool:
         ts = int(cert["issued_at"])
         if time.time() - ts > max_age_days * 86400:
             return False
+        secret = _cert_secret()
+        if secret is None:
+            return False
         payload = f"{cert['sha256']}|{cert['risk_level']}|{cert['security_score']}|{ts}"
-        expect = hmac.new(_cert_secret(), payload.encode(), hashlib.sha256).hexdigest()[:32]
+        expect = hmac.new(secret, payload.encode(), hashlib.sha256).hexdigest()[:32]
         return hmac.compare_digest(expect, str(cert.get("signature", "")))
     except Exception:  # noqa: BLE001
         return False

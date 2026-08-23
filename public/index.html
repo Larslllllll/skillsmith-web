@@ -485,8 +485,12 @@ function getApiKey() { return localStorage.getItem('skillsmith-api-key') || ''; 
   // GitHub login redirects back to /#key=sk_..., pick it up and store it,
   // then clean the URL so the key doesn't linger in browser history.
   if (location.hash.startsWith('#key=')) {
-    const key = decodeURIComponent(location.hash.slice(5));
-    localStorage.setItem('skillsmith-api-key', key);
+    try {
+      const key = decodeURIComponent(location.hash.slice(5));
+      if (/^sk_[A-Za-z0-9_-]{10,80}$/.test(key)) {
+        localStorage.setItem('skillsmith-api-key', key);
+      }
+    } catch (e) { /* malformed %-encoding must not kill the whole script (audit L13) */ }
     history.replaceState(null, '', location.pathname + location.search);
   }
   const params = new URLSearchParams(location.search);
@@ -692,6 +696,8 @@ async function runScan(payload, btn) {
     }
     render(data);
     refreshAccountBar();
+  } catch (e) {
+    showResultError('NETWORK ERROR', 'Scan request failed: ' + (e && e.message ? e.message : 'unknown') + '. Check your connection and retry.'); // audit L14
   } finally {
     btn.disabled = false; btn.textContent = originalLabel;
   }
@@ -833,8 +839,11 @@ function render(data) {
     if (!key) { promptLogin(); return; }
     const q = searchInput.value.trim().toLowerCase();
     if (q.length !== 64) { alert('Paste a full 64-character SHA-256 hash.'); return; }
-    const res = await fetch('/api/lookup?sha256=' + encodeURIComponent(q) + '&api_key=' + encodeURIComponent(key));
-    const found = await res.json();
+    let res, found;
+    try {
+      res = await fetch('/api/lookup?sha256=' + encodeURIComponent(q) + '&api_key=' + encodeURIComponent(key));
+      found = await res.json();
+    } catch (e) { alert('Lookup failed: ' + e.message); return; } // audit L14
     if (res.status === 401) { showResultError('SIGN IN REQUIRED', found.message || 'Sign in to look up a hash.'); return; }
     if (res.status === 429) { showResultError('LOOKUP LIMIT REACHED', (found.quota && found.quota.error) || 'try again tomorrow.'); return; }
     addRow(db, [bold(found.found ? 'Found:' : 'Not found:'), ' ' + (found.found ? `seen ${found.record.seen_count}x, name "${found.record.name || '?'}"` : 'no record for this hash yet.')]);

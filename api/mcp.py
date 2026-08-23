@@ -136,6 +136,13 @@ def _call_tool(name, args, client_ip: str = ""):
         key, _record = create_account()
         return _tool_result({"api_key": key, "free_daily_limit": 5, "note": "Save this key; it's the only way to recover this account."})
 
+    # logic audit L2: REST requires an explicit api_key; MCP must too, or
+    # empty keys made every quota call "anonymous" = unmetered.
+    if name in ("scan_skill", "lookup_hash", "get_skill_content", "list_safe_skills", "whoami"):
+        if not api_key:
+            return _tool_result({"error": "api_key required",
+                                 "tip": "call skillsmith_signup first (free), then pass the key as api_key"})
+
     if name == "scan_skill":
         text = args.get("text", "")
         url = args.get("url", "")
@@ -151,7 +158,15 @@ def _call_tool(name, args, client_ip: str = ""):
             return _tool_result({"error": "quota_exceeded", "quota": quota_info})
         digest = sha256_of(text)
         result = idx.analyze(text)
+        # logic audit L6: MCP must run the same OSV enrichment as REST,
+        # otherwise the two front doors can produce different verdicts for
+        # the same hash (and MCP could publish what REST would gate).
+        try:
+            idx.enrich_with_osv(result, text)
+        except Exception:  # noqa: BLE001
+            pass
         publish = bool(args.get("publish"))
+        seen_before = get_scan_record(digest) is not None  # read BEFORE upsert
         try:
             history = record_scan(digest, result, name=result.get("name") or "", publish=publish, text=text)
         except Exception:  # noqa: BLE001
@@ -159,15 +174,16 @@ def _call_tool(name, args, client_ip: str = ""):
         result["quota"] = quota_info
         result["sha256"] = digest
         result["scan_history"] = {
-            "seen_before": get_scan_record(digest) is not None,
+            "seen_before": seen_before,
             "seen_count": (history or {}).get("seen_count", 1),
             "published": bool((history or {}).get("has_content")),
         }
         return _tool_result(result)
 
     if name == "lookup_hash":
-        digest = args.get("sha256", "").lower()
-        if len(digest) != 64:
+        import re as _re_mod
+        digest = str(args.get("sha256", "")).lower()
+        if not _re_mod.fullmatch(r"[0-9a-f]{64}", digest):  # audit L11
             return _tool_result({"error": "sha256 must be a 64-char hex digest"})
         allowed, quota_info = check_and_consume_lookup_quota(api_key or None)
         if not allowed:
@@ -176,8 +192,9 @@ def _call_tool(name, args, client_ip: str = ""):
         return _tool_result({"disclaimer": idx.DISCLAIMER, "found": record is not None, "record": record, "quota": quota_info})
 
     if name == "get_skill_content":
-        digest = args.get("sha256", "").lower()
-        if len(digest) != 64:
+        import re as _re_mod
+        digest = str(args.get("sha256", "")).lower()
+        if not _re_mod.fullmatch(r"[0-9a-f]{64}", digest):  # audit L11
             return _tool_result({"error": "sha256 must be a 64-char hex digest"})
         allowed, quota_info = check_and_consume_lookup_quota(api_key or None)
         if not allowed:
@@ -202,8 +219,18 @@ def _call_tool(name, args, client_ip: str = ""):
         record = get_account(api_key)
         if record is None:
             return _tool_result({"error": "unknown api_key"})
+        import time as _time
+        now = _time.time()
+        if record.get("unlimited"):
+            tier = "unlimited"
+        elif record.get("premium_expires_at", 0) > now:  # truthiness lied about expired tiers (audit L7)
+            tier = "premium"
+        elif record.get("pro_expires_at", 0) > now:
+            tier = "pro"
+        else:
+            tier = "free"
         return _tool_result({
-            "tier": "unlimited" if record.get("unlimited") else "premium" if record.get("premium_expires_at", 0) else "pro" if record.get("pro_expires_at", 0) else "free",
+            "tier": tier,
             "free_used_today": record.get("free_used_count", 0),
             "pro_used_today": record.get("pro_used_count", 0),
             "bonus_credits": record.get("bonus_credits", 0),

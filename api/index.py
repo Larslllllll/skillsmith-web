@@ -476,6 +476,41 @@ def _fetch_skill_url(url):
     return data.decode("utf-8", errors="replace")
 
 
+def enrich_with_osv(result: dict, text: str) -> dict:
+    """OSV.dev dependency check shared by REST and MCP (logic audit L6).
+
+    Fail-open: if OSV is unreachable the static result passes through.
+    Recomputes risk_score/risk_level AND security_score together so the DB
+    never stores a contradictory pair (L5)."""
+    try:
+        from .osv import extract_pins, query_osv
+    except ImportError:
+        from osv import extract_pins, query_osv
+    try:
+        pins = extract_pins(text)
+        if not pins:
+            return result
+        result["osv"] = {"checked": len(pins), "packages": query_osv(pins)}
+        vulnerable = [p for p in result["osv"]["packages"] if p.get("vulnerabilities")]
+        if vulnerable:
+            result["findings"] = list(result.get("findings", [])) + [{
+                "source": "osv",
+                "message": f"known vulnerabilities in {p['package']} {p['version']}: " +
+                           ", ".join(v["id"] for v in p["vulnerabilities"][:4]) +
+                           (" (+more)" if len(p["vulnerabilities"]) > 4 else ""),
+                "weight": 8,
+            } for p in vulnerable]
+            new_score = sum(f.get("weight", 0) for f in result["findings"])
+            result["risk_score"] = new_score
+            result["risk_level"] = ("clean" if new_score == 0 else "low" if new_score < 8 else
+                                    "medium" if new_score < 20 else "high")
+            result["security_score"] = max(0, 100 - new_score * 4)
+    except Exception:  # noqa: BLE001 - OSV must never break a scan
+        pass
+    return result
+
+
+
 def handle_scan(environ, start_response):
     try:
         payload = _read_json(environ)
@@ -518,36 +553,7 @@ def handle_scan(environ, start_response):
         cached = get_scan_record(digest)
         result = analyze(text)
 
-        # OSV.dev dependency check (fail-open): pinned packages in the
-        # skill's code blocks get checked against known vulnerabilities.
-        try:
-            from .osv import extract_pins, query_osv
-        except ImportError:
-            from osv import extract_pins, query_osv
-        try:
-            pins = extract_pins(text)
-            if pins:
-                result["osv"] = {"checked": len(pins), "packages": query_osv(pins)}
-                vuln_count = sum(len(p.get("vulnerabilities", [])) for p in result["osv"]["packages"])
-                if vuln_count:
-                    # one finding per vulnerable PACKAGE (not per CVE): an old
-                    # pin often has a dozen GHSAs and one finding per CVE would
-                    # drown out everything else in the report.
-                    result["findings"] = list(result.get("findings", [])) + [{
-                        "source": "osv",
-                        "message": f"known vulnerabilities in {p_['package']} {p_['version']}: " +
-                                   ", ".join(v["id"] for v in p_["vulnerabilities"][:4]) +
-                                   (" (+more)" if len(p_["vulnerabilities"]) > 4 else ""),
-                        "weight": 8,
-                    } for p_ in result["osv"]["packages"] if p_.get("vulnerabilities")]
-                    # recompute risk score with the new findings included
-                    new_score = min(100, sum(f.get("weight", 0) for f in result["findings"]))
-                    result["risk_score"] = max(result.get("risk_score", 0), new_score)
-                    rs = result["risk_score"]
-                    result["risk_level"] = ("clean" if rs == 0 else "low" if rs < 8 else
-                                            "medium" if rs < 20 else "high")
-        except Exception:  # noqa: BLE001 - OSV must never break a scan
-            pass
+        enrich_with_osv(result, text)
 
         publish = bool(payload.get("publish"))
         try:
@@ -689,17 +695,17 @@ def handle_get_skill(environ, start_response):
                 "error": "sign_in_required",
                 "message": "Sign in (free) to fetch a published skill's content.",
             }).encode()]
+        qs = urllib.parse.parse_qs(environ.get("QUERY_STRING", ""))
+        digest = (qs.get("sha256") or [""])[0].lower()
+        if not _valid_sha256(digest):  # logic audit L11+L12: validate BEFORE
+            # consuming quota, so a malformed request never costs a unit.
+            start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": "sha256 query param must be a 64-char hex digest"}).encode()]
         allowed, quota_info = check_and_consume_lookup_quota(explicit_api_key)
         if not allowed:
             status = "401 Unauthorized" if quota_info.get("error", "").startswith("unknown api_key") else "429 Too Many Requests"
             start_response(status, [("Content-Type", "application/json")] + _CORS_HEADERS)
             return [json.dumps({"error": "quota_exceeded", "quota": quota_info}).encode()]
-
-        qs = urllib.parse.parse_qs(environ.get("QUERY_STRING", ""))
-        digest = (qs.get("sha256") or [""])[0].lower()
-        if len(digest) != 64:
-            start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
-            return [json.dumps({"error": "sha256 query param must be a 64-char hex digest"}).encode()]
 
         text = get_published_content(digest)
         if text is None:
@@ -838,17 +844,17 @@ def handle_lookup(environ, start_response):
                 "error": "sign_in_required",
                 "message": "Sign in (free) to look up a hash. 5 lookups/day free, 150/day Pro, unlimited Premium.",
             }).encode()]
+        qs = urllib.parse.parse_qs(environ.get("QUERY_STRING", ""))
+        digest = (qs.get("sha256") or [""])[0].lower()
+        if not _valid_sha256(digest):  # logic audit L11+L12: validate BEFORE
+            # consuming quota, so a malformed request never costs a unit.
+            start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": "sha256 query param must be a 64-char hex digest"}).encode()]
         allowed, quota_info = check_and_consume_lookup_quota(explicit_api_key)
         if not allowed:
             status = "401 Unauthorized" if quota_info.get("error", "").startswith("unknown api_key") else "429 Too Many Requests"
             start_response(status, [("Content-Type", "application/json")] + _CORS_HEADERS)
             return [json.dumps({"error": "quota_exceeded", "quota": quota_info}).encode()]
-
-        qs = urllib.parse.parse_qs(environ.get("QUERY_STRING", ""))
-        digest = (qs.get("sha256") or [""])[0].lower()
-        if len(digest) != 64:
-            start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
-            return [json.dumps({"error": "sha256 query param must be a 64-char hex digest"}).encode()]
         record = get_scan_record(digest)
         start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({"disclaimer": DISCLAIMER, "quota": quota_info, "found": record is not None, "record": record}).encode()]
@@ -870,9 +876,12 @@ def handle_signup(environ, start_response, method):
             start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
             return [json.dumps({"error": "unknown api_key"}).encode()]
         is_pro = record.get("pro_expires_at", 0) > time.time()
+        is_premium = record.get("premium_expires_at", 0) > time.time()
         today = time.strftime("%Y-%m-%d", time.gmtime())
         if record.get("unlimited"):
             body = {"tier": "unlimited", "name": record.get("name", "")}
+        elif is_premium:
+            body = {"tier": "premium", "name": record.get("name", "")}
         elif is_pro:
             used = record.get("pro_used_count", 0) if record.get("pro_used_date") == today else 0
             body = {"tier": "pro", "limit": PRO_DAILY_LIMIT, "used": used,
@@ -1074,6 +1083,9 @@ def _escape_svg(text: str) -> str:
     return (str(text).replace("&", "&amp;").replace("<", "&lt;")
             .replace(">", "&gt;").replace('"', "&quot;"))
 
+def _valid_sha256(digest: str) -> bool:
+    return bool(re.fullmatch(r"[0-9a-fA-F]{64}", digest or ""))
+
 
 def handle_badge(environ, start_response):
     qs = urllib.parse.parse_qs(environ.get("QUERY_STRING", ""))
@@ -1083,7 +1095,8 @@ def handle_badge(environ, start_response):
                ("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'"),
                ("Cache-Control", "public, max-age=60")] + _CORS_HEADERS
 
-    if len(digest) != 64 or not all(c in "0123456789abcdef" for c in digest):
+    if not _valid_sha256(digest):  # logic audit L11
+
         svg = _badge_svg("skillsmith", "invalid hash", "#6e7681")
         start_response("400 Bad Request", headers)
         return [svg.encode()]
@@ -1122,7 +1135,7 @@ def handle_public_scan(environ, start_response):
         return [json.dumps({"error": rl_error}).encode()]
     qs = urllib.parse.parse_qs(environ.get("QUERY_STRING", ""))
     digest = (qs.get("sha256", [""])[0] or "").lower().strip()
-    if len(digest) != 64 or not any(c.isalpha() or c.isdigit() for c in digest):
+    if not _valid_sha256(digest):  # logic audit L11: strict hex check
         start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({"error": "sha256 must be a 64-char hex digest"}).encode()]
     rec = get_scan_record(digest)
@@ -1148,6 +1161,25 @@ def handle_health(environ, start_response):
     """Cheap liveness probe for uptime monitors -- no blob/network calls."""
     start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
     return [json.dumps({"ok": True, "service": "skillsmith-web", "time": time.time()}).encode()]
+
+def handle_analysis(environ, start_response):
+    """Fetch a completed behavioral analysis report by id (shareable permalink)."""
+    qs = urllib.parse.parse_qs(environ.get("QUERY_STRING", ""))
+    aid = (qs.get("id", [""])[0] or "").strip()
+    if not re.fullmatch(r"[0-9a-f]{16}", aid):
+        start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
+        return [json.dumps({"error": "id must be 16 hex chars"}).encode()]
+    try:
+        from .account import _blob_get
+    except ImportError:
+        from account import _blob_get
+    rec = _blob_get(f"analyses/{aid}.json")
+    if rec is None:
+        start_response("404 Not Found", [("Content-Type", "application/json")] + _CORS_HEADERS)
+        return [json.dumps({"error": "unknown analysis id"}).encode()]
+    # private blob: serve through, strip nothing -- report contains no secrets
+    start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
+    return [json.dumps(rec).encode()]
 
 
 def app(environ, start_response):
@@ -1175,6 +1207,12 @@ def _app_inner(environ, start_response):
     if method == "OPTIONS":
         start_response("204 No Content", _CORS_HEADERS)
         return [b""]
+
+    if path.rstrip("/").endswith("/api/analysis"):
+        if method != "GET":
+            start_response("405 Method Not Allowed", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": "GET only"}).encode()]
+        return handle_analysis(environ, start_response)
 
     if path.rstrip("/").endswith("/health"):
         return handle_health(environ, start_response)

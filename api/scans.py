@@ -25,7 +25,20 @@ try:
     from .account import _blob_get, _blob_put, BLOB_API_BASE, _blob_headers
 except ImportError:  # local/script execution without package context
     from account import _blob_get, _blob_put, BLOB_API_BASE, _blob_headers
+
+
+def _blob_delete(path: str) -> None:
+    """Best-effort delete via the Blob store's REST delete endpoint."""
+    req = urllib.request.Request(
+        f"{BLOB_API_BASE}?pathname={urllib.parse.quote(path)}",
+        headers=_blob_headers(), method="DELETE")
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            resp.read()
+    except Exception:  # noqa: BLE001 - best effort by design
+        pass
 import urllib.request
+import urllib.parse
 import json
 
 
@@ -89,6 +102,16 @@ def record_scan(digest: str, analysis: dict, name: str = "", publish: bool = Fal
     if publish and is_safe and text:
         _blob_put(_content_path(digest), {"text": text, "published_at": time.time()})
         has_content = True
+
+    # logic audit L4: publishing must be reversible. If a later scan of the
+    # SAME hash comes back not-clean, the stale clean registry entry and any
+    # stored content would keep serving a skill that no longer passes -- pull
+    # both immediately.
+    if not is_safe:
+        _blob_delete(_registry_path(digest))
+        _blob_delete(_content_path(digest))
+        has_content = False
+
     existing["has_content"] = has_content
 
     _blob_put(_scan_path(digest), existing)

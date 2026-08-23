@@ -356,6 +356,19 @@ def check_and_consume_quota(api_key: str | None) -> tuple[bool, dict]:
         else:
             return False, {"error": "unknown api_key, sign in again"}
 
+    # Race mitigation (pentest v2 F-04): blob read-modify-write is not atomic,
+    # so N parallel requests could each read the same count and all pass. After
+    # writing the incremented count we re-read it; if confirmation shows we're
+    # over the limit we roll our unit back and deny. Shrinks the race window
+    # from "always wins" to "needs precise timing", without a real lock service.
+    # NOTE: defined BEFORE both tier branches -- logic audit L1: the previous
+    # placement inside the free branch made every Pro scan crash with
+    # UnboundLocalError (and the unit was already consumed).
+    def _confirm_over(field, limit):
+        time.sleep(0.15)
+        check = _blob_get(_blob_path(api_key)) or {}
+        return int(check.get(field, 0) or 0) > limit
+
     if record.get("unlimited"):
         return True, {"tier": "unlimited"}
 
@@ -386,15 +399,6 @@ def check_and_consume_quota(api_key: str | None) -> tuple[bool, dict]:
     if record.get("free_used_date") != today:
         record["free_used_date"] = today
         record["free_used_count"] = 0
-    # Race mitigation (pentest v2 F-04): blob read-modify-write is not atomic,
-    # so N parallel requests could each read the same count and all pass. After
-    # writing the incremented count we re-read it; if confirmation shows we're
-    # over the limit we roll our unit back and deny. Shrinks the race window
-    # from "always wins" to "needs precise timing", without a real lock service.
-    def _confirm_over(field, limit):
-        time.sleep(0.15)
-        check = _blob_get(_blob_path(api_key)) or {}
-        return int(check.get(field, 0) or 0) > limit
     if record["free_used_count"] >= FREE_DAILY_LIMIT:
         if record.get("bonus_credits", 0) > 0:
             record["bonus_credits"] -= 1
