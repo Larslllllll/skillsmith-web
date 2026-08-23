@@ -221,6 +221,27 @@ module.exports = async (req, res) => {
   }
   if (req.method !== "POST") return jsonResp(res, { error: "POST only" }, 405);
 
+  // diagnostic mode: payload {"probe": "...args..."} runs opencode directly
+  // (e.g. ["--version"]) so we can see how far the binary gets in-lambda.
+  let result;
+  if (payload && typeof payload.probe === "string") {
+    const bin = await ensureOpencode();
+    const presult = await new Promise((resolve) => {
+      const child = spawn(bin, payload.probe.split(" "), { cwd: workdir, timeout: 60000,
+        env: { ...process.env, CI: "1", HOME: "/tmp/oc-home",
+               XDG_DATA_HOME: "/tmp/oc-home/.local/share", XDG_CONFIG_HOME: "/tmp/oc-home/.config",
+               XDG_CACHE_HOME: "/tmp/oc-home/.cache" } });
+      let out = "", err = "";
+      child.stdout.on("data", d => { out += d; });
+      child.stderr.on("data", d => { err += d; });
+      child.on("error", e => resolve({ ok: false, out, err: String(e) }));
+      child.on("close", () => resolve({ ok: true, out, err }));
+    });
+    return jsonResp(res, { probe: payload.probe, out_tail: (presult.out || "").slice(-1500),
+                           err_tail: (presult.err || "").slice(-2500), status: presult.ok ? "ran" : "spawn_error" },
+                   200);
+  }
+
   let payload;
   try { payload = JSON.parse(await readBody(req) || "{}"); }
   catch (e) { return jsonResp(res, { error: e.message === "body too large" ? "body too large" : "invalid json" }, 400); }
@@ -256,26 +277,6 @@ Produce ONE JSON object (and nothing after it) with exactly these keys:
   "recommendation": "install / avoid / inspect-further"
 }`;
 
-  // diagnostic mode: payload {"probe": "...args..."} runs opencode directly
-  // (e.g. ["--version"]) so we can see how far the binary gets in-lambda.
-  let result;
-  if (payload && typeof payload.probe === "string") {
-    const bin = await ensureOpencode();
-    const presult = await new Promise((resolve) => {
-      const child = spawn(bin, payload.probe.split(" "), { cwd: workdir, timeout: 60000,
-        env: { ...process.env, CI: "1", HOME: "/tmp/oc-home",
-               XDG_DATA_HOME: "/tmp/oc-home/.local/share", XDG_CONFIG_HOME: "/tmp/oc-home/.config",
-               XDG_CACHE_HOME: "/tmp/oc-home/.cache" } });
-      let out = "", err = "";
-      child.stdout.on("data", d => { out += d; });
-      child.stderr.on("data", d => { err += d; });
-      child.on("error", e => resolve({ ok: false, out, err: String(e) }));
-      child.on("close", () => resolve({ ok: true, out, err }));
-    });
-    return jsonResp(res, { probe: payload.probe, out_tail: (presult.out || "").slice(-1500),
-                           err_tail: (presult.err || "").slice(-2500), status: presult.ok ? "ran" : "spawn_error" },
-                   200);
-  }
   const started = Date.now();
   result = await runOpencode(prompt, workdir, 230000);
   const duration_s = Math.round((Date.now() - started) / 1000);
