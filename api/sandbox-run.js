@@ -110,6 +110,20 @@ function execFileP(file, args, opts) {
   });
 }
 
+async function netProbe() {
+  const probes = {};
+  for (const u of ["https://models.dev/api", "https://api.github.com"]) {
+    try {
+      const ctl = new AbortController();
+      const tmo = setTimeout(() => ctl.abort(), 8000);
+      const rr = await fetch(u, { signal: ctl.signal });
+      clearTimeout(tmo);
+      probes[u] = rr.status;
+    } catch (e) { probes[u] = "ERR " + e.message.slice(0, 60); }
+  }
+  return probes;
+}
+
 async function ensureOpencode() {
   if (fs.existsSync(OC_BIN)) return OC_BIN;
   if (!_ocPromise) {
@@ -159,6 +173,9 @@ async function runOpencode(prompt, cwd, timeoutMs) {
       { cwd, timeout: timeoutMs, env: {
         ...process.env,
         CI: "1",
+        OPENCODE_DISABLE_AUTOUPDATE: "true",
+        OPENCODE_DISABLE_TELEMETRY: "true",
+        DO_NOT_TRACK: "1",
         // lambda /home is read-only; keep ALL opencode state under /tmp
         HOME: "/tmp/oc-home",
         XDG_DATA_HOME: "/tmp/oc-home/.local/share",
@@ -254,6 +271,7 @@ Produce ONE JSON object (and nothing after it) with exactly these keys:
     duration_s,
     static_iocs: extractIocs(text),
     ai_analysis: parsed,
+    network_probe: parsed ? undefined : await netProbe(),
     debug: parsed ? undefined : {
       out_len: (result.out || "").length,
       out_tail: (result.out || "").slice(-1200),
