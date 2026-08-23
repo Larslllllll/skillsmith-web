@@ -208,6 +208,29 @@ async function runOpencode(prompt, cwd, timeoutMs) {
 // Find the analysis object itself (it contains simulated_actions) instead
 // of trusting "last JSON wins": opencode streams NDJSON events, and a
 // transient {"type":"error"} can come AFTER the answer.
+// opencode --format json emits NDJSON stream events; the model's answer
+// arrives as {"type":"text","part":{"type":"text","text":"..."}} lines with
+// the analysis JSON ESCAPED inside .part.text. Decode those first.
+function extractAnalysis(out) {
+  const texts = [];
+  for (const line of out.split("\n")) {
+    const s = line.trim();
+    if (!s || s[0] !== "{") continue;
+    try {
+      const o = JSON.parse(s);
+      if ((o.type === "text" || o.type === "tool") && o.part && typeof o.part.text === "string") {
+        texts.push(o.part.text);
+      }
+    } catch {}
+  }
+  if (texts.length) {
+    const joined = texts.join("\n");
+    const found = findAnalysis(joined);
+    if (found) return found;
+  }
+  return findAnalysis(out); // fallback: raw scan of the whole stream
+}
+
 function findAnalysis(text) {
   let idx = 0;
   while ((idx = text.indexOf('"simulated_actions"', idx)) !== -1) {
@@ -338,7 +361,7 @@ Produce ONE JSON object (and nothing after it) with exactly these keys:
     // The ONLY file in the sandbox dir is the untrusted skill itself.
     fs.writeFileSync(path.join(attemptDir, "untrusted-skill.md"), text);
     result = await runOpencode(prompt, attemptDir, 210000);
-    parsed = result.out ? findAnalysis(result.out) : null;
+    parsed = result.out ? extractAnalysis(result.out) : null;
     if (!parsed && attempt < MAX_ATTEMPTS) {
       await new Promise(r => setTimeout(r, 3000));
     }
