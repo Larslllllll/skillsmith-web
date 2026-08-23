@@ -87,9 +87,28 @@ function readBody(req) {
   });
 }
 
+function findOpencodeBin() {
+  const candidates = [
+    path.join(process.cwd(), "node_modules", "opencode-ai", "bin", "opencode.exe"),
+    path.join(process.cwd(), "node_modules", "opencode-ai", "bin", "opencode"),
+    path.join(process.cwd(), "node_modules", ".bin", "opencode"),
+  ];
+  for (const c of candidates) {
+    try { if (fs.existsSync(c)) return c; } catch {}
+  }
+  return null;
+}
+
 function runOpencode(prompt, cwd, timeoutMs) {
   return new Promise((resolve) => {
-    const bin = path.join(process.cwd(), "node_modules", ".bin", "opencode");
+    const bin = findOpencodeBin();
+    if (!bin) {
+      let listing = "";
+      try { listing = fs.readdirSync(path.join(process.cwd(), "node_modules")).slice(0, 40).join(","); } catch {}
+      resolve({ ok: false, out: "", err: "opencode binary not found. node_modules: " + listing });
+      return;
+    }
+    try { fs.chmodSync(bin, 0o755); } catch {} // exec bit can be lost in bundling
     const child = spawn(bin, ["run", "--pure", "--format", "json", "-m", MODEL, prompt],
       { cwd, timeout: timeoutMs, env: { ...process.env, CI: "1" } });
     let out = "", err = "";
