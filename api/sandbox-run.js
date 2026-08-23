@@ -221,6 +221,10 @@ module.exports = async (req, res) => {
   }
   if (req.method !== "POST") return jsonResp(res, { error: "POST only" }, 405);
 
+  let payload;
+  try { payload = JSON.parse(await readBody(req) || "{}"); }
+  catch (e) { return jsonResp(res, { error: e.message === "body too large" ? "body too large" : "invalid json" }, 400); }
+
   // diagnostic mode: payload {"probe": "...args..."} runs opencode directly
   // (e.g. ["--version"]) so we can see how far the binary gets in-lambda.
   let result;
@@ -243,10 +247,6 @@ module.exports = async (req, res) => {
                            err_tail: (presult.err || "").slice(-2500), status: presult.ok ? "ran" : "spawn_error" },
                    200);
   }
-
-  let payload;
-  try { payload = JSON.parse(await readBody(req) || "{}"); }
-  catch (e) { return jsonResp(res, { error: e.message === "body too large" ? "body too large" : "invalid json" }, 400); }
 
   let text = payload && typeof payload.text === "string" ? payload.text : "";
   if (!text.trim()) return jsonResp(res, { error: "text required (raw SKILL.md content)" }, 400);
