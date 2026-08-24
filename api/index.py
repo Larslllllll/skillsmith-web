@@ -249,7 +249,12 @@ def parse_skill_md(text: str):
     if not m:
         raise ValueError("SKILL.md must start with a YAML frontmatter block delimited by '---' lines")
     raw_frontmatter, body = m.group(1), m.group(2)
-    data = yaml.safe_load(raw_frontmatter) or {}
+    try:
+        data = yaml.safe_load(raw_frontmatter) or {}
+    except yaml.YAMLError as e133:
+        # PT-T77: yaml errors (tags, scanner errors) are client input problems,
+        # not 500-class bugs -- normalize to ValueError => clean 400
+        raise ValueError(f"invalid YAML frontmatter: {e133.problem or e133}")
     if not isinstance(data, dict):
         raise ValueError("frontmatter must be a YAML mapping")
     return data, body

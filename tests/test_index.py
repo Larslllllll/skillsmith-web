@@ -952,6 +952,16 @@ def test_short_base64_and_exfil_url():
     assert not any("credential-looking query" in f["message"] for f in ok2["findings"])
 
 
+def test_malformed_yaml_frontmatter_is_400_not_500():
+    # PT-T77: yaml tags / scanner errors must normalize to parse_ok=false
+    for bad in [
+        "---\nname: !!python/object/apply:os.system ['id']\ndescription: d\n---\n\nBody",
+        "---\n" + "x" * 100000 + ": v\nname: n\ndescription: d\n---\n\nBody",
+    ]:
+        res = webapp.analyze(bad)
+        assert res.get("parse_ok") is False and "invalid YAML frontmatter" in (res.get("parse_error") or "")
+
+
 def test_badge_styles(monkeypatch):
     """badge ?style= variants: flat (default), flat-square, round; invalid falls back."""
     monkeypatch.setattr(webapp, "get_scan_record",
