@@ -749,11 +749,7 @@ def handle_get_skill(environ, start_response):
             }).encode()]
         # PT-T30: soft per-key cap -- each call lists the dna prefix and fetches
         # neighbour blobs; make bulk graph-mapping expensive too.
-        try:
-            from .account import check_public_scan_rate
-        except ImportError:
-            from account import check_public_scan_rate
-        allowed_sim, sim_err = check_public_scan_rate(explicit_api_key[:24], daily_cap=1000, bucket="simrl_")
+        allowed_sim, sim_err = _soft_rate_limit(explicit_api_key[:24], 1000, "simrl_")
         if not allowed_sim:
             start_response("429 Too Many Requests", [("Content-Type", "application/json")] + _CORS_HEADERS)
             return [json.dumps({"error": sim_err}).encode()]
@@ -914,11 +910,7 @@ def handle_lookup(environ, start_response):
             }).encode()]
         # PT-T30: soft per-key cap -- each call lists the dna prefix and fetches
         # neighbour blobs; make bulk graph-mapping expensive too.
-        try:
-            from .account import check_public_scan_rate
-        except ImportError:
-            from account import check_public_scan_rate
-        allowed_sim, sim_err = check_public_scan_rate(explicit_api_key[:24], daily_cap=1000, bucket="simrl_")
+        allowed_sim, sim_err = _soft_rate_limit(explicit_api_key[:24], 1000, "simrl_")
         if not allowed_sim:
             start_response("429 Too Many Requests", [("Content-Type", "application/json")] + _CORS_HEADERS)
             return [json.dumps({"error": sim_err}).encode()]
@@ -1064,11 +1056,7 @@ def handle_similar(environ, start_response):
             return [json.dumps({"error": "sign_in_required"}).encode()]
         # PT-T30: soft per-key cap -- each call lists the dna prefix and fetches
         # neighbour blobs; make bulk graph-mapping expensive too.
-        try:
-            from .account import check_public_scan_rate
-        except ImportError:
-            from account import check_public_scan_rate
-        allowed_sim, sim_err = check_public_scan_rate(explicit_api_key[:24], daily_cap=1000, bucket="simrl_")
+        allowed_sim, sim_err = _soft_rate_limit(explicit_api_key[:24], 1000, "simrl_")
         if not allowed_sim:
             start_response("429 Too Many Requests", [("Content-Type", "application/json")] + _CORS_HEADERS)
             return [json.dumps({"error": sim_err}).encode()]
@@ -1119,6 +1107,16 @@ def _deliver_watch_webhook(rec: dict) -> str:
         return "delivered"
     except Exception as e113:  # noqa: BLE001 - delivery is best-effort
         return f"failed:{str(e113)[:80]}"
+
+
+def _soft_rate_limit(identity: str, daily_cap: int, bucket: str) -> tuple[bool, str]:
+    """Shared wrapper for the per-identity soft caps (PT-T30/T26/T40 family):
+    one import site instead of five copies of the try/except boilerplate."""
+    try:
+        from .account import check_public_scan_rate
+    except ImportError:
+        from account import check_public_scan_rate
+    return check_public_scan_rate(identity, daily_cap=daily_cap, bucket=bucket)
 
 
 def watch_create(api_key: str, url: str, webhook_url: str = "") -> dict:
@@ -1237,11 +1235,7 @@ def handle_watch(environ, start_response):
         # PT-T40: each check re-fetches the watched URL and can fire a webhook
         # delivery -- cap checks per key so one account cannot drive unlimited
         # upstream fetches (200/day/key, shared with nothing else).
-        try:
-            from .account import check_public_scan_rate as _cpsr
-        except ImportError:
-            from account import check_public_scan_rate as _cpsr
-        ok_chk, err_chk = _cpsr(api_key[:24], daily_cap=200, bucket="wchk_")
+        ok_chk, err_chk = _soft_rate_limit(api_key[:24], 200, "wchk_")
         if not ok_chk:
             start_response("429 Too Many Requests", [("Content-Type", "application/json")] + _CORS_HEADERS)
             return [json.dumps({"error": err_chk}).encode()]
@@ -1785,11 +1779,7 @@ def handle_analysis(environ, start_response):
     """Fetch a completed behavioral analysis report by id (shareable permalink)."""
     # PT-T26: soft per-IP cap -- unknown ids are not CDN-cached, so hammering
     # random ids costs one blob fetch each; make bulk probing expensive too.
-    try:
-        from .account import check_public_scan_rate
-    except ImportError:
-        from account import check_public_scan_rate
-    allowed, rl_error = check_public_scan_rate(_client_ip(environ), daily_cap=500, bucket="anarlr_")
+    allowed, rl_error = _soft_rate_limit(_client_ip(environ), 500, "anarlr_")
     if not allowed:
         start_response("429 Too Many Requests", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({"error": rl_error}).encode()]
