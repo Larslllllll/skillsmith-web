@@ -698,6 +698,7 @@ async function runScan(payload, btn) {
   // would delete them and crash the next render() call with
   // "Cannot set properties of null".
   if (!getApiKey()) { promptLogin(); return; }
+  window.lastScanPayload = payload || null;
   const originalLabel = btn.textContent;
   btn.disabled = true; btn.textContent = 'Scanning...';
   try {
@@ -865,6 +866,25 @@ function render(data) {
     ca.textContent = '🪪 Download signed verdict certificate (JSON, HMAC-signed, 90-day validity)';
     ca.setAttribute('download', 'skillsmith-certificate-' + data.sha256.slice(0, 12) + '.json');
     details.appendChild(ca);
+    if (window.lastScanPayload && window.lastScanPayload.url &&
+        /https:\/\/github\.com\//.test(window.lastScanPayload.url)) {
+      const wb = document.createElement('button');
+      wb.textContent = '🛡 Watch this file for changes (rug-pull alerts)';
+      wb.style.cssText = 'display:block;margin-top:4px;padding:5px 10px;font-size:12px;cursor:pointer;';
+      wb.onclick = async function () {
+        wb.disabled = true; wb.textContent = 'Watching…';
+        try {
+          const res2 = await fetch('/api/watch', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ api_key: getApiKey(), url: window.lastScanPayload.url })
+          });
+          const d2 = await res2.json();
+          wb.textContent = d2.watch_id ? ('✅ Watching (id ' + String(d2.watch_id).slice(0, 8) + '…) — see panel above after reload') : ('⚠️ ' + (d2.error || 'failed'));
+        } catch (e130) { wb.textContent = '⚠️ failed'; }
+      };
+      details.appendChild(wb);
+    }
   }
 
   // --- Badge embed snippet (copyable) ---
