@@ -302,7 +302,14 @@ def list_watches(owner_prefix: str, limit: int = 50) -> list:
     except Exception:  # noqa: BLE001 - listing failure -> empty, never fail
         return out
     for b in listing.get("blobs", []):
-        rec = _blob_get(b["pathname"].rsplit(".", 1)[0])
+        # stored names look like watch/<id>-<rand>.json and _blob_get matches
+        # exact pathnames, so download the blob directly via its listing URL.
+        try:
+            req_b = urllib.request.Request(b["url"], headers=_blob_headers(), method="GET")
+            with urllib.request.urlopen(req_b, timeout=10) as resp_b:
+                rec = json.loads(resp_b.read().decode())
+        except Exception:  # noqa: BLE001 - skip unreadable entries
+            continue
         if not rec or rec.get("owner") != owner_prefix:
             continue
         out.append({k: rec.get(k) for k in ("watch_id", "url", "last_status",
