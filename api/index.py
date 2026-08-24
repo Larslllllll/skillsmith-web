@@ -1088,6 +1088,10 @@ def handle_watch(environ, start_response):
                                     "hint": "only github.com blob URLs and raw.githubusercontent.com URLs are allowed"}).encode()]
             digest = sha256_of(text)
             rec = create_watch(url.strip(), digest)
+            # PT-T11: bind the watch to its creator so other accounts cannot
+            # read it or trigger checks against it (404, not 403: no oracle).
+            rec["owner"] = api_key[:24]
+            update_watch(rec)
             _bput(rl_path, {"count": rl.get("count", 0) + 1})
             start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
             return [json.dumps({"disclaimer": DISCLAIMER,
@@ -1106,7 +1110,7 @@ def handle_watch(environ, start_response):
             start_response("401 Unauthorized", [("Content-Type", "application/json")] + _CORS_HEADERS)
             return [json.dumps({"error": "sign_in_required"}).encode()]
         rec = get_watch(wid)
-        if rec is None:
+        if rec is None or (rec.get("owner") and rec.get("owner") != api_key[:24]):
             start_response("404 Not Found", [("Content-Type", "application/json")] + _CORS_HEADERS)
             return [json.dumps({"error": "unknown watch_id"}).encode()]
         current_sha, fetch_error = None, None

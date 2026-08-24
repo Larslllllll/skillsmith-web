@@ -617,3 +617,30 @@ def test_watch_check_flow(monkeypatch):
     resp_c = b"".join(webapp.handle_watch(environ_g, lambda s, h: statuses.append(s)))
     d2 = json.loads(resp_c)
     assert d2["status"] == "changed"
+
+
+def test_watch_ownership(monkeypatch):
+    """PT-T11: another valid account must NOT read/check someone else's watch."""
+    store = {}
+    import scans as scans_mod
+    monkeypatch.setattr(scans_mod, "_blob_get", lambda p: store.get(p))
+    monkeypatch.setattr(scans_mod, "_blob_put", lambda p, v: store.__setitem__(p, v))
+    monkeypatch.setattr(webapp, "get_account", lambda k: {"created_at": 0})
+    monkeypatch.setattr(webapp, "_fetch_skill_url", lambda url: "content")
+    payload = json.dumps({"api_key": "sk_owner", "url": "https://github.com/o/r/blob/main/SKILL.md"}).encode()
+    environ = {"REQUEST_METHOD": "POST", "PATH_INFO": "/api/watch",
+               "CONTENT_LENGTH": str(len(payload)), "wsgi.input": io.BytesIO(payload)}
+    statuses = []
+    resp = b"".join(webapp.handle_watch(environ, lambda s, h: statuses.append(s)))
+    wid = json.loads(resp)["watch_id"]
+    # fremder Account -> 404
+    environ_g = {"REQUEST_METHOD": "GET", "QUERY_STRING": f"watch_id={wid}&api_key=sk_attacker"}
+    statuses.clear()
+    resp_g = b"".join(webapp.handle_watch(environ_g, lambda s, h: statuses.append(s)))
+    assert statuses[0].startswith("404"), resp_g[:120]
+    # Owner selbst -> 200
+    environ_o = {"REQUEST_METHOD": "GET", "QUERY_STRING": f"watch_id={wid}&api_key=sk_owner"}
+    statuses.clear()
+    resp_o = b"".join(webapp.handle_watch(environ_o, lambda s, h: statuses.append(s)))
+    assert statuses[0].startswith("200")
+    assert json.loads(resp_o)["status"] == "unchanged"
