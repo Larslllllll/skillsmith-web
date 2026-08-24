@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root { --bg:#0B0E14; --surface:#151921; --border:#2A3140; --text:#D8DEE9;
+        --text-muted:#9AA5B1; --accent:#7EE3C3; }
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:760px; padding:2rem 1.2rem 4rem;
+       background:var(--bg); color:var(--text); line-height:1.65;
+       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; font-size:16px; }
+a { color:var(--accent); }
+h1 { font-size:1.7rem; line-height:1.25; }
+h2 { font-size:1.25rem; margin-top:2.2rem; border-bottom:1px solid var(--border); padding-bottom:.35rem; }
+h3 { font-size:1.05rem; }
+code, pre { background:var(--surface); border:1px solid var(--border);
+            border-radius:6px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
+code { padding:.12rem .35rem; font-size:.9em; }
+pre { padding:.9rem 1rem; overflow-x:auto; line-height:1.5; }
+blockquote { border-left:3px solid var(--accent); margin-left:0; padding:.2rem 1rem;
+             color:var(--text-muted); }
+table { border-collapse:collapse; width:100%; }
+td, th { border:1px solid var(--border); padding:.45rem .6rem; text-align:left; }
+.backlink { font-size:.9rem; }
+.meta { color:var(--text-muted); font-size:.85rem; }
+</style>
+<title>FAQ — skillsmith — skillsmith</title>
+<meta name="description" content="Frequently asked questions about skillsmith: pricing, clean-verdict limits, the behavioral sandbox, Skill-DNA near-duplicate detection, privacy, and CI integration.">
+<meta property="og:title" content="FAQ — skillsmith — skillsmith">
+<meta property="og:description" content="Frequently asked questions about skillsmith: pricing, clean-verdict limits, the behavioral sandbox, Skill-DNA near-duplicate detection, privacy, and CI integration.">
+<meta property="og:type" content="article">
+<link rel="canonical" href="https://skillsmith.ch/faq.html">
+</head>
+<body>
+<p class="backlink"><a href="/">← skillsmith scanner</a> · <a href="/guides.html">all guides</a></p>
+
+<h1>Frequently Asked Questions</h1>
+<p class="meta">skillsmith.ch · Claude Agent Skill security</p>
+
+<h2>What is skillsmith?</h2>
+<p>skillsmith is an open-source security scanner for Claude Agent Skills
+(<code>SKILL.md</code> files). Paste a skill or point it at a GitHub URL and get
+a risk verdict with plain-language findings in seconds. There is also a REST
+API, an MCP server, a behavioral sandbox, and a Python CLI
+(<code>skillsmith-scanner</code> on PyPI).</p>
+
+<h2>Is skillsmith free?</h2>
+<p>Yes. Sign-in is free and includes 5 scans/day. Paid tiers exist for heavier
+use (Pro: 100 scans/day; pay-per-use single scans from $0.02). Payments are
+handled via USDC on Solana — no credit card required. Scanning one file by
+hand will never cost anything.</p>
+
+<h2>Can a "clean" result be wrong?</h2>
+<p>Yes. skillsmith is a <strong>static heuristic scanner</strong>. It does not
+execute the skill. A clean verdict means no known suspicious pattern matched —
+it is not a guarantee of safety. Likewise, flagged findings can be false
+positives. Always read short files yourself before running them; that is why
+every finding ships with a human-readable explanation.</p>
+
+<h2>What is the behavioral sandbox?</h2>
+<p>The <a href="/analysis.html">behavioral sandbox</a> goes beyond pattern
+matching: an AI analyst inside an isolated container simulates what an agent
+following the skill would actually do — step-by-step actions, capabilities,
+indicators of compromise, and a 0–10 severity score. It catches attacks that
+never match any string pattern, such as paraphrased exfiltration instructions.
+The skill is never executed against real systems.</p>
+
+<h2>Someone renamed a malicious skill — can you detect that?</h2>
+<p>Often yes. Every scanned skill gets a "Skill-DNA" fingerprint (simhash).
+Near-duplicate variants with tiny cosmetic changes stay within Hamming
+distance ≤12 of known scans and appear via
+<code>/api/similar</code>. Rug-pull watching (<code>/api/watch</code>) covers
+the other trick: content that changes after you vetted it.</p>
+
+<h2>Do you store my skills publicly?</h2>
+<p>A scan stores only the hash, verdict metadata and — if you opt in with
+"publish" — the full content. Private scans keep your skill text private;
+near-duplicate search masks names of unpublished skills. Clean-scanned skills
+appear in the public safe-skills registry and feed without their source code
+unless published.</p>
+
+<h2>How do I use skillsmith in CI?</h2>
+<p>Add the official GitHub Action (or call the API directly) to lint and scan
+skills in your repository on every push — see the
+<a href="/api-docs.html">API docs</a> and the
+<a href="https://github.com/Larslllllll/skillsmith-web">repository README</a>.
+The CLI works offline: <code>pip install skillsmith-scanner</code>, then
+<code>skillsmith scan ./SKILL.md</code>.</p>
+
+<h2>Is the detection engine open source?</h2>
+<p>Yes — MIT-licensed, including pattern categories inspired by NVIDIA's
+SkillSpector research (Apache-2.0, credited in-file). Audit the scanner
+itself at <a href="https://github.com/Larslllllll/skillsmith-web">GitHub</a>;
+we eat our own dog food by scanning every contributed change.</p>
+
+<h2>I found a bug or a false positive.</h2>
+<p>Please open an issue at
+<a href="https://github.com/Larslllllll/skillsmith-web/issues">GitHub Issues</a>
+— include the SKILL.md (redacted if needed) and the reported verdict. False
+positives directly improve the engine weights.</p>
+
+</body>
+</html>
