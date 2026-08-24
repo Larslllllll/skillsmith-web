@@ -311,6 +311,11 @@ def handle_jsonrpc(req: dict, client_ip: str = "") -> tuple[int, dict]:
     req_id = req.get("id")
     rpc_method = req.get("method", "")
     params = req.get("params") or {}
+    # pentest PT-T3: params must be an object for our methods; arrays or
+    # strings used to crash with a 500 instead of a structured RPC error.
+    if not isinstance(params, dict):
+        return 200, {"jsonrpc": "2.0", "id": req_id,
+                     "error": {"code": -32602, "message": "invalid params: expected object"}}
 
     if rpc_method == "initialize":
         result = {

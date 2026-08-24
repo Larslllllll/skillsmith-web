@@ -411,3 +411,12 @@ def test_scan_trend_and_explanation_fields(monkeypatch):
     assert data2["trend"]["direction"] == "unchanged"
     assert data2["trend"]["delta"] == 0
     assert data2["trend"]["previous_security_score"] == data2["security_score"]
+
+
+def test_mcp_invalid_params_type():
+    """PT-T3: params as array/string must yield -32602, not a 500 crash."""
+    import mcp as mcp_mod
+    for bad in (["x"], "tools", 42):
+        status, body = mcp_mod.handle_jsonrpc({"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": bad})
+        assert status == 200
+        assert body["error"]["code"] == -32602
