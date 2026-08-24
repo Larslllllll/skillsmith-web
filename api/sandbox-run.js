@@ -301,27 +301,6 @@ module.exports = async (req, res) => {
   try { payload = JSON.parse(await readBody(req) || "{}"); }
   catch (e) { return jsonResp(res, { error: e.message === "body too large" ? "body too large" : "invalid json" }, 400); }
 
-  // diagnostic mode: payload {"probe": "...args..."} runs opencode directly
-  // (e.g. ["--version"]) so we can see how far the binary gets in-lambda.
-  if (payload && typeof payload.probe === "string") {
-    let bin;
-    try { bin = await ensureOpencode(); }
-    catch (e) { return jsonResp(res, { probe: payload.probe, setup_error: e.message }, 200); }
-    const probeDir = fs.mkdtempSync(path.join(os.tmpdir(), "probe-"));
-    const presult = await new Promise((resolve) => {
-      const child = spawn(bin, payload.probe.split(" "), { cwd: probeDir, timeout: 120000,
-        env: ocEnv(), stdio: ["ignore", "pipe", "pipe"] });
-      let out = "", err = "";
-      child.stdout.on("data", d => { out += d; });
-      child.stderr.on("data", d => { err += d; });
-      child.on("error", e => resolve({ ok: false, out, err: String(e) }));
-      child.on("close", () => resolve({ ok: true, out, err }));
-    });
-    return jsonResp(res, { probe: payload.probe, out_tail: (presult.out || "").slice(-1500),
-                           err_tail: (presult.err || "").slice(-2500), status: presult.ok ? "ran" : "spawn_error" },
-                   200);
-  }
-
   let text = payload && typeof payload.text === "string" ? payload.text : "";
   if (!text.trim()) return jsonResp(res, { error: "text required (raw SKILL.md content)" }, 400);
   if (text.length > MAX_TEXT) return jsonResp(res, { error: `text too large (${text.length} > ${MAX_TEXT})` }, 413);
