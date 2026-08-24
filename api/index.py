@@ -1234,6 +1234,17 @@ def handle_watch(environ, start_response):
         if not api_key or get_account(api_key) is None:
             start_response("401 Unauthorized", [("Content-Type", "application/json")] + _CORS_HEADERS)
             return [json.dumps({"error": "sign_in_required"}).encode()]
+        # PT-T40: each check re-fetches the watched URL and can fire a webhook
+        # delivery -- cap checks per key so one account cannot drive unlimited
+        # upstream fetches (200/day/key, shared with nothing else).
+        try:
+            from .account import check_public_scan_rate as _cpsr
+        except ImportError:
+            from account import check_public_scan_rate as _cpsr
+        ok_chk, err_chk = _cpsr(api_key[:24], daily_cap=200, bucket="wchk_")
+        if not ok_chk:
+            start_response("429 Too Many Requests", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": err_chk}).encode()]
         out = watch_check(api_key, wid)
         if out is None:
             start_response("404 Not Found", [("Content-Type", "application/json")] + _CORS_HEADERS)
