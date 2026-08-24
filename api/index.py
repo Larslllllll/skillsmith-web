@@ -1189,9 +1189,12 @@ def watch_check(api_key: str, watch_id: str) -> dict | None:
     rec["last_status"] = "changed" if changed else ("unchanged" if current_sha else "unreachable")
     if changed and not rec.get("changed_at"):
         rec["changed_at"] = time.time()
-    if rec["last_status"] == "changed" and rec.get("webhook_url"):
-        # PT-T38: push notification on rug-pull (Discord/Slack only, best-effort)
+    if rec["last_status"] == "changed" and rec.get("webhook_url") and not rec.get("webhook_delivered"):
+        # PT-T38: push notification on rug-pull (Discord/Slack only, best-effort).
+        # PT-T44: fire ONCE per watch -- repeated checks on an already-changed
+        # skill must not spam the user's channel (or our egress) every time.
         rec["webhook_delivery"] = _deliver_watch_webhook(rec)
+        rec["webhook_delivered"] = True
     update_watch(rec)
     return {"watch_id": watch_id, "status": rec["last_status"],
             "baseline_sha256": rec.get("baseline_sha256"), "current_sha256": current_sha,
