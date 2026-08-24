@@ -229,15 +229,16 @@ def check_and_consume_signup_quota(ip: str) -> tuple[bool, str]:
     return True, ""
 
 
-def check_public_scan_rate(ip: str, daily_cap: int = 200) -> tuple[bool, str]:
-    """Soft per-IP cap on the anonymous /api/public_scan verdict endpoint.
+def check_public_scan_rate(ip: str, daily_cap: int = 200, bucket: str = "pubscan_") -> tuple[bool, str]:
+    """Soft per-IP cap for anonymous read endpoints (public_scan, analysis).
 
+    Pass a distinct `bucket` prefix to keep counters separate per endpoint.
     Same eventual-consistency caveat as check_and_consume_signup_quota: the
     blob list/get window means a burst can slip a few extra through. The
     goal is making bulk scraping expensive, not airtight enforcement --
     humans following badge links will never see 200 verdict pages a day.
     """
-    key = "pubscan_" + hashlib.sha256((ip or "unknown").encode()).hexdigest()[:24]
+    key = bucket + hashlib.sha256((ip or "unknown").encode()).hexdigest()[:24]
     record = _blob_get(_identity_path("signup_rl", key)) or {"date": "", "count": 0}
     today = _today()
     if record.get("date") != today:

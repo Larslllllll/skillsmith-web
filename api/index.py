@@ -1670,6 +1670,16 @@ def handle_health(environ, start_response):
 
 def handle_analysis(environ, start_response):
     """Fetch a completed behavioral analysis report by id (shareable permalink)."""
+    # PT-T26: soft per-IP cap -- unknown ids are not CDN-cached, so hammering
+    # random ids costs one blob fetch each; make bulk probing expensive too.
+    try:
+        from .account import check_public_scan_rate
+    except ImportError:
+        from account import check_public_scan_rate
+    allowed, rl_error = check_public_scan_rate(_client_ip(environ), daily_cap=500, bucket="anarlr_")
+    if not allowed:
+        start_response("429 Too Many Requests", [("Content-Type", "application/json")] + _CORS_HEADERS)
+        return [json.dumps({"error": rl_error}).encode()]
     qs = urllib.parse.parse_qs(environ.get("QUERY_STRING", ""))
     aid = (qs.get("id", [""])[0] or "").strip()
     if not re.fullmatch(r"[0-9a-f]{16}", aid):
