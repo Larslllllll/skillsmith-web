@@ -1,21 +1,66 @@
 {
   "version": 2,
   "routes": [
-    { "src": "/api/scan_pro", "dest": "/api/index.py" },
-    { "src": "/api/scan-pro", "dest": "/api/index.py" },
-    { "src": "/api/signup", "dest": "/api/index.py" },
-    { "src": "/api/scan", "dest": "/api/index.py" },
-    { "src": "/api/auth/(.*)", "dest": "/api/index.py" },
-    { "src": "/mcp", "dest": "/api/index.py" },
-    { "src": "/health", "dest": "/api/index.py" },
-    { "src": "/api/sandbox-run", "dest": "/api/sandbox-run.js" },
-    { "src": "/badge", "dest": "/api/index.py" },
-    { "src": "/api/public_scan", "dest": "/api/index.py" },
-    { "src": "/api/analysis", "dest": "/api/index.py" },
-    { "src": "/api/lookup", "dest": "/api/index.py" },
-    { "src": "/api/registry", "dest": "/api/index.py" },
-    { "src": "/api/skill", "dest": "/api/index.py" },
-    { "src": "/api/buy_credit", "dest": "/api/index.py" }
+    {
+      "src": "/api/scan_pro",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/api/scan-pro",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/api/signup",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/api/scan",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/api/auth/(.*)",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/mcp",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/health",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/api/sandbox-run",
+      "dest": "/api/sandbox-run.js"
+    },
+    {
+      "src": "/badge",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/api/public_scan",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/api/analysis",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/api/lookup",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/api/registry",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/api/skill",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/api/buy_credit",
+      "dest": "/api/index.py"
+    }
   ],
   "headers": [
     {
@@ -25,11 +70,28 @@
           "key": "Content-Security-Policy",
           "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.google.com https://*.doubleclick.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.googlesyndication.com https://*.google.com https://*.doubleclick.net https://*.gstatic.com; connect-src 'self' https://api.mainnet-beta.solana.com https://*.google.com https://*.googlesyndication.com https://*.doubleclick.net; frame-src https://*.googlesyndication.com https://*.google.com https://*.doubleclick.net; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'"
         },
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "X-Frame-Options", "value": "DENY" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-        { "key": "Permissions-Policy", "value": "geolocation=(), microphone=(), camera=()" }
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "geolocation=(), microphone=(), camera=()"
+        }
       ]
     }
-  ]
+  ],
+  "functions": {
+    "api/index.py": {
+      "maxDuration": 300
+    }
+  }
 }

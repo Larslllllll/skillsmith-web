@@ -178,7 +178,7 @@ def test_publish_content_constants_and_wiring():
 def test_mcp_tools_list_registered():
     import mcp as mcp_mod
     names = {t["name"] for t in mcp_mod.TOOLS}
-    assert names == {"scan_skill", "lookup_hash", "get_skill_content", "list_safe_skills", "skillsmith_signup", "whoami"}
+    assert names == {"scan_skill", "lookup_hash", "get_skill_content", "list_safe_skills", "skillsmith_signup", "whoami", "analyze_behavior"}
 
 
 def test_mcp_initialize_and_unknown_method():

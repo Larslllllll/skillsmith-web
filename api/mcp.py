@@ -104,10 +104,72 @@ TOOLS = [
             "required": ["api_key"],
         },
     },
+    {
+        "name": "analyze_behavior",
+        "description": "Behavioral sandbox ('any.run for agent skills'): an AI analyst in an isolated container reads the skill and simulates what an agent following it WOULD do -- capabilities, step-by-step action trace, IOCs, deception techniques and a 0-10 severity verdict. Nothing is executed against real systems. Slow (30-120s). Requires api_key; limited to a few analyses per account per day.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "api_key": {"type": "string", "description": "Account key from skillsmith_signup"},
+                "text": {"type": "string", "description": "Raw SKILL.md content to analyze (max 100000 chars)"},
+            },
+            "required": ["api_key", "text"],
+        },
+    },
 ]
 
 
 def _tool_result(payload):
+    if name == "analyze_behavior":
+        text = args.get("text", "")
+        if not isinstance(text, str) or not text.strip():
+            return _tool_result({"error": "text required (raw SKILL.md content)"})
+        if len(text) > 100_000:
+            return _tool_result({"error": f"text too large ({len(text)} > 100000)"})
+        # per-account daily cap (the REST route caps per-IP; MCP callers are
+        # authenticated, so cap per account): 5/day, unlimited for owners.
+        import time as _t2
+        from .account import get_account as _ga, _blob_path as _bp, _blob_get as _bg, _blob_put as _bput
+        try:
+            from .account import _blob_headers as _bh
+        except ImportError:
+            from account import _blob_headers as _bh
+        rec = _ga(api_key)
+        if rec is None:
+            return _tool_result({"error": "unknown api_key"})
+        day = _t2.strftime("%Y-%m-%d", _t2.gmtime())
+        if not rec.get("unlimited"):
+            rl_path = _bp(f"analyses_rl_acct/{api_key[:24]}-{day}.json")
+            rl = _bg(rl_path) or {"count": 0}
+            if rl.get("count", 0) >= 5:
+                return _tool_result({"error": "daily behavioral-analysis limit reached (5/day/account)",
+                                     "tip": "counter resets at 00:00 UTC"})
+            _bput(rl_path, {"count": rl.get("count", 0) + 1})
+        # synchronous call into the Node sandbox function (30-120s typical)
+        import urllib.request as _ureq, os as _os
+        base = _os.environ.get("SITE_URL", "https://skillsmith.ch").rstrip("/")
+        req = _ureq.Request(base + "/api/sandbox-run",
+                            data=json.dumps({"text": text}).encode(),
+                            headers={"Content-Type": "application/json"}, method="POST")
+        try:
+            with _ureq.urlopen(req, timeout=280) as resp:
+                report = json.loads(resp.read().decode())
+        except Exception as e:  # noqa: BLE001 - never crash the MCP session
+            return _tool_result({"error": f"behavioral analysis failed: {e}",
+                                 "note": "the sandbox can take up to ~120s; retry once if this was a timeout"})
+        sev = (report.get("ai_analysis") or {}).get("severity") or {}
+        return _tool_result({
+            "analysis_id": report.get("analysis_id"),
+            "sha256": report.get("sha256"),
+            "status": report.get("status"),
+            "duration_s": report.get("duration_s"),
+            "static_iocs": report.get("static_iocs"),
+            "ai_analysis": report.get("ai_analysis"),
+            "severity": sev,
+            "permalink": f"/api/analysis?id={report.get('analysis_id')}" if report.get("analysis_id") else None,
+            "disclaimer": "Behavioral SIMULATION by an LLM analyst in an isolated container. Heuristic, not a guarantee.",
+        })
+
     return {"content": [{"type": "text", "text": json.dumps(payload)}]}
 
 
@@ -138,7 +200,7 @@ def _call_tool(name, args, client_ip: str = ""):
 
     # logic audit L2: REST requires an explicit api_key; MCP must too, or
     # empty keys made every quota call "anonymous" = unmetered.
-    if name in ("scan_skill", "lookup_hash", "get_skill_content", "list_safe_skills", "whoami"):
+    if name in ("scan_skill", "lookup_hash", "get_skill_content", "list_safe_skills", "whoami", "analyze_behavior"):
         if not api_key:
             return _tool_result({"error": "api_key required",
                                  "tip": "call skillsmith_signup first (free), then pass the key as api_key"})
@@ -235,6 +297,56 @@ def _call_tool(name, args, client_ip: str = ""):
             "pro_used_today": record.get("pro_used_count", 0),
             "bonus_credits": record.get("bonus_credits", 0),
             "bonus_lookup_credits": record.get("bonus_lookup_credits", 0),
+        })
+
+    if name == "analyze_behavior":
+        text = args.get("text", "")
+        if not isinstance(text, str) or not text.strip():
+            return _tool_result({"error": "text required (raw SKILL.md content)"})
+        if len(text) > 100_000:
+            return _tool_result({"error": f"text too large ({len(text)} > 100000)"})
+        # per-account daily cap (the REST route caps per-IP; MCP callers are
+        # authenticated, so cap per account): 5/day, unlimited for owners.
+        import time as _t2
+        from .account import get_account as _ga, _blob_path as _bp, _blob_get as _bg, _blob_put as _bput
+        try:
+            from .account import _blob_headers as _bh
+        except ImportError:
+            from account import _blob_headers as _bh
+        rec = _ga(api_key)
+        if rec is None:
+            return _tool_result({"error": "unknown api_key"})
+        day = _t2.strftime("%Y-%m-%d", _t2.gmtime())
+        if not rec.get("unlimited"):
+            rl_path = _bp(f"analyses_rl_acct/{api_key[:24]}-{day}.json")
+            rl = _bg(rl_path) or {"count": 0}
+            if rl.get("count", 0) >= 5:
+                return _tool_result({"error": "daily behavioral-analysis limit reached (5/day/account)",
+                                     "tip": "counter resets at 00:00 UTC"})
+            _bput(rl_path, {"count": rl.get("count", 0) + 1})
+        # synchronous call into the Node sandbox function (30-120s typical)
+        import urllib.request as _ureq, os as _os
+        base = _os.environ.get("SITE_URL", "https://skillsmith.ch").rstrip("/")
+        req = _ureq.Request(base + "/api/sandbox-run",
+                            data=json.dumps({"text": text}).encode(),
+                            headers={"Content-Type": "application/json"}, method="POST")
+        try:
+            with _ureq.urlopen(req, timeout=280) as resp:
+                report = json.loads(resp.read().decode())
+        except Exception as e:  # noqa: BLE001 - never crash the MCP session
+            return _tool_result({"error": f"behavioral analysis failed: {e}",
+                                 "note": "the sandbox can take up to ~120s; retry once if this was a timeout"})
+        sev = (report.get("ai_analysis") or {}).get("severity") or {}
+        return _tool_result({
+            "analysis_id": report.get("analysis_id"),
+            "sha256": report.get("sha256"),
+            "status": report.get("status"),
+            "duration_s": report.get("duration_s"),
+            "static_iocs": report.get("static_iocs"),
+            "ai_analysis": report.get("ai_analysis"),
+            "severity": sev,
+            "permalink": f"/api/analysis?id={report.get('analysis_id')}" if report.get("analysis_id") else None,
+            "disclaimer": "Behavioral SIMULATION by an LLM analyst in an isolated container. Heuristic, not a guarantee.",
         })
 
     return {"content": [{"type": "text", "text": json.dumps({"error": f"unknown tool: {name}"})}], "isError": True}
