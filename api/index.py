@@ -289,6 +289,19 @@ def analyze(text: str) -> dict:
     if fm_lines:
         findings += _scan_text(fm_lines, "frontmatter", _PROMPT_INJECTION_PATTERNS)
         findings += _scan_text(fm_lines, "frontmatter", _PARAPHRASE_PATTERNS)
+    # PT-T74: scan unicode-normalized variants too - fullwidth chars and
+    # combining-mark stacks are pure obfuscation and fold losslessly to ASCII
+    import unicodedata as _ud
+
+    def _norm(t: str) -> str:
+        t = "".join(chr(ord(c) - 0xFEE0) if 0xFF01 <= ord(c) <= 0xFF5E else c for c in t)
+        return "".join(c for c in _ud.normalize("NFKD", t) if not _ud.combining(c))
+
+    for label, variant in (("body(normalized)", body), ("frontmatter(normalized)", fm_lines)):
+        nv = _norm(variant)
+        if nv != variant and nv.strip():
+            findings += _scan_text(nv, label, _PROMPT_INJECTION_PATTERNS)
+            findings += _scan_text(nv, label, _PARAPHRASE_PATTERNS)
     findings += _scan_text(text, "raw text (incl. code blocks)", _CODE_PATTERNS)
 
     findings += _scan_text(text, "raw text (incl. code blocks)", _DROPPER_PATTERNS)
