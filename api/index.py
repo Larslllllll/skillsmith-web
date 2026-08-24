@@ -1093,10 +1093,13 @@ def handle_similar(environ, start_response):
 def _valid_watch_webhook(url) -> bool:
     """PT-T38: outbound webhooks are restricted to Discord/Slack endpoints so
     a stored watch can never be turned into an arbitrary-URL SSRF probe."""
-    return (isinstance(url, str) and (
-        url.startswith("https://discord.com/api/webhooks/")
-        or url.startswith("https://discordapp.com/api/webhooks/")
-        or url.startswith("https://hooks.slack.com/services/")))
+    if not isinstance(url, str) or "?" in url or "#" in url:
+        # PT-T39: no query strings / fragments -- nothing extra should ride
+        # along to the provider, and params make payload confusion possible.
+        return False
+    return (url.startswith("https://discord.com/api/webhooks/")
+            or url.startswith("https://discordapp.com/api/webhooks/")
+            or url.startswith("https://hooks.slack.com/services/"))
 
 
 def _deliver_watch_webhook(rec: dict) -> str:
