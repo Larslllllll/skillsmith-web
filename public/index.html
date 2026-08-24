@@ -1122,7 +1122,15 @@ loadRegistry();
 (function () {
   var el = document.getElementById('statsBar');
   if (!el || !el.textContent) {}
-  fetch('/api/stats').then(function (r) { return r.ok ? r.json() : null; }).then(function (s) {
+  fetch('/api/stats').then(function (r) {
+    if (r.status === 503) {
+      el.textContent = '⚠️ Scanning & accounts are temporarily unavailable (storage maintenance). Static pages, guides and cached verdicts still work.';
+      el.style.display = 'block';
+      el.style.color = '#d97706';
+      return null;
+    }
+    return r.ok ? r.json() : null;
+  }).then(function (s) {
     if (!s || typeof s.total_scans !== 'number') return;
     var risk = s.by_risk || {};
     el.textContent = '📊 ' + s.total_scans + ' scans performed · ' +
