@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root { --bg:#0B0E14; --surface:#151921; --border:#2A3140; --text:#D8DEE9;
+        --text-muted:#9AA5B1; --accent:#7EE3C3; }
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:760px; padding:2rem 1.2rem 4rem;
+       background:var(--bg); color:var(--text); line-height:1.65;
+       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; font-size:16px; }
+a { color:var(--accent); }
+h1 { font-size:1.7rem; line-height:1.25; }
+h2 { font-size:1.25rem; margin-top:2.2rem; border-bottom:1px solid var(--border); padding-bottom:.35rem; }
+h3 { font-size:1.05rem; }
+code, pre { background:var(--surface); border:1px solid var(--border);
+            border-radius:6px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
+code { padding:.12rem .35rem; font-size:.9em; }
+pre { padding:.9rem 1rem; overflow-x:auto; line-height:1.5; }
+blockquote { border-left:3px solid var(--accent); margin-left:0; padding:.2rem 1rem;
+             color:var(--text-muted); }
+table { border-collapse:collapse; width:100%; }
+td, th { border:1px solid var(--border); padding:.45rem .6rem; text-align:left; }
+.backlink { font-size:.9rem; }
+.meta { color:var(--text-muted); font-size:.85rem; }
+</style>
+<title>Threat Modeling for AI Agent Skills — skillsmith</title>
+<meta name="description" content="Apply STRIDE-style threat modeling to Claude Agent Skills: trust boundaries, skill-flavored attack categories, attacker economics, and mitigations.">
+<meta property="og:title" content="Threat Modeling for AI Agent Skills — skillsmith">
+<meta property="og:description" content="Apply STRIDE-style threat modeling to Claude Agent Skills: trust boundaries, skill-flavored attack categories, attacker economics, and mitigations.">
+<meta property="og:type" content="article">
+<link rel="canonical" href="https://skillsmith.ch/guide-threat-modeling.html">
+</head>
+<body>
+<p class="backlink"><a href="/">← skillsmith scanner</a> · <a href="/guides.html">all guides</a></p>
+
+<h1>Threat Modeling for AI Agent Skills</h1>
+<p class="meta">Guide · skillsmith.ch</p>
+
+<p>Security people run threat models before trusting a system. You can apply
+the same discipline to Claude Agent Skills in about ten minutes. This guide
+walks the four classic questions — what are we building, what can go wrong,
+what would an attacker do, how do we respond — translated to SKILL.md files.</p>
+
+<h2>1. What are we trusting?</h2>
+<p>An agent skill is a <strong>configuration that becomes instructions</strong>.
+Map every input:</p>
+<ul>
+  <li>The SKILL.md itself (and any files it references)</li>
+  <li>Remote resources it loads: URLs, raw GitHub links, package registries</li>
+  <li>The author and everyone with push access to their repo</li>
+  <li>Everything the agent can reach once the skill is active: filesystem,
+      network, other tools, your credentials</li>
+</ul>
+<p>Each of these is a trust boundary you accept when you install.</p>
+
+<h2>2. What can go wrong? (STRIDE, adapted)</h2>
+<table>
+<tr><th>Category</th><th>Skill-flavoured example</th></tr>
+<tr><td>Spoofing</td><td>Skill impersonates a popular one (typosquat name, homoglyphs)</td></tr>
+<tr><td>Tampering</td><td>Rug pull: remote content changes after you vetted it</td></tr>
+<tr><td>Repudiation</td><td>"Do not tell the user" steps hide what happened</td></tr>
+<tr><td>Information disclosure</td><td>Credentials/env collected "for context" and forwarded outward</td></tr>
+<tr><td>Denial of service</td><td>Instructions that make the agent loop or spam endpoints</td></tr>
+<tr><td>Elevation of privilege</td><td>Override language ("set aside earlier guidance") hijacks the operator's rules</td></tr>
+</table>
+
+<h2>3. What would an attacker actually do?</h2>
+<p>The cheapest attacks win: rename a known-malicious skill, paraphrase its
+injection lines so keyword filters pass, split a base64 payload into harmless
+chunks, defang the exfiltration URL until runtime. Detection therefore has to
+work at the meaning level — exactly why
+<a href="/guide-prompt-injection.html">prompt injection mechanics</a> matter
+more than blocklists.</p>
+
+<h2>4. How do we respond?</h2>
+<ol>
+  <li><strong>Before install:</strong> run the
+      <a href="/guide-audit-checklist.html">five-minute checklist</a>, scan with
+      <a href="/">skillsmith</a>.</li>
+  <li><strong>At install:</strong> pin the exact version/commit; note the hash.</li>
+  <li><strong>In operation:</strong> watch for rug pulls
+      (<code>POST /api/watch</code>) and check near-duplicates
+      (<code>/api/similar</code>) against known-bad variants.</li>
+  <li><strong>When stakes are high:</strong> behavioral sandbox before first
+      real use (<a href="/analysis.html">analysis</a>).</li>
+</ol>
+
+<h2>The one-paragraph version</h2>
+<blockquote>A skill converts text into authority over your agent. Threat model
+it like code from a stranger: minimize what it can touch, verify what it
+claims, monitor it after install, and never let it instruct the agent to hide
+things from you.</blockquote>
+
+<h2>Go deeper</h2>
+<ul>
+  <li><a href="/guide-malicious-skills.html">Anatomy of a malicious SKILL.md</a> — attack patterns dissected</li>
+  <li><a href="/guide-how-it-works.html">How skillsmith detects</a> — methodology &amp; scoring</li>
+  <li><a href="/faq.html">FAQ</a> — limits, privacy, pricing</li>
+</ul>
+
+</body>
+</html>
