@@ -1159,7 +1159,7 @@ loadRegistry();
       rows += '<tr><td style="padding:3px 10px 3px 0;font-family:monospace;">' + String(it.watch_id || '').slice(0, 12) +
         '</td><td style="padding:3px 10px;color:' + c + ';font-weight:600;">' + String(it.last_status || '?') +
         '</td><td style="padding:3px 0;color:#9AA5B1;max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' +
-        String(it.url || '').replace(/[<>&]/g, '') + '</td></tr>';
+        String(it.url || '').replace(/[<>&"']/g, '') + '</td></tr>';
     }
     host.innerHTML = '<strong style="color:#e6edf3;">🛡 Your rug-pull watches</strong>' +
       '<table style="margin-top:6px;font-size:13px;border-collapse:collapse;">' + rows + '</table>';
