@@ -857,6 +857,16 @@ function render(data) {
       .catch(function () {});
   }
 
+  // --- Verdict certificate link (needs sign-in; consumes one lookup) ---
+  if (data.sha256 && /^[0-9a-f]{64}$/.test(data.sha256) && typeof getApiKey === 'function' && getApiKey()) {
+    addRow(details, ['']);
+    const ca = document.createElement('a');
+    ca.href = '/api/certificate?sha256=' + data.sha256 + '&api_key=' + encodeURIComponent(getApiKey());
+    ca.textContent = '🪪 Download signed verdict certificate (JSON, HMAC-signed, 90-day validity)';
+    ca.setAttribute('download', 'skillsmith-certificate-' + data.sha256.slice(0, 12) + '.json');
+    details.appendChild(ca);
+  }
+
   // --- Badge embed snippet (copyable) ---
   if (data.sha256 && /^[0-9a-f]{64}$/.test(data.sha256)) {
     addRow(details, ['']);
