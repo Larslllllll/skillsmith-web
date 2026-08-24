@@ -1141,11 +1141,23 @@ def handle_watch(environ, start_response):
         return [json.dumps({"error": str(e)}).encode()]
 
 
+_feed_cache = {"t": 0.0, "body": b""}
+
+
 def handle_feed(environ, start_response):
     """GET /feed.xml -- Atom feed of recently registry-clean agent skills
     (automated heuristic verdicts only, see DISCLAIMER). Cached 5 min."""
     from xml.sax.saxutils import escape as xesc
     try:
+        # PT-T12: query-string cache-busting skips the CDN cache, and each cold
+        # render costs ~1 listing + up to 20 registry fetches. A tiny process-level
+        # TTL cache caps the upstream amplification per warm lambda instance.
+        now_t = time.time()
+        if _feed_cache["body"] and now_t - _feed_cache["t"] < 60:
+            start_response("200 OK", [("Content-Type", "application/atom+xml; charset=utf-8"),
+                                      ("Cache-Control", "public, max-age=300"),
+                                      ("X-Feed-Cache", "hit")] + _CORS_HEADERS)
+            return [_feed_cache["body"]]
         try:
             from .scans import list_safe_registry
         except ImportError:
@@ -1179,6 +1191,8 @@ def handle_feed(environ, start_response):
                 "  </entry>"]
         parts.append("</feed>")
         body = ("\n".join(parts)).encode("utf-8")
+        _feed_cache["body"] = body
+        _feed_cache["t"] = now_t
         start_response("200 OK", [("Content-Type", "application/atom+xml; charset=utf-8"),
                                   ("Cache-Control", "public, max-age=300")] + _CORS_HEADERS)
         return [body]

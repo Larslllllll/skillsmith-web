@@ -673,3 +673,21 @@ def test_feed_get_only():
     """Router answers 405 for non-GET /feed.xml."""
     status, body = _wsgi("POST", "/feed.xml")
     assert status in (404, 405), status
+
+
+def test_feed_microcache(monkeypatch):
+    """PT-T12: second render within TTL is served from the process cache."""
+    import scans as _sm
+    calls = {"n": 0}
+    def fake_list(limit=20):
+        calls["n"] += 1
+        return [{"sha256": "c" * 64, "name": "x", "last_seen_at": 1724400000}]
+    monkeypatch.setattr(_sm, "list_safe_registry", fake_list)
+    webapp._feed_cache["body"] = b""  # reset module-level cache (test isolation)
+    environ = {"REQUEST_METHOD": "GET", "PATH_INFO": "/feed.xml"}
+    warm = []
+    b"".join(webapp.handle_feed(environ, lambda s, h: warm.append(s)))  # warm
+    webapp._feed_cache["t"] = __import__("time").time()  # ensure within TTL
+    b2 = b"".join(webapp.handle_feed(environ, lambda s, h: warm.append(s)))
+    assert b"<entry>" in b2
+    assert calls["n"] == 1  # no second upstream render
