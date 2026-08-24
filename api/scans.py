@@ -106,8 +106,16 @@ def get_scan_record(digest: str) -> dict | None:
 
 
 def get_published_content(digest: str) -> str | None:
-    """Returns the actual SKILL.md text if this hash was explicitly
-    published, else None. This is the "use the skill" read path."""
+    """Returns the actual SKILL.md text if this hash is currently listed in
+    the safe registry AND has stored publish content, else None.
+
+    PT-T31 (defense in depth): the registry gate lives here, not only in the
+    depublish purge path. If a content blob ever survives a failed/aborted
+    purge as an orphan, this endpoint still refuses to serve it -- published
+    means "in the registry right now", never "blob happens to exist"."""
+    reg = _blob_get(_registry_path(digest))
+    if not reg:
+        return None
     doc = _blob_get(_content_path(digest))
     return doc.get("text") if doc else None
 
