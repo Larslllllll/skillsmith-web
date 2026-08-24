@@ -107,6 +107,8 @@ and remember the key."</p>
 <h3><span class="method get">GET</span><code>/health</code></h3>
 <p>Liveness probe. Returns <code>{"status": "ok", ...}</code> with HTTP 200; no auth, no quota.</p>
 
+<h3><span class="method get">GET</span><code>/badge?sha256=...&amp;style=flat</code></h3>
+<p>SVG trust badge for a scanned hash (unlimited, no auth, cached 60s). Optional <code>style</code>: <code>flat</code> (default), <code>flat-square</code>, <code>round</code>. Colors follow the verdict: green (clean), amber (low), orange (medium), red (high). Usage: <code>&lt;img src="https://skillsmith.ch/badge?sha256=..."&gt;</code> in your README.</p>
 <h3><span class="method get">GET</span><code>/api/report?sha256=...</code></h3>
 <p>Public community verdicts for a hash: <code>{"total": n, "tally": {"malicious": x, "false_positive": y, "note": z}, "reports": [...]}</code>.</p>
 

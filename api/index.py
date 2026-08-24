@@ -1478,22 +1478,29 @@ def handle_mcp(environ, start_response):
     return [json.dumps(body).encode()]
 
 
-def _badge_svg(left: str, right: str, color: str) -> str:
-    """Minimal shields.io-style flat SVG badge, no external deps."""
+def _badge_svg(left: str, right: str, color: str, style: str = "flat") -> str:
+    """Minimal shields.io-style SVG badge, no external deps.
+    Styles: flat (default), flat-square, round."""
     left_w = 11 * len(left) + 20
     right_w = 11 * len(right) + 20
     total = left_w + right_w
-    return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{total}" height="20" role="img" aria-label="{left}: {right}">
-  <title>{left}: {right}</title>
+    if style == "flat-square":
+        radius, gradient = "0", ""
+    elif style == "round":
+        radius, gradient = "10", ""
+    else:  # flat
+        radius, gradient = "3", """
   <linearGradient id="s" x2="0" y2="100%">
     <stop offset="0" stop-color="#bbb" stop-opacity=".1"/>
     <stop offset="1" stop-opacity=".1"/>
-  </linearGradient>
-  <clipPath id="r"><rect width="{total}" height="20" rx="3" fill="#fff"/></clipPath>
+  </linearGradient>"""
+    overlay = '<rect width="%d" height="20" fill="url(#s)"/>' % total if gradient else ""
+    return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{total}" height="20" role="img" aria-label="{left}: {right}">
+  <title>{left}: {right}</title>{gradient}
+  <clipPath id="r"><rect width="{total}" height="20" rx="{radius}" fill="#fff"/></clipPath>
   <g clip-path="url(#r)">
     <rect width="{left_w}" height="20" fill="#1f2430"/>
-    <rect x="{left_w}" width="{right_w}" height="20" fill="{color}"/>
-    <rect width="{total}" height="20" fill="url(#s)"/>
+    <rect x="{left_w}" width="{right_w}" height="20" fill="{color}"/>{overlay}
   </g>
   <g fill="#fff" text-anchor="middle" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" font-size="11">
     <text x="{left_w // 2}" y="14">{left}</text>
@@ -1522,6 +1529,9 @@ def _valid_sha256(digest: str) -> bool:
 def handle_badge(environ, start_response):
     qs = urllib.parse.parse_qs(environ.get("QUERY_STRING", ""))
     digest = (qs.get("sha256", [""])[0] or "").lower().strip()
+    style = qs.get("style", ["flat"])[0]
+    if style not in ("flat", "flat-square", "round"):
+        style = "flat"
     headers = [("Content-Type", "image/svg+xml; charset=utf-8"),
                ("X-Content-Type-Options", "nosniff"),
                ("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'"),
@@ -1529,13 +1539,13 @@ def handle_badge(environ, start_response):
 
     if not _valid_sha256(digest):  # logic audit L11
 
-        svg = _badge_svg("skillsmith", "invalid hash", "#6e7681")
+        svg = _badge_svg("skillsmith", "invalid hash", "#6e7681", style)
         start_response("400 Bad Request", headers)
         return [svg.encode()]
 
     rec = get_scan_record(digest)
     if rec is None:
-        svg = _badge_svg("skillsmith", "not scanned", "#6e7681")
+        svg = _badge_svg("skillsmith", "not scanned", "#6e7681", style)
         start_response("200 OK", headers)
         return [svg.encode()]
 
@@ -1546,7 +1556,7 @@ def handle_badge(environ, start_response):
     else:
         score = rec.get("risk_score")
         right = f"{risk} ({score}) | skillsmith.ch" if score is not None else f"{risk} | skillsmith.ch"
-    svg = _badge_svg("skill check", _escape_svg(right), color)
+    svg = _badge_svg("skill check", _escape_svg(right), color, style)
     start_response("200 OK", headers)
     return [svg.encode()]
 

@@ -734,3 +734,20 @@ def test_hook_scan(monkeypatch):
     statuses.clear()
     b"".join(webapp.handle_hook_scan(environ, lambda s, h: statuses.append(s)))
     assert statuses[0].startswith("429")
+
+
+def test_badge_styles(monkeypatch):
+    """badge ?style= variants: flat (default), flat-square, round; invalid falls back."""
+    monkeypatch.setattr(webapp, "get_scan_record",
+                        lambda d: {"risk_level": "clean", "risk_score": 0})
+    import xml.etree.ElementTree as ET
+    for style, expect_rx in [("flat", 'rx="3"'), ("flat-square", 'rx="0"'), ("round", 'rx="10"'), ("bogus", 'rx="3"')]:
+        status, body = _wsgi("GET", f"/badge?sha256={'d'*64}&style={style}")
+        assert status == 200, (style, body[:120])
+        s = body.decode()
+        assert expect_rx in s, (style, s[:200])
+        ET.fromstring(s)  # valid XML
+        if style == "flat-square":
+            assert "linearGradient" not in s
+        if style == "flat":
+            assert "linearGradient" in s
