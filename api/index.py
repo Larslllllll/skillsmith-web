@@ -1295,6 +1295,54 @@ def handle_hook_scan(environ, start_response):
         return [json.dumps({"error": str(e)}).encode()]
 
 
+def handle_certificate(environ, start_response):
+    """GET /api/certificate?sha256=...&api_key=... -- issue an HMAC-signed
+    verdict certificate for a scanned hash (90-day validity, built-in).
+    POST /api/certificate {"certificate": {...}} -- verify a certificate."""
+    try:
+        try:
+            from .features import make_certificate, verify_certificate
+        except ImportError:
+            from features import make_certificate, verify_certificate
+        if environ.get("REQUEST_METHOD") == "POST":
+            payload = _read_json(environ)
+            cert = payload.get("certificate")
+            if not isinstance(cert, dict):
+                start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
+                return [json.dumps({"error": "certificate object required"}).encode()]
+            valid = verify_certificate(cert)
+            current = get_scan_record(str(cert.get("sha256", ""))) if _valid_sha256(str(cert.get("sha256", ""))) else None
+            matches_current = bool(current and cert.get("risk_level") == current.get("risk_level"))
+            start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"disclaimer": DISCLAIMER,
+                                "valid": bool(valid),
+                                "matches_current_verdict": matches_current if valid else None,
+                                "current_risk_level": (current or {}).get("risk_level"),
+                                "note": "valid means signed by skillsmith and within 90 days; "
+                                        "matches_current_verdict means the hash still carries that verdict today."}).encode()]
+
+        qs = urllib.parse.parse_qs(environ.get("QUERY_STRING", ""))
+        digest = (qs.get("sha256", [""])[0] or "").lower().strip()
+        api_key = _get_qs_api_key(environ) or ""
+        if not _valid_sha256(digest):
+            start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": "sha256 query param must be a 64-char hex digest"}).encode()]
+        if not api_key or get_account(api_key) is None:
+            start_response("401 Unauthorized", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": "sign_in_required"}).encode()]
+        rec = get_scan_record(digest)
+        if rec is None:
+            start_response("404 Not Found", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": "not_scanned"}).encode()]
+        cert = make_certificate(digest, rec.get("risk_level") or "unknown",
+                                rec.get("security_score"))
+        start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
+        return [json.dumps({"disclaimer": DISCLAIMER, "certificate": cert}).encode()]
+    except Exception as e:  # noqa: BLE001
+        start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
+        return [json.dumps({"error": str(e)}).encode()]
+
+
 def handle_signup(environ, start_response, method):
     if method == "GET":
         qs = environ.get("QUERY_STRING", "")
@@ -1717,6 +1765,9 @@ def _app_inner(environ, start_response):
 
     if path.rstrip("/").endswith("/api/watch"):
         return handle_watch(environ, start_response)
+
+    if path.rstrip("/").endswith("/api/certificate"):
+        return handle_certificate(environ, start_response)
 
     if path.rstrip("/").endswith("/api/hook-scan"):
         if method != "POST":

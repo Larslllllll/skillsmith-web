@@ -751,3 +751,36 @@ def test_badge_styles(monkeypatch):
             assert "linearGradient" not in s
         if style == "flat":
             assert "linearGradient" in s
+
+
+def test_certificate(monkeypatch):
+    """GET issues signed cert; POST verifies it; tampering fails."""
+    monkeypatch.setattr(webapp, "get_account", lambda k: {"created_at": 0})
+    monkeypatch.setattr(webapp, "get_scan_record",
+                        lambda d: {"risk_level": "low", "risk_score": 3, "security_score": 88})
+    # GET
+    status, body = _wsgi("GET", f"/api/certificate?sha256={'e'*64}&api_key=sk_ok")
+    assert status == 200, body[:150]
+    d = json.loads(body)
+    cert = d["certificate"]
+    assert cert["risk_level"] == "low" and len(cert["signature"]) == 32
+    # POST verify (valid)
+    payload = json.dumps({"certificate": cert}).encode()
+    environ = {"REQUEST_METHOD": "POST", "PATH_INFO": "/api/certificate",
+               "CONTENT_LENGTH": str(len(payload)), "wsgi.input": io.BytesIO(payload)}
+    statuses = []
+    resp = b"".join(webapp.handle_certificate(environ, lambda s, h: statuses.append(s)))
+    out = json.loads(resp)
+    assert out["valid"] is True, out
+    assert out["matches_current_verdict"] is True
+    # Tampered risk level -> signature invalid
+    cert["risk_level"] = "clean"
+    payload2 = json.dumps({"certificate": cert}).encode()
+    environ2 = {"REQUEST_METHOD": "POST", "PATH_INFO": "/api/certificate",
+                "CONTENT_LENGTH": str(len(payload2)), "wsgi.input": io.BytesIO(payload2)}
+    statuses.clear()
+    resp2 = b"".join(webapp.handle_certificate(environ2, lambda s, h: statuses.append(s)))
+    assert json.loads(resp2)["valid"] is False
+    # GET without auth -> 401
+    status2, _b = _wsgi("GET", f"/api/certificate?sha256={'e'*64}")
+    assert status2 == 401

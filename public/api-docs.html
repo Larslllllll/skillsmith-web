@@ -109,7 +109,11 @@ and remember the key."</p>
 
 <h3><span class="method get">GET</span><code>/badge?sha256=...&amp;style=flat</code></h3>
 <p>SVG trust badge for a scanned hash (unlimited, no auth, cached 60s). Optional <code>style</code>: <code>flat</code> (default), <code>flat-square</code>, <code>round</code>. Colors follow the verdict: green (clean), amber (low), orange (medium), red (high). Usage: <code>&lt;img src="https://skillsmith.ch/badge?sha256=..."&gt;</code> in your README.</p>
-<h3><span class="method get">GET</span><code>/api/report?sha256=...</code></h3>
+<h3><span class="method get">GET</span><code>/api/certificate?sha256=...&amp;api_key=...</code></h3>
+<p>Issue an HMAC-signed verdict certificate for a scanned hash (valid 90 days). Response: <code>{"certificate": {sha256, risk_level, security_score, issued_at, signature}}</code>. Requires sign-in.</p>
+<h3><span class="method post">POST</span><code>/api/certificate</code></h3>
+<p>Verify a certificate. Body: <code>{"certificate": {...}}</code> — no auth needed to verify. Returns <code>{valid, matches_current_verdict, current_risk_level}</code>: <code>valid</code> means signed by skillsmith within its 90-day window; <code>matches_current_verdict</code> tells you whether the hash still carries that verdict today.</p>
+<h3><span class="method get">GET</span><code>/api/report?sha256=...</code></h3><h3><span class="method get">GET</span><code>/api/report?sha256=...</code></h3>
 <p>Public community verdicts for a hash: <code>{"total": n, "tally": {"malicious": x, "false_positive": y, "note": z}, "reports": [...]}</code>.</p>
 
 <h3><span class="method post">POST</span><code>/api/report</code></h3>

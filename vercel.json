@@ -2,6 +2,10 @@
   "version": 2,
   "routes": [
     {
+      "src": "/api/certificate",
+      "dest": "/api/index.py"
+    },
+    {
       "src": "/api/hook-scan",
       "dest": "/api/index.py"
     },
