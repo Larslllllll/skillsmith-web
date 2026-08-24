@@ -1054,7 +1054,7 @@ loadRegistry();
   fetch('/api/stats').then(function (r) { return r.ok ? r.json() : null; }).then(function (s) {
     if (!s || typeof s.total_scans !== 'number') return;
     var risk = s.by_risk || {};
-    el.textContent = '📊 ' + s.total_scans + ' skills scanned so far · ' +
+    el.textContent = '📊 ' + s.total_scans + ' scans performed · ' +
       (risk.clean || 0) + ' clean, ' + ((risk.low || 0) + (risk.medium || 0) + (risk.high || 0)) + ' flagged' +
       ' · automated heuristic verdicts';
     el.style.display = 'block';
