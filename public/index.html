@@ -1176,14 +1176,28 @@ loadRegistry();
     for (var i = 0; i < items.length; i++) {
       var it = items[i];
       var c = it.last_status === 'changed' ? '#dc2626' : (it.last_status === 'unreachable' ? '#d97706' : '#16a34a');
-      rows += '<tr><td style="padding:3px 10px 3px 0;font-family:monospace;">' + String(it.watch_id || '').slice(0, 12) +
+      var widFull = String(it.watch_id || '');
+      rows += '<tr><td style="padding:3px 10px 3px 0;font-family:monospace;">' + widFull.slice(0, 12) +
         '</td><td style="padding:3px 10px;color:' + c + ';font-weight:600;">' + String(it.last_status || '?') +
         '</td><td style="padding:3px 0;color:#9AA5B1;max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' +
-        String(it.url || '').replace(/[<>&"']/g, '') + '</td></tr>';
+        String(it.url || '').replace(/[<>&"']/g, '') +
+        '</td><td style="padding:3px 0 3px 10px;"><button data-wid="' + widFull.replace(/[^A-Za-z0-9_-]/g, '') +
+        '" class="watchDel" title="delete watch" style="background:none;border:none;color:#8b949e;cursor:pointer;font-size:12px;padding:2px 6px;">✕</button></td></tr>';
     }
     host.innerHTML = '<strong style="color:#e6edf3;">🛡 Your rug-pull watches</strong>' +
       '<table style="margin-top:6px;font-size:13px;border-collapse:collapse;">' + rows + '</table>';
     host.style.display = 'block';
+    var dels = host.querySelectorAll('.watchDel');
+    for (var j = 0; j < dels.length; j++) {
+      dels[j].addEventListener('click', function () {
+        var btn = this, wid = btn.getAttribute('data-wid');
+        if (!wid || !window.confirm('Delete this watch?')) return;
+        btn.disabled = true;
+        fetch('/api/watch?watch_id=' + encodeURIComponent(wid) + '&api_key=' + encodeURIComponent(key()), { method: 'DELETE' })
+          .then(function (r) { if (r.ok) { var tr = btn.closest('tr'); if (tr) tr.remove(); } else { btn.disabled = false; } })
+          .catch(function () { btn.disabled = false; });
+      });
+    }
   }
   function load() {
     var k = key();
