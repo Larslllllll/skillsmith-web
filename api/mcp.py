@@ -428,7 +428,7 @@ def handle_jsonrpc(req: dict, client_ip: str = "") -> tuple[int, dict]:
             "protocolVersion": "2024-11-05",
             "serverInfo": {"name": "skillsmith-mcp", "version": "1.0.0"},
             "capabilities": {"tools": {}},
-            "instructions": "Call skillsmith_signup first to get an api_key (free), then scan_skill / lookup_hash / get_skill_content / list_safe_skills / whoami. All tools use the same quota as https://skillsmith.ch.",
+            "instructions": "Call skillsmith_signup first to get a free api_key. Core loop: scan_skill (verdict) -> analyze_behavior (sandbox) -> watch_skill with a Discord/Slack webhook_url (automatic rug-pull alerts). Also: lookup_hash, get_skill_content, list_safe_skills, file_report, find_similar, whoami. All tools share the https://skillsmith.ch quota; free tier 5 scans/day.",
         }
     elif rpc_method == "tools/list":
         result = {"tools": TOOLS}
