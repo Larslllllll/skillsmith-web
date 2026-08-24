@@ -11,7 +11,7 @@ tool argument on every call -- MCP doesn't mandate OAuth, and requiring one
 here would be needless friction for agents that already have a key.
 
 Tools exposed: scan_skill, lookup_hash, get_skill_content, list_safe_skills,
-whoami. All of them just call straight into the same analyze()/account
+file_report, whoami. All of them just call straight into the same analyze()/account
 functions the REST API and the web UI use -- one detection engine, one
 quota system, three front doors (web, REST, MCP).
 """
@@ -94,6 +94,20 @@ TOOLS = [
         "name": "skillsmith_signup",
         "description": "Create a new anonymous skillsmith account (no email/password) and get an api_key to use with the other tools. Free tier: 5 scans/day, 5 DB lookups/day.",
         "inputSchema": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "file_report",
+        "description": "File a community verdict report for a scanned skill hash: verdict is 'malicious', 'false_positive' or 'note'; optional comment (max 500 chars). Crowd reports are shown publicly on skillsmith.ch and in scan results. 20 reports/day/key.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "api_key": {"type": "string"},
+                "sha256": {"type": "string", "description": "64-char hex digest of the skill"},
+                "verdict": {"type": "string", "enum": ["malicious", "false_positive", "note"]},
+                "comment": {"type": "string", "description": "optional, max 500 chars"}
+            },
+            "required": ["api_key", "sha256", "verdict"],
+        },
     },
     {
         "name": "whoami",
@@ -248,6 +262,33 @@ def _call_tool(name, args, client_ip: str = ""):
             "bonus_credits": record.get("bonus_credits", 0),
             "bonus_lookup_credits": record.get("bonus_lookup_credits", 0),
         })
+
+    if name == "file_report":
+        import time as _time
+        digest = str(args.get("sha256", "")).lower().strip()
+        if not idx._valid_sha256(digest):
+            return _tool_result({"error": "sha256 must be a 64-char hex digest"})
+        verdict = args.get("verdict", "")
+        if verdict not in ("malicious", "false_positive", "note"):
+            return _tool_result({"error": "verdict must be malicious | false_positive | note"})
+        comment = args.get("comment", "") if isinstance(args.get("comment"), str) else ""
+        record = get_account(api_key)
+        if record is None:
+            return _tool_result({"error": "unknown api_key"})
+        # same flood guard as POST /api/report: 20/day/key
+        try:
+            from .account import _blob_path as _abp, _blob_get as _abg, _blob_put as _abput
+        except ImportError:
+            from account import _blob_path as _abp, _blob_get as _abg, _blob_put as _abput
+        day = _time.strftime("%Y-%m-%d", _time.gmtime())
+        rl_path = _abp(f"report_rl/{api_key[:24]}-{day}.json")
+        rl = _abg(rl_path) or {"count": 0}
+        if int(rl.get("count", 0)) >= 20:
+            return _tool_result({"error": "too many reports today (20/day/key)"})
+        from scans import add_report as _add_report  # noqa: PLC0415 - lazy like the rest
+        tally = _add_report(digest, {"verdict": verdict, "comment": comment[:500], "via": "mcp"})
+        _abput(rl_path, {"count": int(rl.get("count", 0)) + 1})
+        return _tool_result({"ok": True, **tally})
 
     if name == "analyze_behavior":
         text = args.get("text", "")

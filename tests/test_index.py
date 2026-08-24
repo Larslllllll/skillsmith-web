@@ -178,7 +178,7 @@ def test_publish_content_constants_and_wiring():
 def test_mcp_tools_list_registered():
     import mcp as mcp_mod
     names = {t["name"] for t in mcp_mod.TOOLS}
-    assert names == {"scan_skill", "lookup_hash", "get_skill_content", "list_safe_skills", "skillsmith_signup", "whoami", "analyze_behavior"}
+    assert names == {"scan_skill", "lookup_hash", "get_skill_content", "list_safe_skills", "skillsmith_signup", "whoami", "analyze_behavior", "file_report"}
 
 
 def test_mcp_initialize_and_unknown_method():
@@ -625,6 +625,11 @@ def test_watch_ownership(monkeypatch):
     import scans as scans_mod
     monkeypatch.setattr(scans_mod, "_blob_get", lambda p: store.get(p))
     monkeypatch.setattr(scans_mod, "_blob_put", lambda p, v: store.__setitem__(p, v))
+    import account as acc_mod
+    rl_store = {}
+    monkeypatch.setattr(acc_mod, "_blob_path", lambda p: p)
+    monkeypatch.setattr(acc_mod, "_blob_get", lambda p: rl_store.get(p))
+    monkeypatch.setattr(acc_mod, "_blob_put", lambda p, v: rl_store.__setitem__(p, v))
     monkeypatch.setattr(webapp, "get_account", lambda k: {"created_at": 0})
     monkeypatch.setattr(webapp, "_fetch_skill_url", lambda url: "content")
     payload = json.dumps({"api_key": "sk_owner", "url": "https://github.com/o/r/blob/main/SKILL.md"}).encode()
@@ -755,6 +760,8 @@ def test_badge_styles(monkeypatch):
 
 def test_certificate(monkeypatch):
     """GET issues signed cert; POST verifies it; tampering fails."""
+    import features as feat_mod
+    monkeypatch.setattr(feat_mod, "_cert_secret", lambda: b"unit-test-secret")
     monkeypatch.setattr(webapp, "get_account", lambda k: {"created_at": 0})
     monkeypatch.setattr(webapp, "get_scan_record",
                         lambda d: {"risk_level": "low", "risk_score": 3, "security_score": 88})
@@ -784,3 +791,29 @@ def test_certificate(monkeypatch):
     # GET without auth -> 401
     status2, _b = _wsgi("GET", f"/api/certificate?sha256={'e'*64}")
     assert status2 == 401
+
+
+def test_mcp_file_report(monkeypatch):
+    """MCP tool file_report: validation + flood guard + tally."""
+    import mcp as mcp_mod
+    monkeypatch.setattr(mcp_mod, "get_account", lambda k: {"created_at": 0} if k == "sk_ok" else None)
+    store = {}
+    import scans as sm4
+    monkeypatch.setattr(sm4, "_blob_get", lambda p: store.get(p))
+    monkeypatch.setattr(sm4, "_blob_put", lambda p, v: store.__setitem__(p, v))
+    import account as am3
+    rl = {}
+    monkeypatch.setattr(am3, "_blob_path", lambda p: p)
+    monkeypatch.setattr(am3, "_blob_get", lambda p: rl.get(p))
+    monkeypatch.setattr(am3, "_blob_put", lambda p, v: rl.__setitem__(p, v))
+
+    res = mcp_mod._call_tool("file_report",
+                             {"api_key": "sk_ok", "sha256": "f"*64,
+                              "verdict": "malicious", "comment": "steals keys"})
+    data = json.loads(res[0]["text"]) if isinstance(res, list) else json.loads(res["content"][0]["text"])
+    assert data.get("ok") is True and data["tally"]["malicious"] == 1
+
+    # bad verdict
+    res2 = mcp_mod._call_tool("file_report", {"api_key": "sk_ok", "sha256": "f"*64, "verdict": "hate"})
+    s2 = json.loads(res2[0]["text"] if isinstance(res2, list) else res2["content"][0]["text"])
+    assert "verdict must be" in s2.get("error", "")
