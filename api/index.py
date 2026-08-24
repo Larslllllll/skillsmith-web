@@ -167,6 +167,10 @@ _CODE_PATTERNS = [
     (re.compile(r"(?:\\x[0-9a-fA-F]{2}){20,}"), 5, "contains a long run of hex-escaped bytes (possible obfuscated payload)"),
     (re.compile(r"[\u200b\u200c\u200d\ufeff]"), 7, "contains zero-width/invisible unicode characters (common prompt-injection hiding technique)"),
     (re.compile(r"[\u202a-\u202e\u2066-\u2069]"), 8, "contains RTL/bidi direction override characters (can silently reverse displayed text - classic instruction-hiding trick)"),
+    # PT-T75: short base64 payloads that decode to injection phrasing are
+    # caught by the decode-and-rescan pass in analyze(); this static pattern
+    # additionally flags credential-bearing query strings in any URL.
+    (re.compile(r"https?://[^\s\"'<>\]]*(?:[?&](?:api[_-]?key|key|token|secret|password|passwd|auth)=)[^\s\"'<>\]]*", re.I), 9, "URL carries a credential-looking query parameter (possible exfiltration endpoint)"),
 
     # --- Patterns below adapted from NVIDIA SkillSpector (Apache-2.0) ---
     # https://github.com/NVIDIA/SkillSpector -- see THIRD_PARTY_NOTICES.md
@@ -297,6 +301,28 @@ def analyze(text: str) -> dict:
         t = "".join(chr(ord(c) - 0xFEE0) if 0xFF01 <= ord(c) <= 0xFF5E else c for c in t)
         return "".join(c for c in _ud.normalize("NFKD", t) if not _ud.combining(c))
 
+    # PT-T75: short base64 blobs are decoded and the decoded text is scanned -
+    # "aWdub3JlIHByZXZpb3VzIGluc3RydWN0aW9ucw==" no longer slips under the
+    # long-blob threshold.
+    import base64 as _b64
+    import re as _re
+
+    def _decoded_variants(t: str) -> list[str]:
+        out = []
+        for run in _re.findall(r"[A-Za-z0-9+/=]{16,}", t):
+            try:
+                pad = "=" * (-len(run) % 4)
+                dec = _b64.b64decode(run + pad, validate=True).decode("utf-8", errors="ignore")
+            except Exception:  # noqa: BLE001
+                continue
+            if dec and sum(c.isprintable() for c in dec) / max(len(dec), 1) > 0.8:
+                out.append(dec)
+        return out
+
+    _dec_texts = _decoded_variants(body) + _decoded_variants(fm_lines)
+    for i130, dv in enumerate(_dec_texts):
+        findings += _scan_text(dv, f"base64-decoded[{i130}]", _PROMPT_INJECTION_PATTERNS)
+        findings += _scan_text(dv, f"base64-decoded[{i130}]", _PARAPHRASE_PATTERNS)
     for label, variant in (("body(normalized)", body), ("frontmatter(normalized)", fm_lines)):
         nv = _norm(variant)
         if nv != variant and nv.strip():
