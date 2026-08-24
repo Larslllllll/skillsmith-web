@@ -899,6 +899,17 @@ def test_scan_url_allowlist_bypass_battery():
     assert raw_re.match("https://raw.githubusercontent.com/o/r/main/SKILL.md")
 
 
+def test_osv_extract_pins_length_cap():
+    # PT-T71: absurd lange "Paketnamen" sind Attacker-Noise und duerfen nicht an OSV gehen
+    from osv import extract_pins
+    assert extract_pins("x" * 50000 + "requests==1.0.0") == []
+    long_name = "a" * 215
+    assert extract_pins(f"{long_name}==1.0.0") == []
+    ok_name = "b" * 214
+    pins = extract_pins(f"{ok_name}==1.2.3")
+    assert pins and pins[0]["package"] == ok_name
+
+
 def test_badge_styles(monkeypatch):
     """badge ?style= variants: flat (default), flat-square, round; invalid falls back."""
     monkeypatch.setattr(webapp, "get_scan_record",
