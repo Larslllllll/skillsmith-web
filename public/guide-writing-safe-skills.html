@@ -80,6 +80,24 @@ scans clean, and stays clean &mdash; so users (and their agents) can trust it.</
       A skill whose author welcomes monitoring is a skill people adopt.</li>
 </ul>
 
+<h2>What the scanner treats as red flags (2026 engine)</h2>
+<p>Recent engine updates catch obfuscation that used to slip past keyword
+scans &mdash; avoid all of these, even unintentionally:</p>
+<ul>
+  <li><strong>Injection phrasing in <code>description</code></strong> &mdash; the
+      frontmatter is scanned too, not just the body.</li>
+  <li><strong>Unicode tricks</strong> &mdash; zero-width characters, RTL/bidi
+      direction overrides (text can look reversed), fullwidth characters,
+      stacked combining marks. All are folded/normalized before scanning.</li>
+  <li><strong>Base64-encoded text</strong> &mdash; short blobs are decoded and
+      the plaintext is scanned.</li>
+  <li><strong>Credential-bearing URLs</strong> &mdash; links containing
+      <code>key=</code>, <code>token=</code>, <code>secret=</code>,
+      <code>password=</code> or <code>auth=</code> query parameters.</li>
+  <li><strong>Malformed YAML</strong> &mdash; invalid frontmatter fails the lint
+      with a clear error instead of a confusing verdict.</li>
+</ul>
+
 <h2>Before you ship</h2>
 <ol>
   <li>Run the local linter: <code>pip install skillsmith-scanner && skillsmith lint .</code></li>
