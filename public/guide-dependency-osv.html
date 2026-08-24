@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root { --bg:#0B0E14; --surface:#151921; --border:#2A3140; --text:#D8DEE9;
+        --text-muted:#9AA5B1; --accent:#7EE3C3; }
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:760px; padding:2rem 1.2rem 4rem;
+       background:var(--bg); color:var(--text); line-height:1.65;
+       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; font-size:16px; }
+a { color:var(--accent); }
+h1 { font-size:1.7rem; line-height:1.25; }
+h2 { font-size:1.25rem; margin-top:2.2rem; border-bottom:1px solid var(--border); padding-bottom:.35rem; }
+h3 { font-size:1.05rem; }
+code, pre { background:var(--surface); border:1px solid var(--border);
+            border-radius:6px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
+code { padding:.12rem .35rem; font-size:.9em; }
+pre { padding:.9rem 1rem; overflow-x:auto; line-height:1.5; }
+blockquote { border-left:3px solid var(--accent); margin-left:0; padding:.2rem 1rem;
+             color:var(--text-muted); }
+table { border-collapse:collapse; width:100%; }
+td, th { border:1px solid var(--border); padding:.45rem .6rem; text-align:left; }
+.backlink { font-size:.9rem; }
+.meta { color:var(--text-muted); font-size:.85rem; }
+</style>
+<title>Dependency Risk in Agent Skills: What OSV Teaches Us — skillsmith</title>
+<meta name="description" content="Supply-chain review for SKILL.md files: explicit installs, pinned remotes, implied trust - and how OSV vulnerability data turns them into findings.">
+<meta property="og:title" content="Dependency Risk in Agent Skills: What OSV Teaches Us — skillsmith">
+<meta property="og:description" content="Supply-chain review for SKILL.md files: explicit installs, pinned remotes, implied trust - and how OSV vulnerability data turns them into findings.">
+<meta property="og:type" content="article">
+<link rel="canonical" href="https://skillsmith.ch/guide-dependency-osv.html">
+</head>
+<body>
+<p class="backlink"><a href="/">← skillsmith scanner</a> · <a href="/guides.html">all guides</a></p>
+
+<h1>Dependency Risk in Agent Skills: What OSV Teaches Us</h1>
+<p class="meta">Guide · skillsmith.ch</p>
+
+<p>Modern agent skills rarely live alone. They reference scripts, install
+steps, pinned packages, or entire tool ecosystems. Every dependency is a
+supply-chain decision you inherit &mdash; and the OSSF OSV database
+(<a href="https://osv.dev" rel="noopener">osv.dev</a>) exists because those
+decisions go wrong constantly.</p>
+
+<h2>The three dependency surfaces of a SKILL.md</h2>
+<ol>
+  <li><strong>Explicit installs:</strong> "run <code>pip install
+      some-helper</code>" inside instructions. The agent may execute this with
+      your user's permissions, against whatever <code>some-helper</code>
+      resolves to that day.</li>
+  <li><strong>Pinned remotes:</strong> raw.githubusercontent URLs, CDN scripts,
+      release tarballs. A pin to a tag is only as stable as the tag owner.</li>
+  <li><strong>Implied trust:</strong> a skill that says "use my companion CLI"
+      pulls in an entire second package you never reviewed.</li>
+</ol>
+
+<h2>What OSV data changes about review</h2>
+<p>OSV aggregates known vulnerabilities from GitHub Security Advisories, PyPI,
+npm and more, queryable by package or by commit hash. For skill review it adds
+two checks keyword scanning can't do:</p>
+<ul>
+  <li><strong>Version reality check:</strong> if a skill pins
+      <code>requests==2.2.1</code>, OSV tells you in seconds that this version
+      carries known CVEs &mdash; information no amount of reading the SKILL.md
+      reveals.</li>
+  <li><strong>Commit-level exposure:</strong> for pinned commit hashes, OSV's
+      Git ecosystem lets you check whether the pinned code predates a known
+      fix.</li>
+</ul>
+
+<h2>How skillsmith uses it</h2>
+<p>The detection engine extracts candidate dependencies from the skill text
+(import lines, install commands, pinned versions) and enriches them with OSV
+queries during analysis. A match appears as a dedicated finding &mdash; so a
+skill can be perfectly polite in its instructions and still get flagged because
+the exact version it drags in has a published vulnerability. This complements
+<a href="/guide-prompt-injection.html">instruction-level detection</a>: one
+looks at what the skill <em>says</em>, this looks at what it <em>ships</em>.</p>
+
+<h2>Practical review checklist for dependencies</h2>
+<ul>
+  <li>List every external name the skill mentions. Would you install each one
+      yourself, today?</li>
+  <li>Distrust unpinned installs: they silently track upstream &mdash; including
+      a future hostile release.</li>
+  <li>Distrust over-tight pins too: a two-year-old pin may be frozen before a
+      security fix.</li>
+  <li>Check the dependency against OSV (or let
+      <a href="/">skillsmith</a> do it during the scan).</li>
+  <li>Remember transitive risk: your review target is the tree, not the root.</li>
+</ul>
+
+<h2>Keep reading</h2>
+<ul>
+  <li><a href="/guide-malicious-skills.html">Anatomy of a malicious SKILL.md</a></li>
+  <li><a href="/guide-homoglyph-attacks.html">Homoglyph attacks &mdash; when identical-looking names lie</a></li>
+  <li><a href="/guide-audit-checklist.html">The five-minute audit checklist</a></li>
+</ul>
+
+</body>
+</html>
