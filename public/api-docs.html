@@ -113,6 +113,12 @@ and remember the key."</p>
 <h3><span class="method post">POST</span><code>/api/report</code></h3>
 <p>File a community verdict. Body: <code>{api_key, sha256, verdict, comment?}</code> where verdict is <code>false_positive | malicious | note</code>. Requires a valid api_key; 20 reports/day/key.</p>
 
+<h3><span class="method get">GET</span><code>/api/similar?sha256=...&amp;api_key=...</code></h3>
+<p>Skill-DNA neighbours: near-duplicate variants of the skill (64-bit simhash, hamming distance ≤ 12). Requires sign-in; free.</p>
+
+<h3><span class="method get">GET</span><code>/api/stats</code></h3>
+<p>Aggregate global counters: <code>{"total_scans": n, "by_risk": {...}}</code>. Public, cached 60s.</p>
+
 <h3><span class="method post">POST</span><code>/api/signup</code></h3>
 <p>Create an anonymous account. No email/password.</p>
 <pre>curl -X POST https://skillsmith.ch/api/signup</pre>

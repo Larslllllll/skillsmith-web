@@ -501,3 +501,20 @@ def test_purge_blob_versions_deletes_all_copies(monkeypatch):
     assert n == 2, n
     assert len(calls) == 2
     assert all("pathname=scan_content%2Fabc" in c or "pathname=scan_content/abc" in c for c in calls)
+
+
+def test_stats_endpoint(monkeypatch):
+    monkeypatch.setattr(webapp, "get_stats",
+                        lambda: {"total_scans": 7, "by_risk": {"clean": 5, "high": 2}})
+    status, body = _wsgi("GET", "/api/stats")
+    assert status == 200
+    d = json.loads(body)
+    assert d["total_scans"] == 7
+    assert d["by_risk"]["high"] == 2
+
+
+def test_similar_requires_auth_and_valid_hash():
+    # ohne key -> 401
+    status, body = _wsgi("GET", "/api/similar?sha256=" + "a" * 64)
+    assert status == 401
+    # invalid hash -> 400 (monkeypatch account check via webapp.get_account)

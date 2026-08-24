@@ -595,11 +595,23 @@ def handle_scan(environ, start_response):
                 }
             except Exception:  # noqa: BLE001 - trend is cosmetic, never fail a scan
                 pass
-        # plain-language explainer for non-expert users
+        # plain-language explainer for non-expert users + Skill-DNA + stats:
+        # all best-effort, never fail a scan
         try:
-            from .features import explain_findings
+            from .features import explain_findings, simhash
         except ImportError:
-            from features import explain_findings
+            from features import explain_findings, simhash
+        try:
+            dna_hex = simhash(text)
+            if dna_hex:
+                store_dna(digest, dna_hex, result.get("risk_level", ""),
+                          result.get("name", ""))
+        except Exception:  # noqa: BLE001
+            pass
+        try:
+            bump_stats(result.get("risk_level", "unknown"))
+        except Exception:  # noqa: BLE001
+            pass
         try:
             result["explanation"] = explain_findings(result.get("findings", []))
         except Exception:  # noqa: BLE001
@@ -956,6 +968,67 @@ def handle_report(environ, start_response):
         })
         start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({"disclaimer": DISCLAIMER, **result}).encode()]
+    except Exception as e:  # noqa: BLE001
+        start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
+        return [json.dumps({"error": str(e)}).encode()]
+
+
+def handle_stats(environ, start_response):
+    """GET /api/stats -- aggregate global scan counters (no per-user data)."""
+    try:
+        stats = get_stats()
+        start_response("200 OK", [("Content-Type", "application/json"),
+                                  ("Cache-Control", "public, max-age=60")] + _CORS_HEADERS)
+        return [json.dumps({"disclaimer": DISCLAIMER,
+                            "total_scans": int(stats.get("total_scans", 0)),
+                            "by_risk": stats.get("by_risk", {}),
+                            "updated_at": stats.get("updated_at")}).encode()]
+    except Exception as e:  # noqa: BLE001
+        start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
+        return [json.dumps({"error": str(e)}).encode()]
+
+
+def handle_similar(environ, start_response):
+    """GET /api/similar?sha256=...&api_key=... -- Skill-DNA neighbours
+    (near-duplicate detection, hamming distance <= 12 of the 64-bit simhash).
+    Requires sign-in; does not consume DB-lookup quota."""
+    try:
+        explicit_api_key = _get_qs_api_key(environ)
+        if not explicit_api_key or get_account(explicit_api_key) is None:
+            start_response("401 Unauthorized", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": "sign_in_required"}).encode()]
+        qs = urllib.parse.parse_qs(environ.get("QUERY_STRING", ""))
+        digest = (qs.get("sha256") or [""])[0].lower()
+        if not _valid_sha256(digest):
+            start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": "sha256 query param must be a 64-char hex digest"}).encode()]
+        # find this hash's stored DNA by scanning the dna/ listing once
+        try:
+            from .scans import _blob_headers, BLOB_API_BASE
+        except ImportError:
+            from scans import _blob_headers, BLOB_API_BASE
+        import urllib.request as _ureq
+        req = _ureq.Request(f"{BLOB_API_BASE}/?prefix=dna/&limit=200",
+                            headers=_blob_headers(), method="GET")
+        own_dna = None
+        try:
+            with _ureq.urlopen(req, timeout=10) as resp:
+                listing = json.loads(resp.read().decode())
+            for b in listing.get("blobs", []):
+                if digest[:12] in b.get("pathname", ""):
+                    with _ureq.urlopen(_ureq.Request(b["url"], headers=_blob_headers()), timeout=10) as resp:
+                        own_dna = json.loads(resp.read().decode()).get("dna")
+                    break
+        except Exception:  # noqa: BLE001
+            pass
+        if not own_dna:
+            start_response("404 Not Found", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": "dna_unknown",
+                                "message": "No DNA stored for this hash yet. Scan it first."}).encode()]
+        similar = find_similar_dna(own_dna, exclude_digest=digest, max_results=5)
+        start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
+        return [json.dumps({"disclaimer": DISCLAIMER, "sha256": digest,
+                            "similar": similar}).encode()]
     except Exception as e:  # noqa: BLE001
         start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({"error": str(e)}).encode()]
@@ -1370,6 +1443,12 @@ def _app_inner(environ, start_response):
             start_response("405 Method Not Allowed", [("Content-Type", "application/json")] + _CORS_HEADERS)
             return [json.dumps({"error": "GET or POST only"}).encode()]
         return handle_signup(environ, start_response, method)
+
+    if path.rstrip("/").endswith("/api/stats"):
+        return handle_stats(environ, start_response)
+
+    if path.rstrip("/").endswith("/api/similar"):
+        return handle_similar(environ, start_response)
 
     if path.rstrip("/").endswith("/api/report"):
         return handle_report(environ, start_response)
