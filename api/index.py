@@ -1730,8 +1730,17 @@ def app(environ, start_response):
     Any unhandled exception becomes an opaque 500 JSON body (pentest LOW-01);
     the actual traceback goes to the platform logs via the raise/re-raise in
     the except branch."""
+    def _sr_with_security_headers(status, headers, *args):
+        have = {k.lower() for k, _ in headers}
+        for name, value in (("X-Content-Type-Options", "nosniff"),
+                            ("X-Frame-Options", "DENY"),
+                            ("Referrer-Policy", "strict-origin-when-cross-origin")):
+            if name.lower() not in have:
+                headers.append((name, value))
+        return start_response(status, headers, *args)
+
     try:
-        return _app_inner(environ, start_response)
+        return _app_inner(environ, _sr_with_security_headers)
     except Exception:
         import traceback
         traceback.print_exc()
