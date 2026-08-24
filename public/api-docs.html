@@ -228,6 +228,7 @@ curl -X POST https://skillsmith.ch/api/buy_credit \
 <tr><td>401</td><td>Sign in required, or your api_key is unknown/invalid</td></tr>
 <tr><td>402</td><td>Payment required or not yet verified on-chain</td></tr>
 <tr><td>429</td><td>Daily quota exceeded for your current tier</td></tr>
+<tr><td>503</td><td>Storage temporarily unavailable (rare) — retry later; honor the <code>Retry-After</code> header</td></tr>
 </table>
 
 <h2>Source</h2>
