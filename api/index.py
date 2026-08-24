@@ -898,6 +898,69 @@ def handle_lookup(environ, start_response):
         return [json.dumps({"error": str(e)}).encode()]
 
 
+def handle_report(environ, start_response):
+    """GET  /api/report?sha256=<hex>          -> public community verdict tally.
+    POST /api/report {api_key, sha256, verdict, comment?} -> file a report.
+    verdict is one of: false_positive | malicious | note. Requires a valid
+    api_key; max 20 reports/day/key so one account cannot flood the tally."""
+    try:
+        if environ.get("REQUEST_METHOD") == "GET":
+            qs = urllib.parse.parse_qs(environ.get("QUERY_STRING", ""))
+            digest = (qs.get("sha256") or [""])[0].lower()
+            if not _valid_sha256(digest):
+                start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
+                return [json.dumps({"error": "sha256 must be a 64-char hex digest"}).encode()]
+            data = get_reports(digest)
+            start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"disclaimer": DISCLAIMER,
+                                "sha256": digest,
+                                "total": data.get("total", 0),
+                                "tally": data.get("tally", {}),
+                                "reports": [{"verdict": r_.get("verdict"), "at": r_.get("at"),
+                                             "comment": r_.get("comment", "")}
+                                            for r_ in data.get("reports", [])][-50:]}).encode()]
+
+        payload = _read_json(environ)
+        api_key = payload.get("api_key", "")
+        digest = str(payload.get("sha256", "")).lower()
+        verdict = payload.get("verdict", "")
+        comment = payload.get("comment", "")
+        if not isinstance(api_key, str) or not api_key:
+            start_response("401 Unauthorized", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": "sign_in_required"}).encode()]
+        if get_account(api_key) is None:
+            start_response("401 Unauthorized", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": "unknown api_key"}).encode()]
+        if not _valid_sha256(digest):
+            start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": "sha256 must be a 64-char hex digest"}).encode()]
+        if verdict not in ("false_positive", "malicious", "note"):
+            start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": "verdict must be false_positive | malicious | note"}).encode()]
+        # per-key flood guard: 20 reports/day via blob counter
+        try:
+            from .account import _blob_path as _bp, _blob_get as _bg, _blob_put as _bput
+        except ImportError:  # local/test context
+            from account import _blob_path as _bp, _blob_get as _bg, _blob_put as _bput
+        day = time.strftime("%Y-%m-%d", time.gmtime())
+        rl_path = _bp(f"report_rl/{api_key[:24]}-{day}.json")
+        rl = _bg(rl_path) or {"count": 0}
+        if rl.get("count", 0) >= 20:
+            start_response("429 Too Many Requests", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": "too many reports today (20/day/key)"}).encode()]
+        _bput(rl_path, {"count": rl.get("count", 0) + 1})
+        result = add_report(digest, {
+            "verdict": verdict,
+            "comment": comment if isinstance(comment, str) else "",
+            "by": api_key[:10] + "...",
+        })
+        start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
+        return [json.dumps({"disclaimer": DISCLAIMER, **result}).encode()]
+    except Exception as e:  # noqa: BLE001
+        start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
+        return [json.dumps({"error": str(e)}).encode()]
+
+
 def handle_signup(environ, start_response, method):
     if method == "GET":
         qs = environ.get("QUERY_STRING", "")
@@ -1307,6 +1370,9 @@ def _app_inner(environ, start_response):
             start_response("405 Method Not Allowed", [("Content-Type", "application/json")] + _CORS_HEADERS)
             return [json.dumps({"error": "GET or POST only"}).encode()]
         return handle_signup(environ, start_response, method)
+
+    if path.rstrip("/").endswith("/api/report"):
+        return handle_report(environ, start_response)
 
     if path.rstrip("/").endswith("/scan"):
         if method != "POST":

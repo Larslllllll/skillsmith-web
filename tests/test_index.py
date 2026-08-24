@@ -420,3 +420,56 @@ def test_mcp_invalid_params_type():
         status, body = mcp_mod.handle_jsonrpc({"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": bad})
         assert status == 200
         assert body["error"]["code"] == -32602
+
+
+def test_report_validation_and_wiring(monkeypatch):
+    """PT-T4 follow-up: /api/report is wired, validates input, requires auth."""
+    # route wired?
+    import inspect
+    assert "handle_report" in inspect.getsource(webapp._app_inner)
+
+    # GET without sha256 -> 400
+    status, body = _wsgi("GET", "/api/report")
+    assert status == 400
+    assert b"64-char hex" in body
+
+    # POST unknown key -> 401
+    body = json.dumps({"api_key": "sk_nope", "sha256": "a" * 64,
+                       "verdict": "malicious"}).encode()
+    environ = {"REQUEST_METHOD": "POST", "PATH_INFO": "/api/report",
+               "CONTENT_LENGTH": str(len(body)), "wsgi.input": io.BytesIO(body)}
+    statuses = []
+    resp = b"".join(webapp.handle_report(environ, lambda s, h: statuses.append(s)))
+    assert statuses[0].startswith("401")
+
+    # POST bad verdict with valid-shaped data -> 400 (monkeypatch account lookup)
+    monkeypatch.setattr(webapp, "get_account", lambda k: {"created_at": 0} if k == "sk_ok" else None)
+    for verdict in ("hacked", 123, None):
+        payload = json.dumps({"api_key": "sk_ok", "sha256": "b" * 64, "verdict": verdict}).encode()
+        environ2 = {"REQUEST_METHOD": "POST", "PATH_INFO": "/api/report",
+                    "CONTENT_LENGTH": str(len(payload)), "wsgi.input": io.BytesIO(payload)}
+        statuses.clear()
+        resp2 = b"".join(webapp.handle_report(environ2, lambda s, h: statuses.append(s)))
+        if verdict == 123 or verdict is None or verdict == "hacked":
+            assert statuses[0].startswith("400"), (verdict, resp2[:100])
+
+    # happy path: add_report called with sanitized entry
+    calls = {}
+    monkeypatch.setattr(webapp, "add_report", lambda d, e: calls.update(d=d, e=e) or
+                         {"sha256": d, "total": 1, "tally": {e["verdict"]: 1}})
+    # flood-guard blob calls hit the network in tests -> patch them out
+    import account as account_mod
+    store = {}
+    monkeypatch.setattr(account_mod, "_blob_path", lambda p: p)
+    monkeypatch.setattr(account_mod, "_blob_get", lambda p: store.get(p))
+    def fake_put(p, v): store[p] = v
+    monkeypatch.setattr(account_mod, "_blob_put", fake_put)
+    payload = json.dumps({"api_key": "sk_ok", "sha256": "c" * 64,
+                          "verdict": "false_positive", "comment": "looks fine"}).encode()
+    environ3 = {"REQUEST_METHOD": "POST", "PATH_INFO": "/api/report",
+                "CONTENT_LENGTH": str(len(payload)), "wsgi.input": io.BytesIO(payload)}
+    statuses.clear()
+    resp3 = b"".join(webapp.handle_report(environ3, lambda s, h: statuses.append(s)))
+    assert statuses[0].startswith("200"), resp3[:150]
+    assert calls["d"] == "c" * 64
+    assert calls["e"]["verdict"] == "false_positive"
