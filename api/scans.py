@@ -292,7 +292,7 @@ def delete_watch(watch_id: str, owner_prefix: str) -> bool:
     """PT-T54: hard-delete a watch blob (owner-verified). Returns True when
     a matching owned watch existed and was removed."""
     rec = get_watch(watch_id)
-    if not rec or (rec.get("owner") and rec.get("owner") != owner_prefix):
+    if not rec or rec.get("owner") != owner_prefix:
         return False
     purge_blob_versions(_watch_path(watch_id))
     return True

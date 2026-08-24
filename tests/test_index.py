@@ -860,6 +860,22 @@ def test_storage_outage_maps_to_503(monkeypatch):
     assert b"storage temporarily unavailable" in body503
 
 
+def test_delete_watch_edge_cases(monkeypatch):
+    import sys as _s2
+    sc_t3 = _s2.modules.get("scans")
+    recs = {"W1": {"watch_id": "W1", "owner": "o" * 24}}
+    purged = []
+    monkeypatch.setattr(sc_t3, "get_watch", lambda wid: recs.get(wid))
+    monkeypatch.setattr(sc_t3, "purge_blob_versions", lambda p: purged.append(p))
+    # unbekannt -> False ohne purge
+    assert sc_t3.delete_watch("NOPE", "o" * 24) is False and not purged
+    # fremder owner -> False ohne purge
+    assert sc_t3.delete_watch("W1", "x" * 24) is False and not purged
+    # leerer/fehlender owner im Record -> strikt abgelehnt (kein ownerless Delete)
+    recs["W2"] = {"watch_id": "W2", "owner": ""}
+    assert sc_t3.delete_watch("W2", "o" * 24) is False and len(purged) == 0
+
+
 def test_badge_styles(monkeypatch):
     """badge ?style= variants: flat (default), flat-square, round; invalid falls back."""
     monkeypatch.setattr(webapp, "get_scan_record",
