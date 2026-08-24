@@ -1879,6 +1879,23 @@ def app(environ, start_response):
 
     try:
         return _app_inner(environ, _sr_with_security_headers)
+    except urllib.error.HTTPError as _he:
+        # Graceful degradation: storage-layer outages (e.g. suspended Blob
+        # store) surface as HTTPError from the blob REST calls. Map them to
+        # an honest 503 instead of an opaque 500 so clients and status
+        # monitors can distinguish "bug" from "temporarily unavailable".
+        import traceback
+        traceback.print_exc()
+        try:
+            _he.read()
+        except Exception:  # noqa: BLE001
+            pass
+        try:
+            start_response("503 Service Unavailable",
+                           [("Content-Type", "application/json"), ("Retry-After", "300")] + _CORS_HEADERS)
+        except Exception:  # noqa: BLE001
+            pass
+        return [json.dumps({"error": "storage temporarily unavailable, please retry later"}).encode()]
     except Exception:
         import traceback
         traceback.print_exc()

@@ -113,8 +113,14 @@ def _blob_put(path: str, data: dict) -> None:
         "x-content-type": "application/json",
     }
     req = urllib.request.Request(url, data=body, headers=headers, method="PUT")
-    with urllib.request.urlopen(req, timeout=10) as resp:
-        resp.read()
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            resp.read()
+    except urllib.error.HTTPError as _he:
+        import os as _os
+        print(f"[blob-debug] PUT {path} -> {_he.code}; token_len="
+              f"{len(_os.environ.get('BLOB_READ_WRITE_TOKEN', ''))}; body={_he.read()[:300]!r}")
+        raise
 
 
 def _blob_get(path: str) -> dict | None:

@@ -845,6 +845,21 @@ def test_mcp_watch_delete_unknown(monkeypatch):
     assert out["deleted"] is False and "not yours" in out.get("note", "")
 
 
+def test_storage_outage_maps_to_503(monkeypatch):
+    import urllib.error as ue2
+    def boom(*a, **kw):
+        raise ue2.HTTPError("https://blob.vercel-storage.com/x", 403,
+                            "Forbidden", {}, io.BytesIO(b'{"error":{"code":"store_suspended"}}'))
+    monkeypatch.setattr(webapp, "_app_inner", boom)
+    cap503 = {}
+    def sr(status, headers_):
+        cap503["status"] = int(status.split()[0])
+    body503 = b"".join(webapp.app({"REQUEST_METHOD": "GET", "PATH_INFO": "/api/stats",
+                                   "QUERY_STRING": "", "wsgi.input": io.BytesIO(b"")}, sr))
+    assert cap503["status"] == 503
+    assert b"storage temporarily unavailable" in body503
+
+
 def test_badge_styles(monkeypatch):
     """badge ?style= variants: flat (default), flat-square, round; invalid falls back."""
     monkeypatch.setattr(webapp, "get_scan_record",
