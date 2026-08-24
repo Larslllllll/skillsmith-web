@@ -691,3 +691,46 @@ def test_feed_microcache(monkeypatch):
     b2 = b"".join(webapp.handle_feed(environ, lambda s, h: warm.append(s)))
     assert b"<entry>" in b2
     assert calls["n"] == 1  # no second upstream render
+
+
+def test_hook_scan(monkeypatch):
+    """POST /api/hook-scan returns Discord/Slack webhook payloads."""
+    monkeypatch.setattr(webapp, "get_account", lambda k: {"created_at": 0})
+    monkeypatch.setattr(webapp, "_client_api_key", lambda e, p: "sk_ok")
+    monkeypatch.setattr(webapp, "check_and_consume_quota",
+                        lambda k: (True, {"remaining": 5}))
+    monkeypatch.setattr(webapp, "record_scan", lambda *a, **kw: None)
+    environ = {"REQUEST_METHOD": "POST", "PATH_INFO": "/api/hook-scan",
+               "CONTENT_LENGTH": "0", "wsgi.input": io.BytesIO(b"")}
+    payload = json.dumps({"api_key": "sk_ok", "text": GOOD_SKILL, "format": "discord"}).encode()
+    environ["CONTENT_LENGTH"] = str(len(payload)); environ["wsgi.input"] = io.BytesIO(payload)
+    statuses = []
+    resp = b"".join(webapp.handle_hook_scan(environ, lambda s, h: statuses.append(s)))
+    assert statuses[0].startswith("200"), resp[:200]
+    d = json.loads(resp)
+    assert d["embeds"][0]["title"]
+    assert d["embeds"][0]["color"] == 0x2EA043  # clean -> green
+
+    # slack format
+    payload2 = json.dumps({"api_key": "sk_ok", "text": GOOD_SKILL, "format": "slack"}).encode()
+    environ["CONTENT_LENGTH"] = str(len(payload2)); environ["wsgi.input"] = io.BytesIO(payload2)
+    statuses.clear()
+    resp2 = b"".join(webapp.handle_hook_scan(environ, lambda s, h: statuses.append(s)))
+    d2 = json.loads(resp2)
+    assert statuses[0].startswith("200")
+    assert d2["attachments"][0]["color"].startswith("#")
+
+    # bad format
+    payload3 = json.dumps({"api_key": "sk_ok", "text": GOOD_SKILL, "format": "teams"}).encode()
+    environ["CONTENT_LENGTH"] = str(len(payload3)); environ["wsgi.input"] = io.BytesIO(payload3)
+    statuses.clear()
+    b"".join(webapp.handle_hook_scan(environ, lambda s, h: statuses.append(s)))
+    assert statuses[0].startswith("400")
+
+    # quota exceeded
+    monkeypatch.setattr(webapp, "check_and_consume_quota", lambda k: (False, {"error": "quota_exceeded"}))
+    payload4 = json.dumps({"api_key": "sk_ok", "text": GOOD_SKILL}).encode()
+    environ["CONTENT_LENGTH"] = str(len(payload4)); environ["wsgi.input"] = io.BytesIO(payload4)
+    statuses.clear()
+    b"".join(webapp.handle_hook_scan(environ, lambda s, h: statuses.append(s)))
+    assert statuses[0].startswith("429")

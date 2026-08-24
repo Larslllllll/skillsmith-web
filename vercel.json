@@ -2,6 +2,10 @@
   "version": 2,
   "routes": [
     {
+      "src": "/api/hook-scan",
+      "dest": "/api/index.py"
+    },
+    {
       "src": "/feed.xml",
       "dest": "/api/index.py"
     },

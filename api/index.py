@@ -1201,6 +1201,100 @@ def handle_feed(environ, start_response):
         return [json.dumps({"error": str(e)}).encode()]
 
 
+def handle_hook_scan(environ, start_response):
+    """POST /api/hook-scan {api_key, url|text, format} -- run the normal scan
+    pipeline and return a ready-to-post Discord or Slack webhook payload.
+    Consumes one scan from the account quota. format: "discord" (default) | "slack"."""
+    try:
+        fmt = ""
+        payload = _read_json(environ)
+        text = payload.get("text", "")
+        url = payload.get("url", "")
+        fmt = payload.get("format", "discord") if isinstance(payload.get("format"), str) else "discord"
+        if fmt not in ("discord", "slack"):
+            start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": "format must be 'discord' or 'slack'"}).encode()]
+        if url and not text:
+            try:
+                text = _fetch_skill_url(url)
+            except (ValueError, urllib.error.URLError, TimeoutError) as e:
+                start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
+                return [json.dumps({"error": "could not fetch url: %s" % e}).encode()]
+        if not isinstance(text, str) or len(text) > 100_000:
+            raise ValueError("text must be a string under 100,000 chars")
+        explicit_api_key = payload.get("api_key") if isinstance(payload.get("api_key"), str) else ""
+        explicit_api_key = explicit_api_key[:200]
+        auth_header = environ.get("HTTP_AUTHORIZATION", "")
+        if isinstance(auth_header, str) and not explicit_api_key and auth_header.startswith("Bearer "):
+            explicit_api_key = auth_header[len("Bearer "):].strip()[:200]
+        if not explicit_api_key:
+            start_response("401 Unauthorized", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": "sign_in_required"}).encode()]
+        api_key = _client_api_key(environ, payload)
+        allowed, q = check_and_consume_quota(api_key)
+        if not allowed:
+            status = "401 Unauthorized" if q.get("error", "").startswith("unknown api_key") else "429 Too Many Requests"
+            start_response(status, [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": "quota_exceeded" if allowed is False else "auth",
+                                "quota": q}).encode()]
+
+        digest = sha256_of(text)
+        result = analyze(text)
+        enrich_with_osv(result, text)
+        try:
+            record_scan(digest, result, name=result.get("name") or "", publish=False, text=text)
+        except Exception:  # noqa: BLE001
+            pass
+
+        from xml.sax.saxutils import escape as _xesc
+        name = result.get("name") or digest[:12]
+        level = result.get("risk_level", "unknown")
+        color = {"clean": 0x2EA043, "low": 0x9E6A03, "medium": 0xDB6D28, "high": 0xCF222E}.get(level, 0x6E7681)
+        findings = result.get("findings") or []
+        fdesc = "\n".join("- " + str(f.get("message", f.get("rule", "?")))[:120] for f in findings[:5]) or "none"
+        link = f"https://skillsmith.ch/skill.html?sha256={digest}"
+        if fmt == "discord":
+            body = {
+                "username": "skillsmith",
+                "embeds": [{
+                    "title": name,
+                    "url": link,
+                    "color": color,
+                    "fields": [
+                        {"name": "verdict", "value": str(level), "inline": True},
+                        {"name": "risk score", "value": str(result.get("risk_score", "?")), "inline": True},
+                        {"name": "security score", "value": str(result.get("security_score", "?")), "inline": True},
+                        {"name": "top findings", "value": _xesc(fdesc)[:1024], "inline": False},
+                        {"name": "sha256", "value": "```" + digest + "```", "inline": False},
+                    ],
+                    "footer": {"text": "automated static heuristic - not a manual audit"},
+                }],
+            }
+        else:  # slack
+            body = {
+                "text": f"skillsmith scan: {name} -> {level}",
+                "attachments": [{
+                    "color": "#%06X" % color,
+                    "title": name,
+                    "title_link": link,
+                    "fields": [
+                        {"title": "verdict", "value": str(level), "short": True},
+                        {"title": "risk/security", "short": True,
+                         "value": f"{result.get('risk_score', '?')} / {result.get('security_score', '?')}"},
+                        {"title": "top findings", "value": _xesc(fdesc)[:1000] if findings else "none",
+                         "short": False},
+                    ],
+                    "footer": "automated static heuristic - not a manual audit",
+                }],
+            }
+        body["disclaimer"] = DISCLAIMER
+        start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
+        return [json.dumps(body).encode()]
+    except Exception as e:  # noqa: BLE001
+        start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
+        return [json.dumps({"error": str(e)}).encode()]
+
+
 def handle_signup(environ, start_response, method):
     if method == "GET":
         qs = environ.get("QUERY_STRING", "")
@@ -1613,6 +1707,12 @@ def _app_inner(environ, start_response):
 
     if path.rstrip("/").endswith("/api/watch"):
         return handle_watch(environ, start_response)
+
+    if path.rstrip("/").endswith("/api/hook-scan"):
+        if method != "POST":
+            start_response("405 Method Not Allowed", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": "POST only"}).encode()]
+        return handle_hook_scan(environ, start_response)
 
     if path.rstrip("/") == "/feed.xml":
         if method != "GET":

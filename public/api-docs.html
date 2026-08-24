@@ -116,6 +116,8 @@ and remember the key."</p>
 <h3><span class="method get">GET</span><code>/api/similar?sha256=...&amp;api_key=...</code></h3>
 <p>Skill-DNA neighbours: near-duplicate variants of the skill (64-bit simhash, hamming distance ≤ 12). Requires sign-in; free.</p>
 
+<h3><span class="method post">POST</span><code>/api/hook-scan</code></h3>
+<p>Run the normal scan pipeline and get back a ready-to-post <strong>Discord</strong> or <strong>Slack</strong> webhook payload. Body: <code>{api_key, url | text, format?}</code> — url must be a github.com/raw.githubusercontent.com link; format is <code>"discord"</code> (default) or <code>"slack"</code>. Consumes one scan from your quota. Response: a Discord embed object or Slack attachment object (plus a <code>disclaimer</code> field).</p>
 <h3><span class="method post">POST</span><code>/api/watch</code></h3>
 <p>Watch a GitHub-hosted SKILL.md for rug-pulls. Body: <code>{api_key, url}</code> where url is a github.com blob or raw.githubusercontent.com URL (only those hosts are fetched — no SSRF). Stores the content hash as baseline. 10 watches/day/key. Response: <code>{watch_id, baseline_sha256}</code>.</p>
 <h3><span class="method get">GET</span><code>/api/watch?watch_id=...&amp;api_key=...</code></h3>
