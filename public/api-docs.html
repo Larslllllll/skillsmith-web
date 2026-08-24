@@ -95,6 +95,7 @@ and remember the key."</p>
 <tr><td><code>get_skill_content</code></td><td>api_key, sha256</td><td>Fetch a published skill's actual text</td></tr>
 <tr><td><code>list_safe_skills</code></td><td>api_key, limit?</td><td>Browse the Safe Skills Database</td></tr>
 <tr><td><code>whoami</code></td><td>api_key</td><td>Check tier/quota usage</td></tr>
+<tr><td><code>analyze_behavior</code></td><td>api_key, text</td><td>Behavioral sandbox: an AI analyst simulates what an agent following the skill would do (capabilities, action trace, IOCs, 0-10 severity). Slow (~30-120s); 5/day/account.</td></tr>
 </table>
 <p>Raw JSON-RPC example (what your MCP host does under the hood):</p>
 <pre>curl -X POST https://skillsmith.ch/mcp \
@@ -102,6 +103,9 @@ and remember the key."</p>
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"skillsmith_signup","arguments":{}}}'</pre>
 
 <h2>Endpoints</h2>
+
+<h3><span class="method get">GET</span><code>/health</code></h3>
+<p>Liveness probe. Returns <code>{"status": "ok", ...}</code> with HTTP 200; no auth, no quota.</p>
 
 <h3><span class="method post">POST</span><code>/api/signup</code></h3>
 <p>Create an anonymous account. No email/password.</p>
@@ -130,7 +134,11 @@ curl -X POST https://skillsmith.ch/api/scan \
 <code>lint_issues[]</code>, <code>findings[]</code>, <code>risk_score</code>,
 <code>risk_level</code>, <code>security_score</code> (0-100),
 <code>sha256</code>, <code>scan_history</code>, <code>disclaimer</code>, and
-<code>quota</code>.</p>
+<code>quota</code>. For a hash scanned before, the response also carries
+<code>trend</code> (<code>direction</code>: improved/declined/unchanged,
+<code>delta</code> vs. the previous scan, <code>previous_security_score</code>)
+and <code>explanation[]</code> — plain-language translations of each finding
+with advice.</p>
 
 <h3><span class="method post">POST</span><code>/api/scan_pro</code></h3>
 <p>Two things, based on what you send:</p>
