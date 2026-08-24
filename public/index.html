@@ -845,6 +845,17 @@ function render(data) {
     addRow(details, [bold('Score trend:'), ` ${arrow} security_score is ${word} than the previous scan of this file: ` +
       `${data.trend.previous_security_score}/100 -> ${data.security_score}/100 (${data.trend.direction}).`]);
   }
+  if (data.trend && Array.isArray(data.trend.history) && data.trend.history.length >= 2) {
+    const bars = data.trend.history.map(function (s) {
+      const filled = Math.round(s / 10);
+      return '█'.repeat(filled) + '░'.repeat(10 - filled);
+    });
+    addRow(details, ['']);
+    addRow(details, [bold('Score history (last ' + data.trend.history.length + ' scans):')]);
+    data.trend.history.forEach(function (s, idx) {
+      addRow(details, ['  #' + (idx + 1), `${bars[idx]} ${s}/100`]);
+    });
+  }
 
   // --- Plain-language explainer ---
   if ((data.explanation || []).length) {

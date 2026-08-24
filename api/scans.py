@@ -136,6 +136,13 @@ def record_scan(digest: str, analysis: dict, name: str = "", publish: bool = Fal
     existing["findings"] = analysis.get("findings", [])
     existing["lint_issues"] = analysis.get("lint_issues", [])
 
+    # score history for the UI trend sparkline (keep the last 10 scans)
+    hist = list(existing.get("score_history") or [])
+    if not hist and existing.get("security_score") is not None:
+        hist = [[existing.get("last_seen_at") or time.time(), existing["security_score"]]]
+    hist.append([time.time(), analysis.get("security_score")])
+    existing["score_history"] = hist[-10:]
+
     is_safe = (
         analysis.get("parse_ok")
         and analysis.get("lint_ok")

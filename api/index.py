@@ -593,6 +593,9 @@ def handle_scan(environ, start_response):
                     "previous_security_score": prev_score,
                     "previous_risk_level": prev_risk,
                 }
+                hist = cached.get("score_history")
+                if isinstance(hist, list) and len(hist) >= 2:
+                    result["trend"]["history"] = [int(h[1]) for h in hist if len(h) == 2][-10:]
             except Exception:  # noqa: BLE001 - trend is cosmetic, never fail a scan
                 pass
         # plain-language explainer for non-expert users + Skill-DNA + stats:
