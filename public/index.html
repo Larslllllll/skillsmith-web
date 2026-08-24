@@ -857,6 +857,32 @@ function render(data) {
       .catch(function () {});
   }
 
+  // --- Badge embed snippet (copyable) ---
+  if (data.sha256 && /^[0-9a-f]{64}$/.test(data.sha256)) {
+    addRow(details, ['']);
+    const burl = location.origin + '/badge?sha256=' + data.sha256;
+    const md = `[![skillsmith](${burl})](${location.origin}/analysis-landing.html)`;
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'display:flex;gap:8px;align-items:center;flex-wrap:wrap;';
+    const inp = document.createElement('input');
+    inp.readOnly = true;
+    inp.value = md;
+    inp.style.cssText = 'flex:1;min-width:220px;font-family:monospace;font-size:12px;padding:4px 6px;background:#0d1117;color:#c9d1d9;border:1px solid #30363d;border-radius:4px;';
+    const btn = document.createElement('button');
+    btn.textContent = '📋 Copy README badge';
+    btn.style.cssText = 'padding:5px 10px;font-size:12px;cursor:pointer;';
+    btn.onclick = function () {
+      const done = function () { btn.textContent = '✅ Copied'; setTimeout(function () { btn.textContent = '📋 Copy README badge'; }, 1500); };
+      if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(md).then(done); }
+      else { inp.select(); document.execCommand('copy'); done(); }
+    };
+    const lbl = document.createElement('span');
+    lbl.textContent = 'Show your security score in your README:';
+    lbl.style.cssText = 'width:100%;font-size:12px;color:#9AA5B1;';
+    wrap.appendChild(lbl); wrap.appendChild(inp); wrap.appendChild(btn);
+    details.appendChild(wrap);
+  }
+
   // --- Flagged verdict? Suggest the behavioral sandbox ---
   const lvl = (data.risk_level || '').toLowerCase();
   if (lvl === 'medium' || lvl === 'high' || lvl === 'critical') {
