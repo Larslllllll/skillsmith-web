@@ -20,18 +20,20 @@ _MAX_PACKAGES = 25
 def extract_pins(text: str) -> list[dict]:
     """Pull (ecosystem, package, version) triples out of code blocks."""
     seen, pins = set(), []
+    def _add(eco, pkg, ver):
+        # PT-T71: bound package-name length (real PyPI/npm names are <=214);
+        # absurdly long regex matches are attacker noise, not dependencies.
+        if not pkg or len(pkg) > 214 or len(ver) > 20:
+            return
+        key = (eco, pkg, ver)
+        if key not in seen:
+            seen.add(key)
+            pins.append({"ecosystem": eco, "package": pkg, "version": ver})
+
     for m in _PY_PIN_RE.finditer(text):
-        eco, pkg, ver = "PyPI", m.group(1).lower(), m.group(2)
-        key = (eco, pkg, ver)
-        if key not in seen:
-            seen.add(key)
-            pins.append({"ecosystem": eco, "package": pkg, "version": ver})
+        _add("PyPI", m.group(1).lower(), m.group(2))
     for m in _NPM_PIN_RE.finditer(text):
-        eco, pkg, ver = "npm", m.group(1).lower(), m.group(2)
-        key = (eco, pkg, ver)
-        if key not in seen:
-            seen.add(key)
-            pins.append({"ecosystem": eco, "package": pkg, "version": ver})
+        _add("npm", m.group(1).lower(), m.group(2))
     return pins[:_MAX_PACKAGES]
 
 
