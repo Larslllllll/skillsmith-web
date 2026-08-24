@@ -1181,12 +1181,36 @@ loadRegistry();
         '</td><td style="padding:3px 10px;color:' + c + ';font-weight:600;">' + String(it.last_status || '?') +
         '</td><td style="padding:3px 0;color:#9AA5B1;max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' +
         String(it.url || '').replace(/[<>&"']/g, '') +
-        '</td><td style="padding:3px 0 3px 10px;"><button data-wid="' + widFull.replace(/[^A-Za-z0-9_-]/g, '') +
-        '" class="watchDel" title="delete watch" style="background:none;border:none;color:#8b949e;cursor:pointer;font-size:12px;padding:2px 6px;">✕</button></td></tr>';
+        '</td><td style="padding:3px 0 3px 10px;white-space:nowrap;">' +
+        '<button data-wid="' + widFull.replace(/[^A-Za-z0-9_-]/g, '') + '" class="watchChk" title="check now for changes"' +
+        ' style="background:none;border:none;color:#58a6ff;cursor:pointer;font-size:12px;padding:2px 4px;">⟳</button>' +
+        '<button data-wid="' + widFull.replace(/[^A-Za-z0-9_-]/g, '') + '" class="watchDel" title="delete watch"' +
+        ' style="background:none;border:none;color:#8b949e;cursor:pointer;font-size:12px;padding:2px 4px;">✕</button></td></tr>';
     }
     host.innerHTML = '<strong style="color:#e6edf3;">🛡 Your rug-pull watches</strong>' +
       '<table style="margin-top:6px;font-size:13px;border-collapse:collapse;">' + rows + '</table>';
     host.style.display = 'block';
+    var STATUS_COLOR = { changed: '#dc2626', unreachable: '#d97706' };
+    var chks = host.querySelectorAll('.watchChk');
+    for (var c2i = 0; c2i < chks.length; c2i++) {
+      chks[c2i].addEventListener('click', function () {
+        var btn = this, wid = btn.getAttribute('data-wid');
+        if (!wid) return;
+        btn.disabled = true; btn.textContent = '…';
+        fetch('/api/watch?watch_id=' + encodeURIComponent(wid) + '&api_key=' + encodeURIComponent(key()))
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (dchk) {
+            if (!dchk || !dchk.status) { btn.textContent = '!'; btn.disabled = false; return; }
+            btn.textContent = '⟳'; btn.disabled = false;
+            var tr = btn.closest('tr');
+            if (tr && tr.cells[1]) {
+              tr.cells[1].textContent = dchk.status;
+              tr.cells[1].style.color = STATUS_COLOR[dchk.status] || '#16a34a';
+            }
+          })
+          .catch(function () { btn.textContent = '⟳'; btn.disabled = false; });
+      });
+    }
     var dels = host.querySelectorAll('.watchDel');
     for (var j = 0; j < dels.length; j++) {
       dels[j].addEventListener('click', function () {
