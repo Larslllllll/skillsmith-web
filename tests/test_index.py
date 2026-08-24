@@ -772,6 +772,31 @@ def test_watch_webhook_validation(monkeypatch):
     assert captured["status"] == 400 and "Discord or Slack" in body.decode()
 
 
+def test_watch_delete_owner(monkeypatch):
+    # Fake watch record + purge
+    rec = {"watch_id": "Wx9abc123def", "url": "https://github.com/o/r/blob/main/SKILL.md",
+           "baseline_sha256": "h" * 64, "owner": "sk_ownerprefix1234567890"[:24]}
+    monkeypatch.setattr(webapp, "get_account", lambda k: {"api_key": k})
+    import scans as sc_t
+    monkeypatch.setattr(sc_t, "get_watch", lambda wid: rec if wid == "Wx9abc123def" else None)
+    purged = []
+    monkeypatch.setattr(sc_t, "purge_blob_versions", lambda p: purged.append(p))
+    monkeypatch.setattr(webapp, "_soft_rate_limit", lambda ident, cap_, bucket: (True, ""))
+    captured = {}
+    def sr(status, headers_):
+        captured["status"] = int(status.split()[0])
+    def call(watch_id, key):
+        from urllib.parse import urlencode as _ue
+        return b"".join(webapp.app({"REQUEST_METHOD": "DELETE", "PATH_INFO": "/api/watch",
+                                    "CONTENT_LENGTH": "0", "QUERY_STRING": _ue({"watch_id": watch_id, "api_key": key}),
+                                    "wsgi.input": io.BytesIO(b"")}, sr))
+    body = call("Wx9abc123def", "sk_ownerprefix1234567890xyz")
+    assert captured["status"] == 200 and b'"deleted": true' in body, (captured["status"], body[:200])
+    # fremder Owner -> 404
+    body2 = call("Wx9abc123def", "sk_otherprefix0000000000000aa")
+    assert captured["status"] == 404
+
+
 def test_badge_styles(monkeypatch):
     """badge ?style= variants: flat (default), flat-square, round; invalid falls back."""
     monkeypatch.setattr(webapp, "get_scan_record",

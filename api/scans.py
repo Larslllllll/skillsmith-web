@@ -288,6 +288,16 @@ def get_watch(watch_id: str) -> dict | None:
     return _blob_get(_watch_path(watch_id))
 
 
+def delete_watch(watch_id: str, owner_prefix: str) -> bool:
+    """PT-T54: hard-delete a watch blob (owner-verified). Returns True when
+    a matching owned watch existed and was removed."""
+    rec = get_watch(watch_id)
+    if not rec or (rec.get("owner") and rec.get("owner") != owner_prefix):
+        return False
+    purge_blob_versions(_watch_path(watch_id))
+    return True
+
+
 def list_watches(owner_prefix: str, limit: int = 50) -> list:
     """PT-T50: all watches owned by one api_key prefix.
     Listing-based; capped to keep the blob-listing cost bounded. Note this

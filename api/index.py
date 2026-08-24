@@ -1240,6 +1240,30 @@ def handle_watch(environ, start_response):
             return [json.dumps({"disclaimer": DISCLAIMER, **out,
                                 "note": "check anytime via GET /api/watch?watch_id=...&api_key=..."}).encode()]
 
+        if environ.get("REQUEST_METHOD") == "DELETE":
+            # PT-T54: owner-verified watch removal
+            qs = urllib.parse.parse_qs(environ.get("QUERY_STRING", ""))
+            wid_d = (qs.get("watch_id") or [""])[0]
+            api_key_d = _get_qs_api_key(environ) or ""
+            if not re.fullmatch(r"[A-Za-z0-9_-]{10,40}", wid_d):
+                start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
+                return [json.dumps({"error": "watch_id required"}).encode()]
+            if not api_key_d or get_account(api_key_d) is None:
+                start_response("401 Unauthorized", [("Content-Type", "application/json")] + _CORS_HEADERS)
+                return [json.dumps({"error": "sign_in_required"}).encode()]
+            ok_d, err_d = _soft_rate_limit(api_key_d[:24], 200, "wchk_")
+            if not ok_d:
+                start_response("429 Too Many Requests", [("Content-Type", "application/json")] + _CORS_HEADERS)
+                return [json.dumps({"error": err_d}).encode()]
+            try:
+                from .scans import delete_watch as _del_watch
+            except ImportError:
+                from scans import delete_watch as _del_watch
+            removed = _del_watch(wid_d, api_key_d[:24])
+            status_d = "200 OK" if removed else "404 Not Found"
+            start_response(status_d, [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"disclaimer": DISCLAIMER, "deleted": removed}).encode()]
+
         # GET: on-demand check -- or ?list=1 for all watches owned by this key
         qs = urllib.parse.parse_qs(environ.get("QUERY_STRING", ""))
         api_key = _get_qs_api_key(environ) or ""
