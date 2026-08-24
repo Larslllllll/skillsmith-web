@@ -1103,5 +1103,34 @@ loadRegistry();
   }).catch(function () {});
 })();
 </script>
+<script>
+  // --- Badge landing: show verdict for ?sha256=... (README badge links) ---
+  (function () {
+    var m63 = location.search.match(/[?&]sha256=([0-9a-fA-F]{64})/);
+    if (!m63) return;
+    fetch('/api/public_scan?sha256=' + m63[1]).then(function (r) { return r.json(); }).then(function (v) {
+      if (v.error) return;
+      var colors = { clean: '#16a34a', low: '#d97706', medium: '#ea580c', high: '#dc2626' };
+      var c = colors[v.risk_level] || '#6e7681';
+      var bar = document.createElement('div');
+      bar.style.cssText = 'max-width:860px;margin:12px auto;padding:10px 14px;border-radius:8px;background:#0d1117;border:1px solid ' + c +
+        ';font-size:14px;color:#e6edf3;';
+      bar.innerHTML = '';
+      var b = document.createElement('strong'); b.textContent = v.name || v.sha256.slice(0, 16) + '…'; b.style.color = c;
+      bar.appendChild(document.createTextNode('🛡 Verdict for '));
+      bar.appendChild(b);
+      bar.appendChild(document.createTextNode(': risk_level "' + (v.risk_level || 'unknown') + '"'));
+      if (typeof v.risk_score === 'number') bar.appendChild(document.createTextNode(' (score ' + v.risk_score + ')'));
+      bar.appendChild(document.createTextNode(' · seen ' + (v.seen_count || 1) + '× · '));
+      var a = document.createElement('a');
+      a.href = '/?sha256=' + v.sha256; a.textContent = 'details on skillsmith.ch'; a.style.color = '#58a6ff';
+      // Link zum Scanner mit diesem Hash ist nicht moeglich ohne Upload -> stattdessen zur Analysis-Seite
+      a.href = '/analysis.html';
+      a.textContent = 'run behavioral analysis →';
+      bar.appendChild(a);
+      var host = document.getElementById('statsBar') || document.body;
+      host.parentNode.insertBefore(bar, host.nextSibling);
+    }).catch(function () {});
+  })();
+</script>
 </body>
-</html>
