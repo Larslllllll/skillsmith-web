@@ -74,6 +74,11 @@ async function runAnalysis(){
   const bar=$('bar'); const tick=setInterval(()=>{pct=Math.min(92,pct+2.2);bar.style.width=pct+'%'},3000);
   try{
     const r = await fetch('/api/sandbox-run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})});
+    if (r.status === 503) {
+      clearInterval(tick); $('loading').style.display='none';
+      $('status').textContent='service temporarily unavailable (storage maintenance) - please retry in a few minutes';
+      $('runBtn').disabled = false; return;
+    }
     const d = await r.json();
     clearInterval(tick); $('loading').style.display='none';
     if(d.status==='complete'){ renderReport(d); if(d.analysis_id){$('permalink').style.display='';const u=location.origin+'/analysis.html?id='+d.analysis_id;$('plink').href=u;$('plink').textContent=u;} }
