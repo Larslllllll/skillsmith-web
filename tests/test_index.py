@@ -178,7 +178,7 @@ def test_publish_content_constants_and_wiring():
 def test_mcp_tools_list_registered():
     import mcp as mcp_mod
     names = {t["name"] for t in mcp_mod.TOOLS}
-    assert names == {"scan_skill", "lookup_hash", "get_skill_content", "list_safe_skills", "skillsmith_signup", "whoami", "analyze_behavior", "file_report"}
+    assert names == {"scan_skill", "lookup_hash", "get_skill_content", "list_safe_skills", "skillsmith_signup", "whoami", "analyze_behavior", "file_report", "find_similar"}
 
 
 def test_mcp_initialize_and_unknown_method():
@@ -829,3 +829,19 @@ def test_buy_credit_kind_whitelist(monkeypatch):
     resp = b"".join(webapp.handle_buy_credit(environ, lambda s, h: statuses.append(s)))
     assert statuses[0].startswith("400"), resp[:150]
     assert b"kind must be" in resp
+
+
+def test_mcp_find_similar(monkeypatch):
+    """MCP tool find_similar: validation + masking via similar_payload."""
+    import mcp as mcp_mod
+    monkeypatch.setattr(mcp_mod, "get_account", lambda k: {"created_at": 0} if k == "sk_ok" else None)
+    monkeypatch.setattr(mcp_mod._index_module(), "similar_payload",
+                        lambda d: [{"sha256": "a"*64, "name": None, "published": False, "distance": 3}]
+                        if d == "b"*64 else None)
+    res = mcp_mod._call_tool("find_similar", {"api_key": "sk_ok", "sha256": "B"*64})
+    data = json.loads(res[0]["text"] if isinstance(res, list) else res["content"][0]["text"])
+    assert len(data["similar"]) == 1 and data["similar"][0]["name"] is None
+    # unknown dna
+    res2 = mcp_mod._call_tool("find_similar", {"api_key": "sk_ok", "sha256": "c"*64})
+    s2 = json.loads(res2[0]["text"] if isinstance(res2, list) else res2["content"][0]["text"])
+    assert s2.get("error") == "dna_unknown"

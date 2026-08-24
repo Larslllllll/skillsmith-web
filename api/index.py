@@ -994,6 +994,40 @@ def handle_stats(environ, start_response):
         return [json.dumps({"error": str(e)}).encode()]
 
 
+def similar_payload(digest: str) -> list | None:
+    """Skill-DNA neighbours for one digest, with unpublished names masked
+    (PT-T10). Returns None when no DNA is stored for the hash yet."""
+    try:
+        from .scans import _blob_headers, BLOB_API_BASE, find_similar_dna
+    except ImportError:
+        from scans import _blob_headers, BLOB_API_BASE, find_similar_dna
+    import urllib.request as _ureq
+    req = _ureq.Request(f"{BLOB_API_BASE}/?prefix=dna/&limit=200",
+                        headers=_blob_headers(), method="GET")
+    own_dna = None
+    try:
+        with _ureq.urlopen(req, timeout=10) as resp:
+            listing = json.loads(resp.read().decode())
+        for b in listing.get("blobs", []):
+            if digest[:12] in b.get("pathname", ""):
+                with _ureq.urlopen(_ureq.Request(b["url"], headers=_blob_headers()), timeout=10) as resp:
+                    own_dna = json.loads(resp.read().decode()).get("dna")
+                break
+    except Exception:  # noqa: BLE001
+        pass
+    if not own_dna:
+        return None
+    similar = find_similar_dna(own_dna, exclude_digest=digest, max_results=5)
+    for entry in similar:
+        sha = entry.get("sha256", "")
+        if not sha or get_published_content(sha) is None:
+            entry["name"] = None
+            entry["published"] = False
+        else:
+            entry["published"] = True
+    return similar
+
+
 def handle_similar(environ, start_response):
     """GET /api/similar?sha256=...&api_key=... -- Skill-DNA neighbours
     (near-duplicate detection, hamming distance <= 12 of the 64-bit simhash).
@@ -1008,40 +1042,11 @@ def handle_similar(environ, start_response):
         if not _valid_sha256(digest):
             start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
             return [json.dumps({"error": "sha256 query param must be a 64-char hex digest"}).encode()]
-        # find this hash's stored DNA by scanning the dna/ listing once
-        try:
-            from .scans import _blob_headers, BLOB_API_BASE
-        except ImportError:
-            from scans import _blob_headers, BLOB_API_BASE
-        import urllib.request as _ureq
-        req = _ureq.Request(f"{BLOB_API_BASE}/?prefix=dna/&limit=200",
-                            headers=_blob_headers(), method="GET")
-        own_dna = None
-        try:
-            with _ureq.urlopen(req, timeout=10) as resp:
-                listing = json.loads(resp.read().decode())
-            for b in listing.get("blobs", []):
-                if digest[:12] in b.get("pathname", ""):
-                    with _ureq.urlopen(_ureq.Request(b["url"], headers=_blob_headers()), timeout=10) as resp:
-                        own_dna = json.loads(resp.read().decode()).get("dna")
-                    break
-        except Exception:  # noqa: BLE001
-            pass
-        if not own_dna:
+        similar = similar_payload(digest)
+        if similar is None:
             start_response("404 Not Found", [("Content-Type", "application/json")] + _CORS_HEADERS)
             return [json.dumps({"error": "dna_unknown",
                                 "message": "No DNA stored for this hash yet. Scan it first."}).encode()]
-        similar = find_similar_dna(own_dna, exclude_digest=digest, max_results=5)
-        # PT-T10: a scan is private by default. Leaking the NAME a user gave
-        # their unpublished skill to anyone who scans a near-duplicate is an
-        # unintended disclosure -- only published skills keep their name.
-        for entry in similar:
-            sha = entry.get("sha256", "")
-            if not sha or get_published_content(sha) is None:
-                entry["name"] = None
-                entry["published"] = False
-            else:
-                entry["published"] = True
         start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({"disclaimer": DISCLAIMER, "sha256": digest,
                             "similar": similar}).encode()]

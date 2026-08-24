@@ -11,7 +11,7 @@ tool argument on every call -- MCP doesn't mandate OAuth, and requiring one
 here would be needless friction for agents that already have a key.
 
 Tools exposed: scan_skill, lookup_hash, get_skill_content, list_safe_skills,
-file_report, whoami. All of them just call straight into the same analyze()/account
+file_report, find_similar, whoami. All of them just call straight into the same analyze()/account
 functions the REST API and the web UI use -- one detection engine, one
 quota system, three front doors (web, REST, MCP).
 """
@@ -94,6 +94,18 @@ TOOLS = [
         "name": "skillsmith_signup",
         "description": "Create a new anonymous skillsmith account (no email/password) and get an api_key to use with the other tools. Free tier: 5 scans/day, 5 DB lookups/day.",
         "inputSchema": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "find_similar",
+        "description": "Skill-DNA near-duplicate search: given a scanned skill's sha256, return up to 5 stored skills whose simhash fingerprint is within Hamming distance 12 (renamed/cosmetically altered variants of known skills). Names of unpublished (private) skills are masked. Requires the hash to have been scanned before.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "api_key": {"type": "string"},
+                "sha256": {"type": "string", "description": "64-char hex digest"}
+            },
+            "required": ["api_key", "sha256"],
+        },
     },
     {
         "name": "file_report",
@@ -262,6 +274,19 @@ def _call_tool(name, args, client_ip: str = ""):
             "bonus_credits": record.get("bonus_credits", 0),
             "bonus_lookup_credits": record.get("bonus_lookup_credits", 0),
         })
+
+    if name == "find_similar":
+        digest = str(args.get("sha256", "")).lower().strip()
+        if not idx._valid_sha256(digest):
+            return _tool_result({"error": "sha256 must be a 64-char hex digest"})
+        record = get_account(api_key)
+        if record is None:
+            return _tool_result({"error": "unknown api_key"})
+        similar = idx.similar_payload(digest)
+        if similar is None:
+            return _tool_result({"error": "dna_unknown",
+                                 "message": "No DNA stored for this hash yet. Scan it first."})
+        return _tool_result({"disclaimer": idx.DISCLAIMER, "sha256": digest, "similar": similar})
 
     if name == "file_report":
         import time as _time
