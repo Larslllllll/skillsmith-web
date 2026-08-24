@@ -235,8 +235,13 @@ def add_report(digest: str, entry: dict) -> dict:
     for r_ in record["reports"]:
         k_ = r_.get("verdict", "note")
         record["tally"][k_] = record["tally"].get(k_, 0) + 1
+    # PT-T34: cap stored reports per hash -- the blob is read+written whole on
+    # every report, so an unbounded list would grow cost linearly forever.
+    # The tally stays cumulative; the detail view keeps the latest 500.
+    if len(record["reports"]) > 500:
+        record["reports"] = record["reports"][-500:]
     _blob_put(_reports_path(digest), record)
-    return {"sha256": digest, "total": len(record["reports"]), "tally": record["tally"]}
+    return {"sha256": digest, "total": sum(record["tally"].values()), "tally": record["tally"]}
 
 
 def get_reports(digest: str) -> dict:
