@@ -473,3 +473,31 @@ def test_report_validation_and_wiring(monkeypatch):
     assert statuses[0].startswith("200"), resp3[:150]
     assert calls["d"] == "c" * 64
     assert calls["e"]["verdict"] == "false_positive"
+
+
+def test_purge_blob_versions_deletes_all_copies(monkeypatch):
+    """PT-T8: every physical blob version for a logical path must be deleted."""
+    import scans as scans_mod
+    calls = []
+    fake_blobs = {"blobs": [
+        {"pathname": "scan_content/abc.json", "url": "u1"},
+        {"pathname": "scan_content/abc-XyZ.json", "url": "u2"},  # suffixed old version
+        {"pathname": "scan_content/other.json", "url": "u3"},     # must stay
+    ]}
+    monkeypatch.setattr(scans_mod, "_blob_headers", lambda: {})
+    class FakeResp:
+        def __init__(self, data=None): self.data = data or b""
+        def read(self): return self.data
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+    def fake_urlopen(req, timeout=10):
+        url = req.full_url if hasattr(req, "full_url") else str(req)
+        if "/?prefix=" in url or "?prefix=" in url:
+            return FakeResp(json.dumps(fake_blobs).encode())
+        calls.append(url)
+        return FakeResp(b"{}")
+    monkeypatch.setattr(scans_mod.urllib.request, "urlopen", fake_urlopen)
+    n = scans_mod.purge_blob_versions("scan_content/abc.json")
+    assert n == 2, n
+    assert len(calls) == 2
+    assert all("pathname=scan_content%2Fabc" in c or "pathname=scan_content/abc" in c for c in calls)

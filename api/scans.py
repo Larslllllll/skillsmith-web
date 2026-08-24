@@ -27,6 +27,49 @@ except ImportError:  # local/script execution without package context
     from account import _blob_get, _blob_put, BLOB_API_BASE, _blob_headers
 
 
+def purge_blob_versions(path: str) -> int:
+    """Delete EVERY stored object whose pathname matches this logical path.
+
+    Vercel Blob's addRandomSuffix=false still appends random suffixes to
+    some writes (see account._blob_get docstring), so several physical
+    objects can exist for one logical path. A single DELETE by pathname can
+    leave older versions behind -- and _blob_get resurrects those (pentest
+    tick PT-T8: a depublished malicious skill came back exactly that way).
+    Returns the number of objects deleted."""
+    import urllib.parse as _up
+    prefix = path.rsplit(".", 1)[0] if "." in path else path
+    req = urllib.request.Request(
+        f"{BLOB_API_BASE}/?prefix={_up.quote(prefix)}&limit=100",
+        headers=_blob_headers(), method="GET")
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            blobs = json.loads(resp.read().decode()).get("blobs", [])
+    except Exception:  # noqa: BLE001 - best effort, like _blob_delete
+        return 0
+    n = 0
+    # a physical copy is either the exact logical path or the same path with
+    # Vercel's random suffix inserted before the extension ("abc-XY12.json");
+    # require a ".", "-" or end-of-string boundary after the prefix so
+    # unrelated paths sharing a prefix ("abcd.json") are never touched.
+    for b in blobs:
+        pn = b.get("pathname", "")
+        if not pn.startswith(prefix):
+            continue
+        rest = pn[len(prefix):]
+        if rest and rest[0] not in (".", "-"):
+            continue
+        try:
+            dreq = urllib.request.Request(
+                f"{BLOB_API_BASE}?pathname={_up.quote(b['pathname'])}",
+                headers=_blob_headers(), method="DELETE")
+            with urllib.request.urlopen(dreq, timeout=10) as resp:
+                resp.read()
+            n += 1
+        except Exception:  # noqa: BLE001
+            pass
+    return n
+
+
 def _blob_delete(path: str) -> None:
     """Best-effort delete via the Blob store's REST delete endpoint."""
     req = urllib.request.Request(
@@ -109,8 +152,10 @@ def record_scan(digest: str, analysis: dict, name: str = "", publish: bool = Fal
     # stored content would keep serving a skill that no longer passes -- pull
     # both immediately.
     if not is_safe:
-        _blob_delete(_registry_path(digest))
-        _blob_delete(_content_path(digest))
+        # PT-T8: purge ALL versions -- a single DELETE can leave older
+        # suffixed blob copies that _blob_get would resurrect.
+        purge_blob_versions(_registry_path(digest))
+        purge_blob_versions(_content_path(digest))
         has_content = False
 
     existing["has_content"] = has_content
