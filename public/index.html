@@ -229,6 +229,21 @@
 
 <p id="statsBar" style="margin:.4rem 0 0;font-size:.8rem;color:var(--text-muted);display:none;"></p>
 
+<section style="max-width:62ch;margin:.9rem auto 0;padding:0 1rem;">
+  <h2 style="font-size:1.05rem;margin:.2rem 0 .5rem;">How it works</h2>
+  <ol style="margin:0;padding-left:1.3rem;color:var(--text-muted);font-size:.92rem;line-height:1.7;">
+    <li><strong style="color:var(--text);">Paste or point</strong> — drop a SKILL.md into the scanner, or give a GitHub URL.</li>
+    <li><strong style="color:var(--text);">Scan</strong> — the static engine checks prompt-injection patterns (incl. paraphrases), exfiltration endpoints, droppers, obfuscated payloads and dependency advisories (OSV).</li>
+    <li><strong style="color:var(--text);">Decide</strong> — get a verdict, plain-language findings and a security score. Optional: run the behavioral sandbox to see what an agent following the skill would do.</li>
+  </ol>
+  <p style="margin:.5rem 0 0;font-size:.85rem;color:var(--text-muted);">
+    Works for humans in the browser, for machines via
+    <a href="/api-docs.html">REST API &amp; MCP server</a>, and offline via the
+    <code>skillsmith-scanner</code> CLI. Read the
+    <a href="/guides.html">guides</a> to understand the threat model.
+  </p>
+</section>
+
 <div class="account-bar" id="accountBar">
   <div id="accountLoggedOut">
     <p class="sub" style="margin:0 0 .7rem;">Sign in to scan — free, 5 scans/day, syncs across your devices. Or upgrade to Pro (100/day for $5).</p>
