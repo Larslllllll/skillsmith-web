@@ -852,6 +852,16 @@ function render(data) {
       .catch(function () {});
   }
 
+  // --- Flagged verdict? Suggest the behavioral sandbox ---
+  const lvl = (data.risk_level || '').toLowerCase();
+  if (lvl === 'medium' || lvl === 'high' || lvl === 'critical') {
+    addRow(details, ['']);
+    const a = document.createElement('a');
+    a.href = '/analysis.html';
+    a.textContent = 'Run behavioral analysis on this skill →';
+    addRow(details, ['🧪 ', a]);
+  }
+
   // --- Score trend vs. previous scan of the same hash ---
   if (data.trend && data.trend.direction !== 'unchanged') {
     addRow(details, ['']);
