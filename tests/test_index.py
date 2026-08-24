@@ -797,6 +797,54 @@ def test_watch_delete_owner(monkeypatch):
     assert captured["status"] == 404
 
 
+def _mcp_watch_call(monkeypatch, args):
+    import mcp as mcp_mod
+    monkeypatch.setattr(mcp_mod, "get_account", lambda k: {"api_key": k})
+    status, body = mcp_mod.handle_jsonrpc({"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+                                           "params": {"name": "watch_skill", "arguments": args}})
+    assert status == 200
+    return json.loads(body["result"]["content"][0]["text"])
+
+
+def test_mcp_watch_list_mode(monkeypatch):
+    import mcp as mcp_mod
+    import sys as _s
+    scans_top = _s.modules.get("scans")
+    fake_items = [{"watch_id": "W1", "url": "https://github.com/o/r/blob/main/SKILL.md",
+                   "last_status": "unchanged", "checks": 1}]
+    if scans_top is not None:
+        monkeypatch.setattr(scans_top, "list_watches", lambda pfx: fake_items)
+        import index as _idx_mod
+    monkeypatch.setattr(_idx_mod, "_soft_rate_limit", lambda i, c, b: (True, ""))
+    out = _mcp_watch_call(monkeypatch, {"api_key": "k" * 20, "list": True})
+    assert out["count"] == 1 and out["watches"][0]["watch_id"] == "W1"
+
+
+def test_mcp_watch_delete_mode(monkeypatch):
+    import mcp as mcp_mod
+    import sys as _s
+    scans_top = _s.modules.get("scans")
+    calls = []
+    if scans_top is not None:
+        monkeypatch.setattr(scans_top, "delete_watch", lambda wid, pfx: calls.append((wid, pfx)) or True)
+        import index as _idx_mod
+    monkeypatch.setattr(_idx_mod, "_soft_rate_limit", lambda i, c, b: (True, ""))
+    out = _mcp_watch_call(monkeypatch, {"api_key": "k" * 20, "delete": "W1"})
+    assert out["deleted"] is True and calls and calls[0][0] == "W1"
+
+
+def test_mcp_watch_delete_unknown(monkeypatch):
+    import mcp as mcp_mod
+    import sys as _s
+    scans_top = _s.modules.get("scans")
+    if scans_top is not None:
+        monkeypatch.setattr(scans_top, "delete_watch", lambda wid, pfx: False)
+        import index as _idx_mod
+    monkeypatch.setattr(_idx_mod, "_soft_rate_limit", lambda i, c, b: (True, ""))
+    out = _mcp_watch_call(monkeypatch, {"api_key": "k" * 20, "delete": "NOPE"})
+    assert out["deleted"] is False and "not yours" in out.get("note", "")
+
+
 def test_badge_styles(monkeypatch):
     """badge ?style= variants: flat (default), flat-square, round; invalid falls back."""
     monkeypatch.setattr(webapp, "get_scan_record",
