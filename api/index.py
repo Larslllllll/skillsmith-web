@@ -675,12 +675,14 @@ def handle_scan_pro(environ, start_response):
         is_premium = bool(record) and record.get("premium_expires_at", 0) > time.time()
         is_pro = bool(record) and record.get("pro_expires_at", 0) > time.time()
         if is_premium or (bool(record) and record.get("unlimited")):
-            allowed, quota_info = check_and_consume_quota(api_key)
+            # PT-T23: validate BEFORE consuming quota -- a malformed request
+            # must not burn one of the day's scans
             files = payload.get("files", [])
             if not isinstance(files, list) or not files:
                 raise ValueError("files must be a non-empty list of {name, text}")
             if len(files) > MAX_FILES:
                 raise ValueError(f"max {MAX_FILES} files per batch call")
+            allowed, quota_info = check_and_consume_quota(api_key)
             results = []
             for f in files:
                 name = str(f.get("name", "SKILL.md"))[:200]
