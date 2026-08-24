@@ -95,6 +95,19 @@ skills in your repository on every push — see the
 The CLI works offline: <code>pip install skillsmith-scanner</code>, then
 <code>skillsmith scan ./SKILL.md</code>.</p>
 
+<h2>What kinds of attacks does the scanner detect?</h2>
+<p>The static engine checks prompt-injection phrasing (including paraphrases
+and text hidden in the <code>description</code> frontmatter), credential and
+secret snooping, exfiltration instructions, dangerous code patterns
+(<code>eval</code>, pickle, raw sockets, destructive shell commands), and URLs
+that carry credential-looking query parameters. It also normalizes common
+obfuscation: zero-width characters, RTL/bidi direction overrides, fullwidth
+characters, combining marks, and base64-encoded payloads are decoded or folded
+before scanning &mdash; hiding instructions in reversed or disguised text does
+not work.</p>
+<p>For behavior that only becomes clear at runtime, use the
+<a href="/analysis.html">behavioral sandbox</a>.</p>
+
 <h2>Is the detection engine open source?</h2>
 <p>Yes — MIT-licensed, including pattern categories inspired by NVIDIA's
 SkillSpector research (Apache-2.0, credited in-file). Audit the scanner
