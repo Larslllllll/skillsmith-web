@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root { --bg:#0B0E14; --surface:#151921; --border:#2A3140; --text:#D8DEE9;
+        --text-muted:#9AA5B1; --accent:#7EE3C3; }
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:760px; padding:2rem 1.2rem 4rem;
+       background:var(--bg); color:var(--text); line-height:1.65;
+       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; font-size:16px; }
+a { color:var(--accent); }
+h1 { font-size:1.7rem; line-height:1.25; }
+h2 { font-size:1.25rem; margin-top:2.2rem; border-bottom:1px solid var(--border); padding-bottom:.35rem; }
+h3 { font-size:1.05rem; }
+code, pre { background:var(--surface); border:1px solid var(--border);
+            border-radius:6px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
+code { padding:.12rem .35rem; font-size:.9em; }
+pre { padding:.9rem 1rem; overflow-x:auto; line-height:1.5; }
+blockquote { border-left:3px solid var(--accent); margin-left:0; padding:.2rem 1rem;
+             color:var(--text-muted); }
+table { border-collapse:collapse; width:100%; }
+td, th { border:1px solid var(--border); padding:.45rem .6rem; text-align:left; }
+.backlink { font-size:.9rem; }
+.meta { color:var(--text-muted); font-size:.85rem; }
+</style>
+<title>Guides: Claude Agent Skill Security — skillsmith</title>
+<meta name="description" content="Security guides for Claude Agent Skills: prompt injection mechanics, malicious SKILL.md anatomy, audit checklists, and how automated detection works.">
+<meta property="og:title" content="Guides: Claude Agent Skill Security — skillsmith">
+<meta property="og:description" content="Security guides for Claude Agent Skills: prompt injection mechanics, malicious SKILL.md anatomy, audit checklists, and how automated detection works.">
+<meta property="og:type" content="article">
+<link rel="canonical" href="https://skillsmith.ch/guides.html">
+</head>
+<body>
+<p class="backlink"><a href="/">← skillsmith scanner</a> · <a href="/guides.html">all guides</a></p>
+
+<h1>Guides: Claude Agent Skill Security</h1>
+<p class="meta">Practical security guides for people who install AI agent skills.</p>
+
+<p>Agent skills are just Markdown — which makes them easy to write, easy to share,
+and easy to abuse. These guides explain how malicious SKILL.md attacks work and
+how to defend against them in minutes, not hours.</p>
+
+<ul style="font-size:1.05rem; line-height:2;">
+  <li><a href="/guide-prompt-injection.html"><strong>Prompt Injection in Claude Agent Skills: How It Works</strong></a><br>
+      <span style="color:#9AA5B1;">Data exfiltration, credential harvesting, paraphrased overrides — the words-as-malware problem explained.</span></li>
+  <li><a href="/guide-malicious-skills.html"><strong>Anatomy of a Malicious SKILL.md</strong></a><br>
+      <span style="color:#9AA5B1;">A real-world-style attack skill dissected section by section, with the detection signal for each part.</span></li>
+  <li><a href="/guide-audit-checklist.html"><strong>The SKILL.md Security Checklist</strong></a><br>
+      <span style="color:#9AA5B1;">Five-minute manual audit: author reputation, task/access mismatch, override language, data flow.</span></li>
+  <li><a href="/guide-how-it-works.html"><strong>How skillsmith Detects Malicious Skills</strong></a><br>
+      <span style="color:#9AA5B1;">Our detection methodology, scoring model, OSV integration — and honest limitations.</span></li>
+</ul>
+
+<h2>Scan a skill now</h2>
+<p>All guides apply the moment you install someone else's skill. Check yours in
+seconds with the free <a href="/">static scanner</a> or go deeper with the
+<a href="/analysis.html">behavioral sandbox</a>.</p>
+
+</body>
+</html>

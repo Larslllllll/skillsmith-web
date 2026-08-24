@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root { --bg:#0B0E14; --surface:#151921; --border:#2A3140; --text:#D8DEE9;
+        --text-muted:#9AA5B1; --accent:#7EE3C3; }
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:760px; padding:2rem 1.2rem 4rem;
+       background:var(--bg); color:var(--text); line-height:1.65;
+       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; font-size:16px; }
+a { color:var(--accent); }
+h1 { font-size:1.7rem; line-height:1.25; }
+h2 { font-size:1.25rem; margin-top:2.2rem; border-bottom:1px solid var(--border); padding-bottom:.35rem; }
+h3 { font-size:1.05rem; }
+code, pre { background:var(--surface); border:1px solid var(--border);
+            border-radius:6px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
+code { padding:.12rem .35rem; font-size:.9em; }
+pre { padding:.9rem 1rem; overflow-x:auto; line-height:1.5; }
+blockquote { border-left:3px solid var(--accent); margin-left:0; padding:.2rem 1rem;
+             color:var(--text-muted); }
+table { border-collapse:collapse; width:100%; }
+td, th { border:1px solid var(--border); padding:.45rem .6rem; text-align:left; }
+.backlink { font-size:.9rem; }
+.meta { color:var(--text-muted); font-size:.85rem; }
+</style>
+<title>The SKILL.md Security Checklist — skillsmith</title>
+<meta name="description" content="Five-minute audit checklist for Claude Agent Skills: author reputation, task/access mismatch, override language, data flow review, and automated scanning.">
+<meta property="og:title" content="The SKILL.md Security Checklist — skillsmith">
+<meta property="og:description" content="Five-minute audit checklist for Claude Agent Skills: author reputation, task/access mismatch, override language, data flow review, and automated scanning.">
+<meta property="og:type" content="article">
+<link rel="canonical" href="https://skillsmith.ch/guide-audit-checklist.html">
+</head>
+<body>
+<p class="backlink"><a href="/">← skillsmith scanner</a> · <a href="/guides.html">all guides</a></p>
+
+<h1>The SKILL.md Security Checklist</h1>
+<p class="meta">Guide · skillsmith.ch</p>
+
+<p>Before you install a third-party Claude Agent Skill, run through this
+checklist. It takes five minutes and covers the attack patterns that matter.
+Steps 1–4 you do by reading; step 5 you automate with
+<a href="/">skillsmith</a>.</p>
+
+<h2>1. Who wrote it, and can they rug-pull it?</h2>
+<ul>
+  <li>Is there a source repository with commit history — or just a pasted file?</li>
+  <li>Does the repo have issues, forks, or any second reader?</li>
+  <li>If the skill loads resources from a URL: that URL's content can change
+      <em>after</em> you vetted it. Pin versions; re-check periodically.</li>
+</ul>
+
+<h2>2. Does the stated purpose match the requested access?</h2>
+<p>A summarizer does not need <code>~/.ssh</code>. A formatter does not need
+network access. Read every line that touches:</p>
+<table>
+<tr><th>Touchpoint</th><th>Acceptable for…</th></tr>
+<tr><td><code>~/.ssh</code>, <code>.env</code>, keychains, API keys</td>
+    <td>almost never in a skill</td></tr>
+<tr><td>Network calls (webhooks, APIs)</td>
+    <td>skills whose job is integration/communication</td></tr>
+<tr><td>Writing outside the project directory</td>
+    <td>rarely; ask why</td></tr>
+<tr><td>Installing packages or running scripts</td>
+    <td>only with a very good reason</td></tr>
+</table>
+
+<h2>3. Look for override language</h2>
+<p>Search the file for imperatives aimed at the agent rather than describing tasks:
+<em>"ignore", "override", "instead of", "set aside", "forget", "new rules",
+"do not tell", "hide", "invisible"</em>. Any hit deserves an explanation —
+and most cannot be explained innocently.</p>
+
+<h2>4. Check where data goes</h2>
+<p>List every URL in the file. Ask for each: does the skill's purpose require
+this endpoint? Watch for defanged forms (<code>hxxps://</code>,
+<code>example[.]com</code>) and base64 blobs near words like
+<em>run, execute, decode, payload</em>.</p>
+
+<h2>5. Automate what you just did by hand</h2>
+<p>The checklist above is exactly what skillsmith automates:</p>
+<ul>
+  <li><strong>Static scan:</strong> prompt-injection patterns (including paraphrases),
+      exfiltration endpoints, dropper chains, homoglyph tricks, known-vulnerable
+      dependency pins via OSV.dev → <a href="/">scanner</a></li>
+  <li><strong>Behavioral sandbox:</strong> an AI analyst simulates what an agent
+      following the skill would do, step by step, with IOCs and a severity verdict →
+      <a href="/analysis.html">behavioral analysis</a></li>
+  <li><strong>Rug-pull watch:</strong> hash a GitHub-hosted skill today, re-check
+      tomorrow — if the content changed after you approved it, you want to know →
+      <code>POST /api/watch</code> (<a href="/api-docs.html">API docs</a>)</li>
+  <li><strong>Near-duplicate search:</strong> find renamed/cosmetically altered
+      variants of a known-bad skill via Skill-DNA →
+      <a href="/api-docs.html">API docs</a></li>
+</ul>
+
+<h2>The one-line version</h2>
+<blockquote>A skill is code that talks you into running it. Review it like code,
+not like documentation.</blockquote>
+
+</body>
+</html>

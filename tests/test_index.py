@@ -518,3 +518,102 @@ def test_similar_requires_auth_and_valid_hash():
     status, body = _wsgi("GET", "/api/similar?sha256=" + "a" * 64)
     assert status == 401
     # invalid hash -> 400 (monkeypatch account check via webapp.get_account)
+
+
+def test_similar_masks_unpublished_names(monkeypatch):
+    """PT-T10: names of unpublished (private) skills must not leak."""
+    monkeypatch.setattr(webapp, "get_account", lambda k: {"created_at": 0})
+    monkeypatch.setattr(webapp, "_valid_sha256", webapp._valid_sha256)
+    import scans as _scans_mod
+    monkeypatch.setattr(_scans_mod, "_blob_headers", lambda: {})
+    fake_dna_listing = {"blobs": [
+        {"pathname": "dna/xyz_9a9ba8662241.json", "url": "https://blob.example/u"},
+        {"pathname": "dna/abc_ffffffffffff.json", "url": "https://blob.example/n"}]}
+    fake_entry = {"dna": "14917335d8afafdf", "sha256": "ac8cac90ac9b2bad" + "0"*48,
+                  "name": "secret-name", "risk_level": "clean"}
+    import urllib.request as ureq_mod
+    class FakeResp:
+        def __init__(self, data): self.data = data
+        def read(self): return self.data
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+    calls = []
+    def fake_urlopen(req, timeout=10):
+        url = req.full_url
+        if "/?prefix=dna/" in url:
+            return FakeResp(json.dumps(fake_dna_listing).encode())
+        if url == "https://blob.example/u":
+            return FakeResp(json.dumps(fake_entry).encode())
+        if url == "https://blob.example/n":
+            return FakeResp(json.dumps(fake_entry).encode())
+        calls.append(url)  # get_published_content fetch -> no published copy
+        return FakeResp(json.dumps({"blobs": []}).encode())
+    monkeypatch.setattr(ureq_mod, "urlopen", fake_urlopen)
+    environ = {"REQUEST_METHOD": "GET",
+               "QUERY_STRING": f"sha256={'9a9ba866224186dc'.ljust(64, '0')}&api_key=sk_ok"}
+    statuses = []
+    resp = b"".join(webapp.handle_similar(environ, lambda s, h: statuses.append(s)))
+    assert statuses[0].startswith("200"), resp[:200]
+    d = json.loads(resp)
+    assert d["similar"][0]["name"] is None
+    assert d["similar"][0]["published"] is False
+
+
+def test_watch_wiring(monkeypatch):
+    """PT-T4 follow-up: /api/watch validates auth + restricts URLs to GitHub."""
+    import inspect
+    assert "handle_watch" in inspect.getsource(webapp._app_inner)
+    # SSRF-Schutz dokumentiert/praesent
+    assert "_fetch_skill_url" in inspect.getsource(webapp.handle_watch)
+
+    # POST ohne key -> 401
+    body = json.dumps({"url": "https://github.com/x/y/blob/main/SKILL.md"}).encode()
+    environ = {"REQUEST_METHOD": "POST", "PATH_INFO": "/api/watch",
+               "CONTENT_LENGTH": str(len(body)), "wsgi.input": io.BytesIO(body)}
+    statuses = []
+    b"".join(webapp.handle_watch(environ, lambda s, h: statuses.append(s)))
+    assert statuses[0].startswith("401")
+
+    # GET mit kaputtem watch_id -> 400
+    status, body2 = _wsgi("GET", "/api/watch?watch_id=../../etc")
+    assert status == 400
+
+    # GET ohne key -> 401
+    status, body3 = _wsgi("GET", "/api/watch?watch_id=abcdefghijk")
+    assert status == 401
+
+
+def test_watch_check_flow(monkeypatch):
+    """Happy path: create stores baseline; check reports changed/unchanged."""
+    store = {}
+    import scans as scans_mod, account as account_mod
+    monkeypatch.setattr(scans_mod, "_blob_get", lambda p: store.get(p))
+    def put(p, v): store[p] = v
+    monkeypatch.setattr(scans_mod, "_blob_put", put)
+    monkeypatch.setattr(webapp, "get_account", lambda k: {"created_at": 0} if k == "sk_ok" else None)
+    from account import _blob_path as bp, _blob_get as bg, _blob_put as bput
+    rl = {}
+    monkeypatch.setattr(account_mod, "_blob_path", lambda p: p)
+    monkeypatch.setattr(account_mod, "_blob_get", lambda p: rl.get(p))
+    monkeypatch.setattr(account_mod, "_blob_put", lambda p, v: rl.__setitem__(p, v))
+    monkeypatch.setattr(webapp, "_fetch_skill_url", lambda url: "---\nname: x\ndescription: y\n---\nhello")
+    payload = json.dumps({"api_key": "sk_ok", "url": "https://github.com/o/r/blob/main/SKILL.md"}).encode()
+    environ = {"REQUEST_METHOD": "POST", "PATH_INFO": "/api/watch",
+               "CONTENT_LENGTH": str(len(payload)), "wsgi.input": io.BytesIO(payload)}
+    statuses = []
+    resp = b"".join(webapp.handle_watch(environ, lambda s, h: statuses.append(s)))
+    assert statuses[0].startswith("200"), resp[:200]
+    wid = json.loads(resp)["watch_id"]
+    # unchanged check
+    environ_g = {"REQUEST_METHOD": "GET",
+                 "QUERY_STRING": f"watch_id={wid}&api_key=sk_ok"}
+    statuses.clear()
+    resp_g = b"".join(webapp.handle_watch(environ_g, lambda s, h: statuses.append(s)))
+    d = json.loads(resp_g)
+    assert d["status"] == "unchanged"
+    # changed check (content mutates = rug pull)
+    monkeypatch.setattr(webapp, "_fetch_skill_url", lambda url: "---\nname: x\ndescription: y\n---\nEVIL PAYLOAD")
+    statuses.clear()
+    resp_c = b"".join(webapp.handle_watch(environ_g, lambda s, h: statuses.append(s)))
+    d2 = json.loads(resp_c)
+    assert d2["status"] == "changed"

@@ -116,6 +116,10 @@ and remember the key."</p>
 <h3><span class="method get">GET</span><code>/api/similar?sha256=...&amp;api_key=...</code></h3>
 <p>Skill-DNA neighbours: near-duplicate variants of the skill (64-bit simhash, hamming distance ≤ 12). Requires sign-in; free.</p>
 
+<h3><span class="method post">POST</span><code>/api/watch</code></h3>
+<p>Watch a GitHub-hosted SKILL.md for rug-pulls. Body: <code>{api_key, url}</code> where url is a github.com blob or raw.githubusercontent.com URL (only those hosts are fetched — no SSRF). Stores the content hash as baseline. 10 watches/day/key. Response: <code>{watch_id, baseline_sha256}</code>.</p>
+<h3><span class="method get">GET</span><code>/api/watch?watch_id=...&amp;api_key=...</code></h3>
+<p>On-demand rug-pull check: re-fetches the watched URL and compares the hash. Status is <code>unchanged</code>, <code>changed</code> (= the skill was modified after you vetted it) or <code>unreachable</code>. Response includes baseline/current sha256, check count and timestamps.</p>
 <h3><span class="method get">GET</span><code>/api/stats</code></h3>
 <p>Aggregate global counters: <code>{"total_scans": n, "by_risk": {...}}</code>. Public, cached 60s.</p>
 

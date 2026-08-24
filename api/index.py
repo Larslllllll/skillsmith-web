@@ -1026,9 +1026,112 @@ def handle_similar(environ, start_response):
             return [json.dumps({"error": "dna_unknown",
                                 "message": "No DNA stored for this hash yet. Scan it first."}).encode()]
         similar = find_similar_dna(own_dna, exclude_digest=digest, max_results=5)
+        # PT-T10: a scan is private by default. Leaking the NAME a user gave
+        # their unpublished skill to anyone who scans a near-duplicate is an
+        # unintended disclosure -- only published skills keep their name.
+        for entry in similar:
+            sha = entry.get("sha256", "")
+            if not sha or get_published_content(sha) is None:
+                entry["name"] = None
+                entry["published"] = False
+            else:
+                entry["published"] = True
         start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({"disclaimer": DISCLAIMER, "sha256": digest,
                             "similar": similar}).encode()]
+    except Exception as e:  # noqa: BLE001
+        start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
+        return [json.dumps({"error": str(e)}).encode()]
+
+
+def handle_watch(environ, start_response):
+    """POST /api/watch {api_key, url} -> watch a published GitHub SKILL.md for
+    rug-pulls: we store the content hash as baseline. GET
+    /api/watch?watch_id=...&api_key=... -> on-demand check: re-fetch the url,
+    compare the hash, report changed/unchanged. URLs are restricted to
+    github.com / raw.githubusercontent.com (same allow-list as /api/scan's
+    url mode) so this can never be used as an SSRF proxy."""
+    try:
+        try:
+            from .scans import create_watch, get_watch, update_watch
+        except ImportError:  # local/test context
+            from scans import create_watch, get_watch, update_watch
+        if environ.get("REQUEST_METHOD") == "POST":
+            payload = _read_json(environ)
+            api_key = payload.get("api_key", "")
+            url = payload.get("url", "")
+            if not isinstance(api_key, str) or not api_key:
+                start_response("401 Unauthorized", [("Content-Type", "application/json")] + _CORS_HEADERS)
+                return [json.dumps({"error": "sign_in_required"}).encode()]
+            if get_account(api_key) is None:
+                start_response("401 Unauthorized", [("Content-Type", "application/json")] + _CORS_HEADERS)
+                return [json.dumps({"error": "unknown api_key"}).encode()]
+            if not isinstance(url, str) or not url.strip():
+                start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
+                return [json.dumps({"error": "url required (github.com blob or raw URL)"}).encode()]
+            # flood guard: 10 watches/key/day
+            try:
+                from .account import _blob_path as _bp, _blob_get as _bg, _blob_put as _bput
+            except ImportError:
+                from account import _blob_path as _bp, _blob_get as _bg, _blob_put as _bput
+            day = time.strftime("%Y-%m-%d", time.gmtime())
+            rl_path = _bp(f"watch_rl/{api_key[:24]}-{day}.json")
+            rl = _bg(rl_path) or {"count": 0}
+            if rl.get("count", 0) >= 10:
+                start_response("429 Too Many Requests", [("Content-Type", "application/json")] + _CORS_HEADERS)
+                return [json.dumps({"error": "too many watches today (10/day/key)"}).encode()]
+            try:
+                text = _fetch_skill_url(url.strip())
+            except Exception as e:  # noqa: BLE001 - includes non-github URLs
+                start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
+                return [json.dumps({"error": f"cannot fetch url: {e}",
+                                    "hint": "only github.com blob URLs and raw.githubusercontent.com URLs are allowed"}).encode()]
+            digest = sha256_of(text)
+            rec = create_watch(url.strip(), digest)
+            _bput(rl_path, {"count": rl.get("count", 0) + 1})
+            start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"disclaimer": DISCLAIMER,
+                                "watch_id": rec["watch_id"],
+                                "baseline_sha256": digest,
+                                "note": "check anytime via GET /api/watch?watch_id=...&api_key=..."}).encode()]
+
+        # GET: on-demand check
+        qs = urllib.parse.parse_qs(environ.get("QUERY_STRING", ""))
+        wid = (qs.get("watch_id") or [""])[0]
+        api_key = _get_qs_api_key(environ) or ""
+        if not re.fullmatch(r"[A-Za-z0-9_-]{10,40}", wid):
+            start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": "watch_id required"}).encode()]
+        if not api_key or get_account(api_key) is None:
+            start_response("401 Unauthorized", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": "sign_in_required"}).encode()]
+        rec = get_watch(wid)
+        if rec is None:
+            start_response("404 Not Found", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": "unknown watch_id"}).encode()]
+        current_sha, fetch_error = None, None
+        try:
+            text = _fetch_skill_url(rec["url"])
+            current_sha = sha256_of(text)
+        except Exception as e:  # noqa: BLE001 - unreachable/removed file is a valid state
+            fetch_error = str(e)[:200]
+        changed = bool(current_sha and current_sha != rec.get("baseline_sha256"))
+        rec["checks"] = int(rec.get("checks", 0)) + 1
+        rec["last_checked_at"] = time.time()
+        rec["last_sha256"] = current_sha
+        rec["last_status"] = "changed" if changed else ("unchanged" if current_sha else "unreachable")
+        if changed and not rec.get("changed_at"):
+            rec["changed_at"] = time.time()
+        update_watch(rec)
+        start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
+        return [json.dumps({"disclaimer": DISCLAIMER,
+                            "watch_id": wid,
+                            "status": rec["last_status"],
+                            "baseline_sha256": rec.get("baseline_sha256"),
+                            "current_sha256": current_sha,
+                            "fetch_error": fetch_error,
+                            "checks": rec["checks"],
+                            "last_checked_at": rec["last_checked_at"]}).encode()]
     except Exception as e:  # noqa: BLE001
         start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({"error": str(e)}).encode()]
@@ -1443,6 +1546,9 @@ def _app_inner(environ, start_response):
             start_response("405 Method Not Allowed", [("Content-Type", "application/json")] + _CORS_HEADERS)
             return [json.dumps({"error": "GET or POST only"}).encode()]
         return handle_signup(environ, start_response, method)
+
+    if path.rstrip("/").endswith("/api/watch"):
+        return handle_watch(environ, start_response)
 
     if path.rstrip("/").endswith("/api/stats"):
         return handle_stats(environ, start_response)

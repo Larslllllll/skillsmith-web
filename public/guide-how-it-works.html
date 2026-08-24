@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root { --bg:#0B0E14; --surface:#151921; --border:#2A3140; --text:#D8DEE9;
+        --text-muted:#9AA5B1; --accent:#7EE3C3; }
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:760px; padding:2rem 1.2rem 4rem;
+       background:var(--bg); color:var(--text); line-height:1.65;
+       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; font-size:16px; }
+a { color:var(--accent); }
+h1 { font-size:1.7rem; line-height:1.25; }
+h2 { font-size:1.25rem; margin-top:2.2rem; border-bottom:1px solid var(--border); padding-bottom:.35rem; }
+h3 { font-size:1.05rem; }
+code, pre { background:var(--surface); border:1px solid var(--border);
+            border-radius:6px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
+code { padding:.12rem .35rem; font-size:.9em; }
+pre { padding:.9rem 1rem; overflow-x:auto; line-height:1.5; }
+blockquote { border-left:3px solid var(--accent); margin-left:0; padding:.2rem 1rem;
+             color:var(--text-muted); }
+table { border-collapse:collapse; width:100%; }
+td, th { border:1px solid var(--border); padding:.45rem .6rem; text-align:left; }
+.backlink { font-size:.9rem; }
+.meta { color:var(--text-muted); font-size:.85rem; }
+</style>
+<title>How skillsmith Detects Malicious Skills — skillsmith</title>
+<meta name="description" content="The skillsmith detection methodology: structural lint, weighted pattern categories, OSV dependency intelligence, and the behavioral sandbox — including honest limitations.">
+<meta property="og:title" content="How skillsmith Detects Malicious Skills — skillsmith">
+<meta property="og:description" content="The skillsmith detection methodology: structural lint, weighted pattern categories, OSV dependency intelligence, and the behavioral sandbox — including honest limitations.">
+<meta property="og:type" content="article">
+<link rel="canonical" href="https://skillsmith.ch/guide-how-it-works.html">
+</head>
+<body>
+<p class="backlink"><a href="/">← skillsmith scanner</a> · <a href="/guides.html">all guides</a></p>
+
+<h1>How skillsmith Detects Malicious Skills</h1>
+<p class="meta">Methodology · skillsmith.ch</p>
+
+<p>skillsmith is a static-first security scanner for Claude Agent Skills
+(<code>SKILL.md</code>). This page explains what the engine actually checks,
+what a score means, and where static analysis ends.</p>
+
+<h2>Layer 1: Structural lint</h2>
+<p>The frontmatter (<code>name</code>, <code>description</code>) is validated:
+missing fields, oversized descriptions and malformed YAML are flagged. A skill
+that cannot even describe itself honestly rarely deserves trust.</p>
+
+<h2>Layer 2: Pattern detection</h2>
+<p>The core engine matches weighted patterns across several categories:</p>
+<table>
+<tr><th>Category</th><th>Examples</th></tr>
+<tr><td>Prompt injection</td><td>"ignore previous instructions" — and paraphrases
+    like "set aside earlier guidance", detected by meaning-level signals rather than
+    fixed phrases</td></tr>
+<tr><td>Data exfiltration</td><td>webhook endpoints (Discord, Slack, Telegram),
+    instructions to forward collected data outward</td></tr>
+<tr><td>Credential access</td><td>references to <code>~/.ssh</code>,
+    <code>.env</code>, keychains, browser profiles</td></tr>
+<tr><td>Droppers</td><td><code>curl … | sh</code>, PowerShell
+    <code>IEX(Invoke-Expression)</code>, staged download-then-run chains</td></tr>
+<tr><td>Obfuscation</td><td>base64 payloads split into chunks, defanged URLs
+    (<code>hxxps://…[…]</code>) plus instructions to reassemble them</td></tr>
+<tr><td>Deception</td><td>"do not tell the user", "hide this step",
+    "this file is safe"</td></tr>
+<tr><td>Typosquatting/homoglyphs</td><td>Cyrillic look-alike characters in names
+    and URLs (linear homoglyph scan)</td></tr>
+</table>
+<p>Each finding carries a risk weight. The totals map to four verdicts:
+<strong>clean</strong> (0), <strong>low</strong> (&lt;8), <strong>medium</strong>
+(&lt;20), <strong>high</strong> (≥20). Every result includes a plain-language
+explanation of each finding, so you can verify instead of trusting a number.</p>
+
+<h2>Layer 3: Dependency intelligence (OSV.dev)</h2>
+<p>If the skill pins package versions, they are checked against Google's
+OSV.dev vulnerability database. Findings feed into the same risk score.</p>
+
+<h2>Layer 4: Behavioral analysis (optional)</h2>
+<p>Static analysis cannot answer "what would an agent following this actually
+do?" For that, the <a href="/analysis.html">behavioral sandbox</a> lets an AI
+analyst simulate the skill step by step inside an isolated environment and report
+simulated actions, indicators of compromise and a severity verdict — catching
+attacks that never match any string pattern.</p>
+
+<h2>Honest limitations</h2>
+<blockquote>A clean score is not a guarantee of safety. It means no known pattern
+matched. Static scanners are a triage aid — always read short files yourself;
+use the sandbox when stakes are high.</blockquote>
+<ul>
+  <li>New attack phrasing may evade patterns until added to the engine.</li>
+  <li>URLs can change content after scanning — that is why rug-pull watching
+      exists.</li>
+  <li>Semantic analysis is heuristic; edge cases belong in
+      <a href="https://github.com/Larslllllll/skillsmith-web/issues">issues</a>.</li>
+</ul>
+
+<h2>Try it</h2>
+<p>Paste any SKILL.md into the <a href="/">scanner</a>, run behavioral analysis on
+it, or integrate the API into your pipeline — see the
+<a href="/api-docs.html">API documentation</a>. skillsmith is open source; audit
+the scanner itself on GitHub.</p>
+
+</body>
+</html>
