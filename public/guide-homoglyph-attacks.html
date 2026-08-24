@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root { --bg:#0B0E14; --surface:#151921; --border:#2A3140; --text:#D8DEE9;
+        --text-muted:#9AA5B1; --accent:#7EE3C3; }
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:760px; padding:2rem 1.2rem 4rem;
+       background:var(--bg); color:var(--text); line-height:1.65;
+       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; font-size:16px; }
+a { color:var(--accent); }
+h1 { font-size:1.7rem; line-height:1.25; }
+h2 { font-size:1.25rem; margin-top:2.2rem; border-bottom:1px solid var(--border); padding-bottom:.35rem; }
+h3 { font-size:1.05rem; }
+code, pre { background:var(--surface); border:1px solid var(--border);
+            border-radius:6px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
+code { padding:.12rem .35rem; font-size:.9em; }
+pre { padding:.9rem 1rem; overflow-x:auto; line-height:1.5; }
+blockquote { border-left:3px solid var(--accent); margin-left:0; padding:.2rem 1rem;
+             color:var(--text-muted); }
+table { border-collapse:collapse; width:100%; }
+td, th { border:1px solid var(--border); padding:.45rem .6rem; text-align:left; }
+.backlink { font-size:.9rem; }
+.meta { color:var(--text-muted); font-size:.85rem; }
+</style>
+<title>Homoglyph Attacks on Agent Skills — skillsmith</title>
+<meta name="description" content="How invisible Unicode look-alikes enable skill typosquatting and allowlist evasion in SKILL.md files - and how to detect them with normalization and script checks.">
+<meta property="og:title" content="Homoglyph Attacks on Agent Skills — skillsmith">
+<meta property="og:description" content="How invisible Unicode look-alikes enable skill typosquatting and allowlist evasion in SKILL.md files - and how to detect them with normalization and script checks.">
+<meta property="og:type" content="article">
+<link rel="canonical" href="https://skillsmith.ch/guide-homoglyph-attacks.html">
+</head>
+<body>
+<p class="backlink"><a href="/">← skillsmith scanner</a> · <a href="/guides.html">all guides</a></p>
+
+<h1>Homoglyph Attacks on Agent Skills</h1>
+<p class="meta">Guide · skillsmith.ch</p>
+
+<p>A homoglyph is a character that looks identical (or nearly identical) to
+another but has a different code point. <code>а</code> vs <code>a</code>: the
+first is Cyrillic small letter a (U+0430), the second Latin (U+0061). To your
+eyes they are the same. To a string comparison, a domain filter, or an allowlist,
+they are completely different characters.</p>
+
+<h2>Why this matters for SKILL.md files</h2>
+<p>Agent skills are trusted partly through names and URLs. Homoglyphs attack
+exactly those anchors:</p>
+<ul>
+  <li><strong>Skill typosquatting:</strong> publish
+      <code>pdf-toolkit</code> with a Cyrillic <code>а</code>. It renders the
+      same, sorts the same, and passes casual review.</li>
+  <li><strong>Allowlist evasion:</strong> a skill claims to only talk to
+      <code>github.com</code> &mdash; but the exfiltration host is
+      <code>githuЬ.com</code> (Cyrillic <code>Ь</code>) and your reviewer's
+      pattern match sees only "github".</li>
+  <li><strong>Comment smuggling:</strong> injection instructions hidden inside
+      what looks like harmless documentation text.</li>
+</ul>
+
+<h2>Where they hide</h2>
+<ul>
+  <li>Cyrillic/Greek letters that mirror Latin: а е о р с у х А В Е К М Н О Р С Т Х</li>
+  <li>Look-alike punctuation: fullwidth dots, mathematical dots, IPA glyphs</li>
+  <li>Zero-width joiners and zero-width spaces between visible characters</li>
+  <li>Combining marks attached to ordinary letters</li>
+</ul>
+
+<h2>How to defend</h2>
+<ol>
+  <li><strong>Normalize before comparing:</strong> NFKC normalization folds many
+      look-alikes back to ASCII. Compare normalized forms everywhere.</li>
+  <li><strong>Restrict scripts:</strong> a legitimate English-language SKILL.md
+      almost never needs Cyrillic or Greek letters. Flag any non-ASCII code
+      point outside expected ranges.</li>
+  <li><strong>Inspect byte level:</strong> search the file for code points
+      U+0400&ndash;U+04FF, U+0370&ndash;U+03FF, U+200B&ndash;U+200F and
+      U+FEFF. Any hit deserves a second look at its context.</li>
+  <li><strong>Verify domains character by character</strong> when reviewing
+      exfiltration targets &mdash; paste into a punycode/IDN decoder.</li>
+</ol>
+
+<h2>What skillsmith does about it</h2>
+<p>The detection engine runs a linear scan for suspicious Unicode: non-ASCII
+code points in homoglyph-prone ranges raise findings with their context, so a
+Cyrillic <code>а</code> buried in an otherwise clean file surfaces immediately
+instead of hiding behind visual inspection. Combined with
+<a href="/guide-malicious-skills.html">structural detection</a>, paraphrased
+injections stop relying on your eyes.</p>
+
+<h2>Try it yourself</h2>
+<p>Paste any SKILL.md into the <a href="/">scanner</a> and check the findings
+for unicode warnings. If you want the full picture of what a hostile skill can
+do, start with <a href="/guide-threat-modeling.html">threat modeling</a>.</p>
+
+</body>
+</html>
