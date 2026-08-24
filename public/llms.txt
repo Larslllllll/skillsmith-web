@@ -1,0 +1,35 @@
+# skillsmith
+
+> Security scanner for Claude Agent Skills (SKILL.md files). Paste or link any
+> SKILL.md and get an instant heuristic risk verdict: prompt injection, data
+> exfiltration, dangerous code, homoglyphs, dependency vulnerabilities.
+> Free tier (5 scans/day, sign-in via GitHub), pay-as-you-go via USDC.
+
+Site: https://skillsmith.ch
+Owner: skillsmith (see /impressum.html)
+
+## Main pages
+
+- [Scanner](https://skillsmith.ch/): scan a SKILL.md by text or GitHub URL.
+- [Guides](https://skillsmith.ch/guides.html): security guides for agent skills.
+- [Prompt injection mechanics](https://skillsmith.ch/guide-prompt-injection.html)
+- [Anatomy of a malicious SKILL.md](https://skillsmith.ch/guide-malicious-skills.html)
+- [Five-minute audit checklist](https://skillsmith.ch/guide-audit-checklist.html)
+- [Threat modeling for agent skills](https://skillsmith.ch/guide-threat-modeling.html)
+- [Homoglyph attacks](https://skillsmith.ch/guide-homoglyph-attacks.html)
+- [Dependency risk & OSV](https://skillsmith.ch/guide-dependency-osv.html)
+- [FAQ](https://skillsmith.ch/faq.html)
+- [API docs](https://skillsmith.ch/api-docs.html): full REST + MCP reference.
+
+## Machine interfaces
+
+- REST API: https://skillsmith.ch/api-docs.html (scan, lookup, registry, watch, certificate, reports).
+- MCP server: https://skillsmith.ch/mcp (10 tools incl. scan_skill, analyze_behavior, watch_skill).
+- Atom feed of verified-clean skills: https://skillsmith.ch/feed.xml
+
+## Trust notes
+
+- All verdicts are automated heuristics; see the disclaimer on every response.
+- Community tallies are crowd verdicts, not verified facts.
+- Behavioral analyses run in isolated ephemeral containers; submitted content
+  is never executed in the user's environment.
