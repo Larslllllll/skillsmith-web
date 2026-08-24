@@ -1668,7 +1668,10 @@ def handle_analysis(environ, start_response):
         start_response("404 Not Found", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({"error": "unknown analysis id"}).encode()]
     # private blob: serve through, strip nothing -- report contains no secrets
-    start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
+    # (PT-T17: reports are immutable -> let the CDN/browser cache them; without
+    # this every permalink view costs a blob fetch, unauthenticated)
+    start_response("200 OK", [("Content-Type", "application/json"),
+                              ("Cache-Control", "public, max-age=300")] + _CORS_HEADERS)
     return [json.dumps(rec).encode()]
 
 
