@@ -120,56 +120,6 @@ TOOLS = [
 
 
 def _tool_result(payload):
-    if name == "analyze_behavior":
-        text = args.get("text", "")
-        if not isinstance(text, str) or not text.strip():
-            return _tool_result({"error": "text required (raw SKILL.md content)"})
-        if len(text) > 100_000:
-            return _tool_result({"error": f"text too large ({len(text)} > 100000)"})
-        # per-account daily cap (the REST route caps per-IP; MCP callers are
-        # authenticated, so cap per account): 5/day, unlimited for owners.
-        import time as _t2
-        from .account import get_account as _ga, _blob_path as _bp, _blob_get as _bg, _blob_put as _bput
-        try:
-            from .account import _blob_headers as _bh
-        except ImportError:
-            from account import _blob_headers as _bh
-        rec = _ga(api_key)
-        if rec is None:
-            return _tool_result({"error": "unknown api_key"})
-        day = _t2.strftime("%Y-%m-%d", _t2.gmtime())
-        if not rec.get("unlimited"):
-            rl_path = _bp(f"analyses_rl_acct/{api_key[:24]}-{day}.json")
-            rl = _bg(rl_path) or {"count": 0}
-            if rl.get("count", 0) >= 5:
-                return _tool_result({"error": "daily behavioral-analysis limit reached (5/day/account)",
-                                     "tip": "counter resets at 00:00 UTC"})
-            _bput(rl_path, {"count": rl.get("count", 0) + 1})
-        # synchronous call into the Node sandbox function (30-120s typical)
-        import urllib.request as _ureq, os as _os
-        base = _os.environ.get("SITE_URL", "https://skillsmith.ch").rstrip("/")
-        req = _ureq.Request(base + "/api/sandbox-run",
-                            data=json.dumps({"text": text}).encode(),
-                            headers={"Content-Type": "application/json"}, method="POST")
-        try:
-            with _ureq.urlopen(req, timeout=280) as resp:
-                report = json.loads(resp.read().decode())
-        except Exception as e:  # noqa: BLE001 - never crash the MCP session
-            return _tool_result({"error": f"behavioral analysis failed: {e}",
-                                 "note": "the sandbox can take up to ~120s; retry once if this was a timeout"})
-        sev = (report.get("ai_analysis") or {}).get("severity") or {}
-        return _tool_result({
-            "analysis_id": report.get("analysis_id"),
-            "sha256": report.get("sha256"),
-            "status": report.get("status"),
-            "duration_s": report.get("duration_s"),
-            "static_iocs": report.get("static_iocs"),
-            "ai_analysis": report.get("ai_analysis"),
-            "severity": sev,
-            "permalink": f"/api/analysis?id={report.get('analysis_id')}" if report.get("analysis_id") else None,
-            "disclaimer": "Behavioral SIMULATION by an LLM analyst in an isolated container. Heuristic, not a guarantee.",
-        })
-
     return {"content": [{"type": "text", "text": json.dumps(payload)}]}
 
 
@@ -349,7 +299,7 @@ def _call_tool(name, args, client_ip: str = ""):
             "disclaimer": "Behavioral SIMULATION by an LLM analyst in an isolated container. Heuristic, not a guarantee.",
         })
 
-    return {"content": [{"type": "text", "text": json.dumps({"error": f"unknown tool: {name}"})}], "isError": True}
+        return {"content": [{"type": "text", "text": json.dumps({"error": f"unknown tool: {name}"})}], "isError": True}
 
 
 def handle_jsonrpc(req: dict, client_ip: str = "") -> tuple[int, dict]:
