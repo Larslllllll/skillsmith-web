@@ -1143,4 +1143,46 @@ loadRegistry();
     }).catch(function () {});
   })();
 </script>
+
+<script>
+// --- My watches panel (only when signed in) ---
+(function () {
+  function key() { try { return localStorage.getItem('skillsmith-api-key') || ''; } catch (e) { return ''; } }
+  function render(items) {
+    var host = document.getElementById('watchesPanel');
+    if (!host) return;
+    if (!items.length) { host.style.display = 'none'; return; }
+    var rows = '';
+    for (var i = 0; i < items.length; i++) {
+      var it = items[i];
+      var c = it.last_status === 'changed' ? '#dc2626' : (it.last_status === 'unreachable' ? '#d97706' : '#16a34a');
+      rows += '<tr><td style="padding:3px 10px 3px 0;font-family:monospace;">' + String(it.watch_id || '').slice(0, 12) +
+        '</td><td style="padding:3px 10px;color:' + c + ';font-weight:600;">' + String(it.last_status || '?') +
+        '</td><td style="padding:3px 0;color:#9AA5B1;max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' +
+        String(it.url || '').replace(/[<>&]/g, '') + '</td></tr>';
+    }
+    host.innerHTML = '<strong style="color:#e6edf3;">🛡 Your rug-pull watches</strong>' +
+      '<table style="margin-top:6px;font-size:13px;border-collapse:collapse;">' + rows + '</table>';
+    host.style.display = 'block';
+  }
+  function load() {
+    var k = key();
+    if (!k) return;
+    fetch('/api/watch?list=1&api_key=' + encodeURIComponent(k))
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) { if (d && d.watches) render(d.watches); })
+      .catch(function () {});
+  }
+  document.addEventListener('DOMContentLoaded', function () {
+    if (!key()) return;
+    var div = document.createElement('div');
+    div.id = 'watchesPanel';
+    div.style.cssText = 'display:none;max-width:860px;margin:12px auto;padding:10px 14px;border-radius:8px;background:#0d1117;border:1px solid #30363d;font-size:14px;';
+    var anchorEl = document.getElementById('statsBar');
+    if (anchorEl && anchorEl.parentNode) anchorEl.parentNode.insertBefore(div, anchorEl.nextSibling.nextSibling);
+    else document.body.appendChild(div);
+    load();
+  });
+})();
+</script>
 </body>
