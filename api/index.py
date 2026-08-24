@@ -569,6 +569,36 @@ def handle_scan(environ, start_response):
             "first_seen_at": (history or {}).get("first_seen_at"),
             "published": bool((history or {}).get("has_content")),
         }
+        # score trend: compare this scan against the PREVIOUS record for the
+        # same hash (cached was read before record_scan upserted).
+        if cached is not None:
+            try:
+                prev_score = int(cached.get("security_score", 0))
+                prev_risk = cached.get("risk_level", "")
+                delta = result.get("security_score", 0) - prev_score
+                if delta > 0:
+                    direction = "improved"
+                elif delta < 0:
+                    direction = "declined"
+                else:
+                    direction = "unchanged"
+                result["trend"] = {
+                    "direction": direction,
+                    "delta": delta,
+                    "previous_security_score": prev_score,
+                    "previous_risk_level": prev_risk,
+                }
+            except Exception:  # noqa: BLE001 - trend is cosmetic, never fail a scan
+                pass
+        # plain-language explainer for non-expert users
+        try:
+            from .features import explain_findings
+        except ImportError:
+            from features import explain_findings
+        try:
+            result["explanation"] = explain_findings(result.get("findings", []))
+        except Exception:  # noqa: BLE001
+            pass
         start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps(result).encode()]
     except Exception as e:  # noqa: BLE001

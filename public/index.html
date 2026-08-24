@@ -814,6 +814,22 @@ function render(data) {
   if (!(data.findings || []).length) addRow(details, ['  none']);
   (data.findings || []).forEach(f => addRow(details, [`  [${f.source}] ${f.message} (+${f.weight})`]));
 
+  // --- Score trend vs. previous scan of the same hash ---
+  if (data.trend && data.trend.direction !== 'unchanged') {
+    addRow(details, ['']);
+    const arrow = data.trend.direction === 'improved' ? '📈' : '📉';
+    const word = data.trend.direction === 'improved' ? 'better' : 'worse';
+    addRow(details, [bold('Score trend:'), ` ${arrow} security_score is ${word} than the previous scan of this file: ` +
+      `${data.trend.previous_security_score}/100 -> ${data.security_score}/100 (${data.trend.direction}).`]);
+  }
+
+  // --- Plain-language explainer ---
+  if ((data.explanation || []).length) {
+    addRow(details, ['']);
+    addRow(details, [bold('What this means in plain language:')]);
+    data.explanation.forEach(x => addRow(details, [`  • ${x.what}`, `    → ${x.advice}`]));
+  }
+
   // --- Database tab: hash lookup / scan history ---
   if (data.sha256) {
     addRow(db, [bold('SHA-256:'), ' ' + data.sha256]);

@@ -374,3 +374,40 @@ def test_osv_query_fail_open():
         assert out[0].get("error") == "osv_unavailable"
     finally:
         osv._OSV_BATCH_URL = old
+
+
+def test_scan_trend_and_explanation_fields(monkeypatch):
+    """Second scan of the same hash reports a trend + plain-language explainer."""
+    recs = {}
+    monkeypatch.setattr(webapp, "get_scan_record", lambda d: recs.get(d))
+    def fake_record(digest, result, **kw):
+        rec = {"security_score": result.get("security_score", 0),
+               "risk_level": result.get("risk_level", ""),
+               "seen_count": 1, "first_seen_at": 0, "has_content": False}
+        recs[digest] = rec
+        return rec
+    monkeypatch.setattr(webapp, "record_scan", fake_record)
+    monkeypatch.setattr(webapp, "check_and_consume_quota",
+                        lambda k: (True, {"tier": "free", "used": 1, "limit": 5}))
+    body = json.dumps({"text": GOOD_SKILL, "api_key": "sk_test"}).encode()
+    environ = {"REQUEST_METHOD": "POST", "PATH_INFO": "/api/scan",
+               "CONTENT_LENGTH": str(len(body)),
+               "wsgi.input": io.BytesIO(body)}
+    statuses = []
+    resp = b"".join(webapp.handle_scan(environ, lambda s, h: statuses.append(s)))
+    data = json.loads(resp)
+    assert statuses and statuses[0].startswith("200"), data[:200]
+    assert data["scan_history"]["seen_before"] is False
+    assert isinstance(data.get("explanation", []), list)
+
+    # second scan of the SAME content: seen_before + unchanged trend
+    environ2 = {"REQUEST_METHOD": "POST", "PATH_INFO": "/api/scan",
+                "CONTENT_LENGTH": str(len(body)),
+                "wsgi.input": io.BytesIO(body)}
+    statuses.clear()
+    resp2 = b"".join(webapp.handle_scan(environ2, lambda s, h: statuses.append(s)))
+    data2 = json.loads(resp2)
+    assert data2["scan_history"]["seen_before"] is True
+    assert data2["trend"]["direction"] == "unchanged"
+    assert data2["trend"]["delta"] == 0
+    assert data2["trend"]["previous_security_score"] == data2["security_score"]
