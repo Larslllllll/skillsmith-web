@@ -817,3 +817,15 @@ def test_mcp_file_report(monkeypatch):
     res2 = mcp_mod._call_tool("file_report", {"api_key": "sk_ok", "sha256": "f"*64, "verdict": "hate"})
     s2 = json.loads(res2[0]["text"] if isinstance(res2, list) else res2["content"][0]["text"])
     assert "verdict must be" in s2.get("error", "")
+
+
+def test_buy_credit_kind_whitelist(monkeypatch):
+    """PT-T19: unknown payment kinds are rejected before any pricing/claim."""
+    body = json.dumps({"api_key": "sk_ok", "payment_signature": "sig",
+                       "kind": "premium"}).encode()
+    environ = {"REQUEST_METHOD": "POST", "PATH_INFO": "/api/buy_credit",
+               "CONTENT_LENGTH": str(len(body)), "wsgi.input": io.BytesIO(body)}
+    statuses = []
+    resp = b"".join(webapp.handle_buy_credit(environ, lambda s, h: statuses.append(s)))
+    assert statuses[0].startswith("400"), resp[:150]
+    assert b"kind must be" in resp

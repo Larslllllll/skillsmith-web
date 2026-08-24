@@ -802,6 +802,12 @@ def handle_buy_credit(environ, start_response):
         api_key = payload.get("api_key", "")
         signature = payload.get("payment_signature", "")
         kind = payload.get("kind", "scan")
+        # PT-T19: strict whitelist -- unknown kinds silently fell through to the
+        # scan branch (harmless: same price, same credit type) but made the API
+        # lie in its response echo and polluted claim records.
+        if kind not in ("scan", "lookup"):
+            start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": "kind must be 'scan' or 'lookup'"}).encode()]
         price = LOOKUP_PAY_PER_USE_PRICE_USDC if kind == "lookup" else PAY_PER_USE_PRICE_USDC
         if not api_key:
             start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
