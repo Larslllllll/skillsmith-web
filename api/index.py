@@ -573,7 +573,12 @@ def handle_scan(environ, start_response):
         # same hash (cached was read before record_scan upserted).
         if cached is not None:
             try:
-                prev_score = int(cached.get("security_score", 0))
+                # older records predate security_score storage -> derive it
+                # from risk_score with the same formula analyze() uses
+                prev_score = cached.get("security_score")
+                if prev_score is None:
+                    prev_score = max(0, 100 - int(cached.get("risk_score", 0) or 0) * 4)
+                prev_score = int(prev_score)
                 prev_risk = cached.get("risk_level", "")
                 delta = result.get("security_score", 0) - prev_score
                 if delta > 0:

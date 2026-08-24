@@ -87,6 +87,7 @@ def record_scan(digest: str, analysis: dict, name: str = "", publish: bool = Fal
     existing["name"] = name or existing.get("name", "")
     existing["risk_level"] = analysis.get("risk_level")
     existing["risk_score"] = analysis.get("risk_score")
+    existing["security_score"] = analysis.get("security_score")  # needed for score-trend
     existing["lint_ok"] = analysis.get("lint_ok")
     existing["parse_ok"] = analysis.get("parse_ok")
     existing["findings"] = analysis.get("findings", [])
