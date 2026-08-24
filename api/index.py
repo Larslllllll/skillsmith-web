@@ -914,7 +914,7 @@ def handle_report(environ, start_response):
             start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
             return [json.dumps({"disclaimer": DISCLAIMER,
                                 "sha256": digest,
-                                "total": data.get("total", 0),
+                                "total": len(data.get("reports", [])),
                                 "tally": data.get("tally", {}),
                                 "reports": [{"verdict": r_.get("verdict"), "at": r_.get("at"),
                                              "comment": r_.get("comment", "")}
