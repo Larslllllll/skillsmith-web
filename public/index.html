@@ -816,6 +816,24 @@ function render(data) {
   if (!(data.findings || []).length) addRow(details, ['  none']);
   (data.findings || []).forEach(f => addRow(details, [`  [${f.source}] ${f.message} (+${f.weight})`]));
 
+  // --- Community verdicts (crowd tally) for this exact file ---
+  if (data.sha256) {
+    fetch('/api/report?sha256=' + encodeURIComponent(data.sha256))
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (t) {
+        if (!t || !t.total) return;
+        const parts = [];
+        ['malicious', 'false_positive', 'note'].forEach(function (k) {
+          if (t.tally && t.tally[k]) parts.push(t.tally[k] + ' ' + k.replace('_', ' '));
+        });
+        if (!parts.length) return;
+        addRow(details, ['']);
+        addRow(details, [bold('Community reports:'), ` 👥 ${t.total} total — ${parts.join(', ')}.` +
+          ' These are crowd verdicts, not verified facts.']);
+      })
+      .catch(function () {});
+  }
+
   // --- Score trend vs. previous scan of the same hash ---
   if (data.trend && data.trend.direction !== 'unchanged') {
     addRow(details, ['']);
