@@ -280,6 +280,15 @@ def analyze(text: str) -> dict:
 
     findings = []
     findings += _scan_text(body, "SKILL.md body", _PROMPT_INJECTION_PATTERNS)
+    # PT-T73: frontmatter values (esp. `description`) are the FIRST thing an
+    # agent reads -- injection payloads hidden there must be scanned too.
+    try:
+        fm_lines = "\n".join(f"{k}: {v}" for k, v in fm.items() if isinstance(v, str))
+    except Exception:  # noqa: BLE001 - never let scanning crash the scan
+        fm_lines = ""
+    if fm_lines:
+        findings += _scan_text(fm_lines, "frontmatter", _PROMPT_INJECTION_PATTERNS)
+        findings += _scan_text(fm_lines, "frontmatter", _PARAPHRASE_PATTERNS)
     findings += _scan_text(text, "raw text (incl. code blocks)", _CODE_PATTERNS)
 
     findings += _scan_text(text, "raw text (incl. code blocks)", _DROPPER_PATTERNS)
