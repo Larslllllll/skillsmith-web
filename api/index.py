@@ -747,6 +747,16 @@ def handle_get_skill(environ, start_response):
                 "error": "sign_in_required",
                 "message": "Sign in (free) to fetch a published skill's content.",
             }).encode()]
+        # PT-T30: soft per-key cap -- each call lists the dna prefix and fetches
+        # neighbour blobs; make bulk graph-mapping expensive too.
+        try:
+            from .account import check_public_scan_rate
+        except ImportError:
+            from account import check_public_scan_rate
+        allowed_sim, sim_err = check_public_scan_rate(explicit_api_key[:24], daily_cap=1000, bucket="simrl_")
+        if not allowed_sim:
+            start_response("429 Too Many Requests", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": sim_err}).encode()]
         qs = urllib.parse.parse_qs(environ.get("QUERY_STRING", ""))
         digest = (qs.get("sha256") or [""])[0].lower()
         if not _valid_sha256(digest):  # logic audit L11+L12: validate BEFORE
@@ -902,6 +912,16 @@ def handle_lookup(environ, start_response):
                 "error": "sign_in_required",
                 "message": "Sign in (free) to look up a hash. 5 lookups/day free, 150/day Pro, unlimited Premium.",
             }).encode()]
+        # PT-T30: soft per-key cap -- each call lists the dna prefix and fetches
+        # neighbour blobs; make bulk graph-mapping expensive too.
+        try:
+            from .account import check_public_scan_rate
+        except ImportError:
+            from account import check_public_scan_rate
+        allowed_sim, sim_err = check_public_scan_rate(explicit_api_key[:24], daily_cap=1000, bucket="simrl_")
+        if not allowed_sim:
+            start_response("429 Too Many Requests", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": sim_err}).encode()]
         qs = urllib.parse.parse_qs(environ.get("QUERY_STRING", ""))
         digest = (qs.get("sha256") or [""])[0].lower()
         if not _valid_sha256(digest):  # logic audit L11+L12: validate BEFORE
@@ -1042,6 +1062,16 @@ def handle_similar(environ, start_response):
         if not explicit_api_key or get_account(explicit_api_key) is None:
             start_response("401 Unauthorized", [("Content-Type", "application/json")] + _CORS_HEADERS)
             return [json.dumps({"error": "sign_in_required"}).encode()]
+        # PT-T30: soft per-key cap -- each call lists the dna prefix and fetches
+        # neighbour blobs; make bulk graph-mapping expensive too.
+        try:
+            from .account import check_public_scan_rate
+        except ImportError:
+            from account import check_public_scan_rate
+        allowed_sim, sim_err = check_public_scan_rate(explicit_api_key[:24], daily_cap=1000, bucket="simrl_")
+        if not allowed_sim:
+            start_response("429 Too Many Requests", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": sim_err}).encode()]
         qs = urllib.parse.parse_qs(environ.get("QUERY_STRING", ""))
         digest = (qs.get("sha256") or [""])[0].lower()
         if not _valid_sha256(digest):
