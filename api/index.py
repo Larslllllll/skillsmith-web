@@ -1671,11 +1671,21 @@ def handle_badge(environ, start_response):
 
     risk = rec.get("risk_level") or "unknown"
     color = _BADGE_COLORS.get(risk, "#6e7681")
+    trend_arrow = ""
+    if qs.get("trend", ["0"])[0] in ("1", "true"):
+        # PT-T35: optional score-trend arrow from the last two history points
+        hist = (rec.get("score_history") or [])
+        pts = [h for h in hist[-2:] if isinstance(h, list) and len(h) == 2]
+        if len(pts) == 2 and isinstance(pts[0][1], int) and isinstance(pts[1][1], int):
+            d_pts = pts[1][1] - pts[0][1]
+            trend_arrow = {"up": " ↑", "down": " ↓", "flat": ""}[
+                "up" if d_pts > 0 else ("down" if d_pts < 0 else "flat")]
     if risk == "clean":
-        right = "clean | skillsmith.ch"
+        right = f"clean{trend_arrow} | skillsmith.ch"
     else:
         score = rec.get("risk_score")
-        right = f"{risk} ({score}) | skillsmith.ch" if score is not None else f"{risk} | skillsmith.ch"
+        base = f"{risk} ({score})" if score is not None else risk
+        right = f"{base}{trend_arrow} | skillsmith.ch"
     svg = _badge_svg("skill check", _escape_svg(right), color, style)
     start_response("200 OK", headers)
     return [svg.encode()]

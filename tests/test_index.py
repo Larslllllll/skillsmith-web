@@ -741,6 +741,22 @@ def test_hook_scan(monkeypatch):
     assert statuses[0].startswith("429")
 
 
+def test_badge_trend(monkeypatch):
+    rec = {"sha256": "a" * 64, "risk_level": "medium", "risk_score": 12,
+           "score_history": [[1, 50], [2, 30]]}
+    monkeypatch.setattr(webapp, "get_scan_record", lambda d: rec)
+    st, body = _wsgi("GET", f"/badge?sha256={'a' * 64}&trend=1")
+    assert st == 200
+    assert "↓" in body.decode()  # 50 -> 30 = schlechter
+
+def test_badge_trend_off_by_default(monkeypatch):
+    rec = {"sha256": "b" * 64, "risk_level": "medium", "risk_score": 9,
+           "score_history": [[1, 50], [2, 30]]}
+    monkeypatch.setattr(webapp, "get_scan_record", lambda d: rec)
+    st, body = _wsgi("GET", f"/badge?sha256={'b' * 64}")
+    assert st == 200 and "↓" not in body.decode()
+
+
 def test_badge_styles(monkeypatch):
     """badge ?style= variants: flat (default), flat-square, round; invalid falls back."""
     monkeypatch.setattr(webapp, "get_scan_record",
