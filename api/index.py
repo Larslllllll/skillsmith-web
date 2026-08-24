@@ -1244,6 +1244,9 @@ def handle_watch(environ, start_response):
         qs = urllib.parse.parse_qs(environ.get("QUERY_STRING", ""))
         api_key = _get_qs_api_key(environ) or ""
         if (qs.get("list") or [""])[0] in ("1", "true"):
+            if not api_key or get_account(api_key) is None:
+                start_response("401 Unauthorized", [("Content-Type", "application/json")] + _CORS_HEADERS)
+                return [json.dumps({"error": "sign_in_required"}).encode()]
             try:
                 from .scans import list_watches
             except ImportError:
