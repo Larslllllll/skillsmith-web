@@ -282,6 +282,10 @@ def store_dna(digest: str, dna: str, risk_level: str, name: str) -> None:
 
 def find_similar_dna(dna: str, exclude_digest: str = "", max_results: int = 5) -> list[dict]:
     """Scan stored DNA blobs; return entries within Hamming distance <= 12."""
+    try:
+        from .features import hamming_hex
+    except ImportError:  # local/script execution without package context
+        from features import hamming_hex
     url = f"{BLOB_API_BASE}/?prefix=dna/&limit=200"
     req = urllib.request.Request(url, headers=_blob_headers(), method="GET")
     try:
