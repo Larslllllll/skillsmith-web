@@ -97,14 +97,16 @@ TOOLS = [
     },
     {
         "name": "watch_skill",
-        "description": "Rug-pull watch for a GitHub-hosted SKILL.md. Without watch_id: creates a watch (stores the content hash as baseline, 10/day/key). With watch_id: re-fetches the URL and reports whether the content CHANGED since you vetted it (status: changed/unchanged/unreachable). Only github.com/raw.githubusercontent.com URLs.",
+        "description": "Rug-pull watch for a GitHub-hosted SKILL.md. Modes: create (pass url, optional webhook_url for auto-alerts), check (pass watch_id -> changed/unchanged/unreachable), list (pass list=true), delete (pass delete=<watch_id>). Only github.com/raw.githubusercontent.com URLs.",
         "inputSchema": {
             "type": "object",
             "properties": {
                 "api_key": {"type": "string"},
                 "url": {"type": "string", "description": "github.com blob or raw URL (required when creating)"},
                 "watch_id": {"type": "string", "description": "existing watch to check"},
-                "webhook_url": {"type": "string", "description": "optional Discord/Slack webhook; fires automatically when content changes"}
+                "webhook_url": {"type": "string", "description": "optional Discord/Slack webhook; fires automatically when content changes"},
+                "list": {"type": "boolean", "description": "set true to list all your watches"},
+                "delete": {"type": "string", "description": "watch_id to remove"}
             },
             "required": ["api_key"],
         },
@@ -294,6 +296,28 @@ def _call_tool(name, args, client_ip: str = ""):
         record = get_account(api_key)
         if record is None:
             return _tool_result({"error": "unknown api_key"})
+        # PT-T57: list & delete parity with the REST endpoint
+        if args.get("list"):
+            try:
+                from .scans import list_watches
+            except ImportError:
+                from scans import list_watches
+            ok_l2, err_l2 = idx._soft_rate_limit(api_key[:24], 20, "wchk_")
+            if not ok_l2:
+                return _tool_result({"error": err_l2})
+            items = list_watches(api_key[:24])
+            return _tool_result({"disclaimer": idx.DISCLAIMER, "count": len(items), "watches": items})
+        if args.get("delete"):
+            try:
+                from .scans import delete_watch
+            except ImportError:
+                from scans import delete_watch
+            ok_d2, err_d2 = idx._soft_rate_limit(api_key[:24], 200, "wchk_")
+            if not ok_d2:
+                return _tool_result({"error": err_d2})
+            removed = delete_watch(str(args["delete"]), api_key[:24])
+            return _tool_result({"disclaimer": idx.DISCLAIMER, "deleted": removed,
+                                 **({} if removed else {"note": "unknown watch_id or not yours"})})
         if watch_id:
             out = idx.watch_check(api_key, str(watch_id))
             if out is None:
