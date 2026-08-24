@@ -757,6 +757,21 @@ def test_badge_trend_off_by_default(monkeypatch):
     assert st == 200 and "↓" not in body.decode()
 
 
+def test_watch_webhook_validation(monkeypatch):
+    monkeypatch.setattr(webapp, "get_account", lambda k: {"api_key": k})
+    monkeypatch.setattr(webapp, "_fetch_skill_url", lambda u: "---\nname: ok\ndescription: fine\n---\n\nhello")
+    # ungueltiger Hook -> 400, kein Watch angelegt
+    payload_b = json.dumps({"api_key": "k" * 20, "url": "https://github.com/o/r/blob/main/SKILL.md",
+                            "webhook_url": "https://evil.example/hook"}).encode()
+    captured = {}
+    def sr(status, headers_):
+        captured["status"] = int(status.split()[0])
+    body = b"".join(webapp.app({"REQUEST_METHOD": "POST", "PATH_INFO": "/api/watch",
+                                "CONTENT_LENGTH": str(len(payload_b)), "QUERY_STRING": "",
+                                "wsgi.input": io.BytesIO(payload_b)}, sr))
+    assert captured["status"] == 400 and "Discord or Slack" in body.decode()
+
+
 def test_badge_styles(monkeypatch):
     """badge ?style= variants: flat (default), flat-square, round; invalid falls back."""
     monkeypatch.setattr(webapp, "get_scan_record",

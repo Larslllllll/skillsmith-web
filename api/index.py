@@ -1090,7 +1090,35 @@ def handle_similar(environ, start_response):
         return [json.dumps({"error": str(e)}).encode()]
 
 
-def watch_create(api_key: str, url: str) -> dict:
+def _valid_watch_webhook(url) -> bool:
+    """PT-T38: outbound webhooks are restricted to Discord/Slack endpoints so
+    a stored watch can never be turned into an arbitrary-URL SSRF probe."""
+    return (isinstance(url, str) and (
+        url.startswith("https://discord.com/api/webhooks/")
+        or url.startswith("https://discordapp.com/api/webhooks/")
+        or url.startswith("https://hooks.slack.com/services/")))
+
+
+def _deliver_watch_webhook(rec: dict) -> str:
+    """Best-effort POST on status change. Returns delivery note for the record."""
+    hook = rec.get("webhook_url") or ""
+    if not hook or not _valid_watch_webhook(hook):
+        return "skipped_invalid_or_missing"
+    try:
+        payload = json.dumps({
+            "text": f"[skillsmith] RUG-PULL ALERT: watched skill content CHANGED ({rec.get('url','')})",
+            "content": f"🚨 [skillsmith] Rug-pull alert: watched SKILL.md changed: {rec.get('url','')} (watch_id {rec['watch_id']})",
+            "watch_id": rec["watch_id"], "status": "changed",
+            "baseline_sha256": rec.get("baseline_sha256"), "current_sha256": rec.get("last_sha256"),
+        }).encode()
+        req_u = urllib.request.Request(hook, data=payload, headers={"Content-Type": "application/json"})
+        urllib.request.urlopen(req_u, timeout=5)
+        return "delivered"
+    except Exception as e113:  # noqa: BLE001 - delivery is best-effort
+        return f"failed:{str(e113)[:80]}"
+
+
+def watch_create(api_key: str, url: str, webhook_url: str = "") -> dict:
     """Create a rug-pull watch for one GitHub-hosted SKILL.md.
     Raises ValueError with a client-safe message on any rejection."""
     try:
@@ -1112,8 +1140,10 @@ def watch_create(api_key: str, url: str) -> dict:
         text = _fetch_skill_url(url.strip())
     except Exception as e:  # noqa: BLE001 - includes non-github URLs
         raise ValueError(f"cannot fetch url: {e}; only github.com blob URLs and raw.githubusercontent.com URLs are allowed")
+    if webhook_url and not _valid_watch_webhook(webhook_url):
+        raise ValueError("webhook_url must be a Discord or Slack webhook (https://discord.com/api/webhooks/... or https://hooks.slack.com/services/...)")
     digest = sha256_of(text)
-    rec = create_watch(url.strip(), digest)
+    rec = create_watch(url.strip(), digest, webhook_url=webhook_url.strip()[:300])
     rec["owner"] = api_key[:24]  # PT-T11: ownership binding
     update_watch(rec)
     _bput(rl_path, {"count": rl.get("count", 0) + 1})
@@ -1143,6 +1173,9 @@ def watch_check(api_key: str, watch_id: str) -> dict | None:
     rec["last_status"] = "changed" if changed else ("unchanged" if current_sha else "unreachable")
     if changed and not rec.get("changed_at"):
         rec["changed_at"] = time.time()
+    if rec["last_status"] == "changed" and rec.get("webhook_url"):
+        # PT-T38: push notification on rug-pull (Discord/Slack only, best-effort)
+        rec["webhook_delivery"] = _deliver_watch_webhook(rec)
     update_watch(rec)
     return {"watch_id": watch_id, "status": rec["last_status"],
             "baseline_sha256": rec.get("baseline_sha256"), "current_sha256": current_sha,
@@ -1176,7 +1209,7 @@ def handle_watch(environ, start_response):
                 start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
                 return [json.dumps({"error": "url required (github.com blob or raw URL)"}).encode()]
             try:
-                out = watch_create(api_key, url)
+                out = watch_create(api_key, url, webhook_url=payload.get("webhook_url", ""))
             except PermissionError:
                 start_response("401 Unauthorized", [("Content-Type", "application/json")] + _CORS_HEADERS)
                 return [json.dumps({"error": "unknown api_key"}).encode()]

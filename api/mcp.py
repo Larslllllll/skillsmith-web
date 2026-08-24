@@ -103,7 +103,8 @@ TOOLS = [
             "properties": {
                 "api_key": {"type": "string"},
                 "url": {"type": "string", "description": "github.com blob or raw URL (required when creating)"},
-                "watch_id": {"type": "string", "description": "existing watch to check"}
+                "watch_id": {"type": "string", "description": "existing watch to check"},
+                "webhook_url": {"type": "string", "description": "optional Discord/Slack webhook; fires automatically when content changes"}
             },
             "required": ["api_key"],
         },
@@ -300,7 +301,7 @@ def _call_tool(name, args, client_ip: str = ""):
             return _tool_result({"disclaimer": idx.DISCLAIMER, **out})
         url = args.get("url", "")
         try:
-            out = idx.watch_create(api_key, url)
+            out = idx.watch_create(api_key, url, webhook_url=args.get("webhook_url", ""))
         except PermissionError:
             return _tool_result({"error": "unknown api_key"})
         except ValueError as e:
