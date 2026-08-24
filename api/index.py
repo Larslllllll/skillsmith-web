@@ -685,6 +685,8 @@ def handle_scan_pro(environ, start_response):
             allowed, quota_info = check_and_consume_quota(api_key)
             results = []
             for f in files:
+                if not isinstance(f, dict):
+                    raise ValueError("files must be a list of {name, text} objects")
                 name = str(f.get("name", "SKILL.md"))[:200]
                 text = f.get("text", "")
                 if not isinstance(text, str) or len(text) > 100_000:
