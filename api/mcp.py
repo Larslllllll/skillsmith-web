@@ -285,7 +285,10 @@ def _call_tool(name, args, client_ip: str = ""):
         rl = _abg(rl_path) or {"count": 0}
         if int(rl.get("count", 0)) >= 20:
             return _tool_result({"error": "too many reports today (20/day/key)"})
-        from scans import add_report as _add_report  # noqa: PLC0415 - lazy like the rest
+        try:
+            from .scans import add_report as _add_report
+        except ImportError:
+            from scans import add_report as _add_report
         tally = _add_report(digest, {"verdict": verdict, "comment": comment[:500], "via": "mcp"})
         _abput(rl_path, {"count": int(rl.get("count", 0)) + 1})
         return _tool_result({"ok": True, **tally})
