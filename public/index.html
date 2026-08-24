@@ -1097,6 +1097,7 @@ loadRegistry();
     var risk = s.by_risk || {};
     el.textContent = '📊 ' + s.total_scans + ' scans performed · ' +
       (risk.clean || 0) + ' clean, ' + ((risk.low || 0) + (risk.medium || 0) + (risk.high || 0)) + ' flagged' +
+      (s.published ? ' · ' + s.published + ' published clean skills' : '') +
       ' · automated heuristic verdicts';
     el.style.display = 'block';
   }).catch(function () {});

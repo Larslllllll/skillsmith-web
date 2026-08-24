@@ -996,15 +996,28 @@ def handle_report(environ, start_response):
         return [json.dumps({"error": str(e)}).encode()]
 
 
+_stats_cache = {"t": 0.0, "published": None}
+
+
 def handle_stats(environ, start_response):
     """GET /api/stats -- aggregate global scan counters (no per-user data)."""
     try:
         stats = get_stats()
+        # published count needs a registry listing; cache it for 60s like the
+        # feed so the public stats bar never costs a listing per view.
+        now_s = time.time()
+        if _stats_cache["published"] is None or now_s - _stats_cache["t"] >= 60:
+            try:
+                _stats_cache["published"] = len(list_safe_registry(limit=200))
+            except Exception:  # noqa: BLE001 - cosmetic counter, never fail
+                _stats_cache["published"] = _stats_cache["published"] or 0
+            _stats_cache["t"] = now_s
         start_response("200 OK", [("Content-Type", "application/json"),
                                   ("Cache-Control", "public, max-age=60")] + _CORS_HEADERS)
         return [json.dumps({"disclaimer": DISCLAIMER,
                             "total_scans": int(stats.get("total_scans", 0)),
                             "by_risk": stats.get("by_risk", {}),
+                            "published": _stats_cache["published"],
                             "updated_at": stats.get("updated_at")}).encode()]
     except Exception as e:  # noqa: BLE001
         start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
