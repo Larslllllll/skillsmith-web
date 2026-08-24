@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root { --bg:#0B0E14; --surface:#151921; --border:#2A3140; --text:#D8DEE9;
+        --text-muted:#9AA5B1; --accent:#7EE3C3; }
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:760px; padding:2rem 1.2rem 4rem;
+       background:var(--bg); color:var(--text); line-height:1.65;
+       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; font-size:16px; }
+a { color:var(--accent); }
+h1 { font-size:1.7rem; line-height:1.25; }
+h2 { font-size:1.25rem; margin-top:2.2rem; border-bottom:1px solid var(--border); padding-bottom:.35rem; }
+h3 { font-size:1.05rem; }
+code, pre { background:var(--surface); border:1px solid var(--border);
+            border-radius:6px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
+code { padding:.12rem .35rem; font-size:.9em; }
+pre { padding:.9rem 1rem; overflow-x:auto; line-height:1.5; }
+blockquote { border-left:3px solid var(--accent); margin-left:0; padding:.2rem 1rem;
+             color:var(--text-muted); }
+table { border-collapse:collapse; width:100%; }
+td, th { border:1px solid var(--border); padding:.45rem .6rem; text-align:left; }
+.backlink { font-size:.9rem; }
+.meta { color:var(--text-muted); font-size:.85rem; }
+</style>
+<title>Writing a Safe SKILL.md: An Author's Checklist — skillsmith</title>
+<meta name="description" content="Author-side security for Claude Agent Skills: honest frontmatter, scoped instructions, minimal pinned dependencies, rug-pull-proof hosting, and a pre-ship checklist.">
+<meta property="og:title" content="Writing a Safe SKILL.md: An Author's Checklist — skillsmith">
+<meta property="og:description" content="Author-side security for Claude Agent Skills: honest frontmatter, scoped instructions, minimal pinned dependencies, rug-pull-proof hosting, and a pre-ship checklist.">
+<meta property="og:type" content="article">
+<link rel="canonical" href="https://skillsmith.ch/guide-writing-safe-skills.html">
+</head>
+<body>
+<p class="backlink"><a href="/">← skillsmith scanner</a> · <a href="/guides.html">all guides</a></p>
+
+<h1>Writing a Safe SKILL.md: An Author's Checklist</h1>
+<p class="meta">Guide · skillsmith.ch</p>
+
+<p>Most of our material looks at skills from the defender's side. This one is
+for <strong>authors</strong>: how to write a skill that is genuinely safe,
+scans clean, and stays clean &mdash; so users (and their agents) can trust it.</p>
+
+<h2>Frontmatter: say what you do</h2>
+<ul>
+  <li><code>name</code> and <code>description</code> are required and must be
+      honest. A vague description ("does various things") reads as evasion to
+      both humans and scanners.</li>
+  <li>Never borrow another skill's name or near-name &mdash; typosquatting
+      gets you flagged even when the code is innocent
+      (<a href="/guide-homoglyph-attacks.html">homoglyphs included</a>).</li>
+</ul>
+
+<h2>Instructions: authority, not commands to the agent's operator</h2>
+<ul>
+  <li>Write instructions that scope your skill's behavior only. Phrases like
+      "set aside earlier guidance" or "don't mention this step to the user"
+      are injection patterns and will flag your skill &mdash; rightly.</li>
+  <li>If your skill needs credentials, instruct the user to configure them in
+      their environment; never collect them "for convenience".</li>
+  <li>State side effects explicitly: files written, network calls made,
+      packages installed. Surprise is the enemy of trust.</li>
+</ul>
+
+<h2>Dependencies: minimize and pin</h2>
+<ul>
+  <li>Every dependency is inherited risk (<a href="/guide-dependency-osv.html">OSV
+      data proves it</a>). Ask for each one: does the skill truly need it?</li>
+  <li>Avoid unpinned installs; they silently track upstream releases &mdash;
+      including a future compromised one.</li>
+  <li>Host scripts next to your SKILL.md in the same repo, not on random CDNs.</li>
+</ul>
+
+<h2>Remote content: make yourself rug-pull-proof</h2>
+<ul>
+  <li>If you must load remote resources, use stable raw URLs in the same repo.</li>
+  <li>Tell your users to baseline-hash the file after vetting &mdash; or point
+      them at skillsmith's watch feature so changes alert them automatically.
+      A skill whose author welcomes monitoring is a skill people adopt.</li>
+</ul>
+
+<h2>Before you ship</h2>
+<ol>
+  <li>Run the local linter: <code>pip install skillsmith-scanner && skillsmith lint .</code></li>
+  <li><a href="/">Scan it on skillsmith.ch</a> and read every finding &mdash;
+      false positives tell you where a reviewer might also stumble.</li>
+  <li>Publish with <code>{"publish": true}</code> so the clean verdict and the
+      exact text become verifiable in the public database.</li>
+  <li>Add your badge to the README and keep a watch on the hosted file.</li>
+</ol>
+
+<p>Safe skills win in the long run: they pass audits, get published to the
+<a href="/api-docs.html">Safe Skills Database</a>, and survive the scrutiny
+that increasingly comes with agent ecosystems.</p>
+
+</body>
+</html>

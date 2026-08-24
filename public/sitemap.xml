@@ -78,6 +78,12 @@
     <priority>0.8</priority>
     <lastmod>2026-08-24</lastmod>
   </url>
+  <url>
+    <loc>https://skillsmith.ch/guide-writing-safe-skills.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <lastmod>2026-08-24</lastmod>
+  </url>
 <url>
     <loc>https://skillsmith.ch/api-docs.html</loc>
     <changefreq>monthly</changefreq>
