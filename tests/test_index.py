@@ -644,3 +644,32 @@ def test_watch_ownership(monkeypatch):
     resp_o = b"".join(webapp.handle_watch(environ_o, lambda s, h: statuses.append(s)))
     assert statuses[0].startswith("200")
     assert json.loads(resp_o)["status"] == "unchanged"
+
+
+def test_feed_xml(monkeypatch):
+    """GET /feed.xml renders an Atom feed from the safe registry."""
+    entries = [
+        {"sha256": "a" * 64, "name": "nice-skill <v2>", "last_seen_at": 1724400000,
+         "first_seen_at": 1724400000, "risk_level": "clean"},
+        {"sha256": "bad", "name": "invalid-sha-must-be-skipped"},
+        {"sha256": "b" * 64, "name": "other", "last_seen_at": 1724300000},
+    ]
+    import scans as _sm
+    monkeypatch.setattr(_sm, "list_safe_registry", lambda limit=20: entries)
+    environ = {"REQUEST_METHOD": "GET", "PATH_INFO": "/feed.xml"}
+    statuses = []
+    resp = b"".join(webapp.handle_feed(environ, lambda s, h: statuses.append(s)))
+    assert statuses[0].startswith("200")
+    body = resp.decode()
+    assert "<feed" in body and body.count("<entry>") == 2
+    assert "nice-skill &lt;v2&gt;" in body  # XML-escaped
+    import xml.etree.ElementTree as ET
+    root = ET.fromstring(body)
+    ns = {"a": "http://www.w3.org/2005/Atom"}
+    titles = [e.findtext("a:title", "", ns) for e in root.findall("a:entry", ns)]
+    assert titles == ["nice-skill <v2>", "other"]
+
+def test_feed_get_only():
+    """Router answers 405 for non-GET /feed.xml."""
+    status, body = _wsgi("POST", "/feed.xml")
+    assert status in (404, 405), status

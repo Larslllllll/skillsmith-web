@@ -1141,6 +1141,52 @@ def handle_watch(environ, start_response):
         return [json.dumps({"error": str(e)}).encode()]
 
 
+def handle_feed(environ, start_response):
+    """GET /feed.xml -- Atom feed of recently registry-clean agent skills
+    (automated heuristic verdicts only, see DISCLAIMER). Cached 5 min."""
+    from xml.sax.saxutils import escape as xesc
+    try:
+        try:
+            from .scans import list_safe_registry
+        except ImportError:
+            from scans import list_safe_registry
+        entries = list_safe_registry(limit=20)
+        now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        parts = ['<?xml version="1.0" encoding="utf-8"?>',
+                 '<feed xmlns="http://www.w3.org/2005/Atom">',
+                 "  <title>skillsmith — recently verified-clean agent skills</title>",
+                 "  <id>https://skillsmith.ch/feed.xml</id>",
+                 f"  <updated>{now}</updated>",
+                 '  <link href="https://skillsmith.ch/" rel="alternate"/>',
+                 "  <subtitle>Automated static-heuristic CLEAN verdicts only. "
+                 "Not a manual audit. " + DISCLAIMER + "</subtitle>"]
+        for e in entries:
+            sha = e.get("sha256", "")
+            if not _valid_sha256(sha):
+                continue
+            name = e.get("name") or sha[:12]
+            seen = e.get("last_seen_at") or e.get("first_seen_at") or 0
+            iso = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(float(seen))) if seen else now
+            url = f"https://skillsmith.ch/skill.html?sha256={sha}"
+            parts += [  # noqa: PERF - readability over micro-perf here
+                "  <entry>",
+                f"    <title>{xesc(name)}</title>",
+                f"    <id>{url}</id>",
+                f'    <link rel="alternate" type="text/html" href="{url}"/>',
+                f"    <updated>{iso}</updated>",
+                "    <summary>Static-heuristic verdict: clean (no sandbox, no manual audit). "
+                f"sha256: {sha[:16]}...</summary>",
+                "  </entry>"]
+        parts.append("</feed>")
+        body = ("\n".join(parts)).encode("utf-8")
+        start_response("200 OK", [("Content-Type", "application/atom+xml; charset=utf-8"),
+                                  ("Cache-Control", "public, max-age=300")] + _CORS_HEADERS)
+        return [body]
+    except Exception as e:  # noqa: BLE001
+        start_response("500 Internal Server Error", [("Content-Type", "application/json")] + _CORS_HEADERS)
+        return [json.dumps({"error": str(e)}).encode()]
+
+
 def handle_signup(environ, start_response, method):
     if method == "GET":
         qs = environ.get("QUERY_STRING", "")
@@ -1553,6 +1599,12 @@ def _app_inner(environ, start_response):
 
     if path.rstrip("/").endswith("/api/watch"):
         return handle_watch(environ, start_response)
+
+    if path.rstrip("/") == "/feed.xml":
+        if method != "GET":
+            start_response("405 Method Not Allowed", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": "GET only"}).encode()]
+        return handle_feed(environ, start_response)
 
     if path.rstrip("/").endswith("/api/stats"):
         return handle_stats(environ, start_response)

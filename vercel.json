@@ -2,6 +2,10 @@
   "version": 2,
   "routes": [
     {
+      "src": "/feed.xml",
+      "dest": "/api/index.py"
+    },
+    {
       "src": "/api/scan_pro",
       "dest": "/api/index.py"
     },
