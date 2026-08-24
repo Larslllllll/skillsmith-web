@@ -1242,6 +1242,7 @@ def handle_watch(environ, start_response):
 
         # GET: on-demand check -- or ?list=1 for all watches owned by this key
         qs = urllib.parse.parse_qs(environ.get("QUERY_STRING", ""))
+        api_key = _get_qs_api_key(environ) or ""
         if (qs.get("list") or [""])[0] in ("1", "true"):
             try:
                 from .scans import list_watches
@@ -1256,7 +1257,6 @@ def handle_watch(environ, start_response):
             return [json.dumps({"disclaimer": DISCLAIMER, "count": len(items),
                                 "watches": items}).encode()]
         wid = (qs.get("watch_id") or [""])[0]
-        api_key = _get_qs_api_key(environ) or ""
         if not re.fullmatch(r"[A-Za-z0-9_-]{10,40}", wid):
             start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
             return [json.dumps({"error": "watch_id required"}).encode()]
