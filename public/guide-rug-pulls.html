@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root { --bg:#0B0E14; --surface:#151921; --border:#2A3140; --text:#D8DEE9;
+        --text-muted:#9AA5B1; --accent:#7EE3C3; }
+* { box-sizing:border-box; }
+body { margin:0 auto; max-width:760px; padding:2rem 1.2rem 4rem;
+       background:var(--bg); color:var(--text); line-height:1.65;
+       font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; font-size:16px; }
+a { color:var(--accent); }
+h1 { font-size:1.7rem; line-height:1.25; }
+h2 { font-size:1.25rem; margin-top:2.2rem; border-bottom:1px solid var(--border); padding-bottom:.35rem; }
+h3 { font-size:1.05rem; }
+code, pre { background:var(--surface); border:1px solid var(--border);
+            border-radius:6px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
+code { padding:.12rem .35rem; font-size:.9em; }
+pre { padding:.9rem 1rem; overflow-x:auto; line-height:1.5; }
+blockquote { border-left:3px solid var(--accent); margin-left:0; padding:.2rem 1rem;
+             color:var(--text-muted); }
+table { border-collapse:collapse; width:100%; }
+td, th { border:1px solid var(--border); padding:.45rem .6rem; text-align:left; }
+.backlink { font-size:.9rem; }
+.meta { color:var(--text-muted); font-size:.85rem; }
+</style>
+<title>Rug Pulls: When a Vetted Skill Turns Malicious Later — skillsmith</title>
+<meta name="description" content="Why one-time vetting of agent skills fails: silent mutations, social timing, indirect flips - and a pin-baseline-watch-recheck defense with automatic alerts.">
+<meta property="og:title" content="Rug Pulls: When a Vetted Skill Turns Malicious Later — skillsmith">
+<meta property="og:description" content="Why one-time vetting of agent skills fails: silent mutations, social timing, indirect flips - and a pin-baseline-watch-recheck defense with automatic alerts.">
+<meta property="og:type" content="article">
+<link rel="canonical" href="https://skillsmith.ch/guide-rug-pulls.html">
+</head>
+<body>
+<p class="backlink"><a href="/">← skillsmith scanner</a> · <a href="/guides.html">all guides</a></p>
+
+<h1>Rug Pulls: When a Vetted Skill Turns Malicious Later</h1>
+<p class="meta">Guide · skillsmith.ch</p>
+
+<p>You scanned a skill, it came back clean, you installed it. Three weeks later
+it exfiltrates credentials. Nothing about <em>your</em> review was wrong &mdash;
+the skill simply changed after you looked at it. That is a rug pull, and it is
+the most underrated attack against agent ecosystems.</p>
+
+<h2>Why vetting once is not enough</h2>
+<ul>
+  <li><strong>Packages mutate silently:</strong> a GitHub-hosted SKILL.md is a
+      live file, not a snapshot. Whoever has push access can rewrite it any
+      time &mdash; your "clean" verdict describes a version that no longer exists.</li>
+  <li><strong>Social timing:</strong> the classic pattern is publish clean,
+      accumulate installs and stars, then flip. The flip lands exactly when the
+      trust around the skill peaks.</li>
+  <li><strong>Indirect flips:</strong> the SKILL.md stays innocent but swaps the
+      remote script it loads &mdash; same effect, harder to notice.</li>
+</ul>
+
+<h2>What a defense looks like</h2>
+<ol>
+  <li><strong>Pin, don't float:</strong> reference the exact commit hash, not a
+      branch. A branch pointer follows every change; a hash cannot lie.</li>
+  <li><strong>Baseline the content you vetted:</strong> record the SHA-256 of
+      the exact text you approved. This is what
+      skillsmith's watch does: <code>POST /api/watch {url}</code> stores the
+      baseline hash of a GitHub-hosted skill.</li>
+  <li><strong>Re-check on your schedule:</strong> a watch check re-fetches the
+      URL and compares hashes &mdash; unchanged / changed / unreachable. With an
+      optional Discord or Slack webhook you get pushed an alert automatically,
+      no manual polling.</li>
+  <li><strong>Treat "changed" as hostile until proven otherwise:</strong> a
+      changed hash means everything you read during review is void. Re-run the
+      full <a href="/guide-audit-checklist.html">checklist</a>, not just a diff
+      skim &mdash; and consider that the change may be timed for a moment you are
+      distracted.</li>
+</ol>
+
+<h2>Detection limits, honestly stated</h2>
+<ul>
+  <li>Hash watching detects <em>any</em> change &mdash; including harmless typo
+      fixes. Expect some noise; the point is that silence is never assumed.</li>
+  <li>A watcher cannot see commits that were flipped and flipped back between
+      checks. Frequent checks shrink this window.</li>
+  <li>If the author rotates the hosted URL entirely, the old watch goes
+      unreachable &mdash; treat unreachable as a signal too.</li>
+</ul>
+
+<h2>The full loop</h2>
+<p>Scan (<a href="/">skillsmith.ch</a>) &rarr; behavioral sandbox
+(<a href="/analysis.html">analysis</a>) &rarr; watch with webhook &rarr; alert
+on change &rarr; re-audit. Related reading:
+<a href="/guide-malicious-skills.html">anatomy of a malicious skill</a>,
+<a href="/guide-threat-modeling.html">threat modeling</a>.</p>
+
+</body>
+</html>
