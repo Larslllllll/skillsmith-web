@@ -1240,8 +1240,21 @@ def handle_watch(environ, start_response):
             return [json.dumps({"disclaimer": DISCLAIMER, **out,
                                 "note": "check anytime via GET /api/watch?watch_id=...&api_key=..."}).encode()]
 
-        # GET: on-demand check
+        # GET: on-demand check -- or ?list=1 for all watches owned by this key
         qs = urllib.parse.parse_qs(environ.get("QUERY_STRING", ""))
+        if (qs.get("list") or [""])[0] in ("1", "true"):
+            try:
+                from .scans import list_watches
+            except ImportError:
+                from scans import list_watches
+            ok_l, err_l = _soft_rate_limit(api_key[:24], 20, "wchk_")
+            if not ok_l:
+                start_response("429 Too Many Requests", [("Content-Type", "application/json")] + _CORS_HEADERS)
+                return [json.dumps({"error": err_l}).encode()]
+            items = list_watches(api_key[:24])
+            start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"disclaimer": DISCLAIMER, "count": len(items),
+                                "watches": items}).encode()]
         wid = (qs.get("watch_id") or [""])[0]
         api_key = _get_qs_api_key(environ) or ""
         if not re.fullmatch(r"[A-Za-z0-9_-]{10,40}", wid):

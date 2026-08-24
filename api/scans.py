@@ -288,6 +288,30 @@ def get_watch(watch_id: str) -> dict | None:
     return _blob_get(_watch_path(watch_id))
 
 
+def list_watches(owner_prefix: str, limit: int = 50) -> list:
+    """PT-T50: all watches owned by one api_key prefix.
+    Listing-based; capped to keep the blob-listing cost bounded. Note this
+    scans up to 200 watch records -- fine at current scale, revisit with a
+    per-owner index if watch volume grows."""
+    url = f"{BLOB_API_BASE}/?prefix=watch/&limit=200"
+    req = urllib.request.Request(url, headers=_blob_headers(), method="GET")
+    out = []
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            listing = json.loads(resp.read().decode())
+    except Exception:  # noqa: BLE001 - listing failure -> empty, never fail
+        return out
+    for b in listing.get("blobs", []):
+        rec = _blob_get(b["pathname"].rsplit(".", 1)[0])
+        if not rec or rec.get("owner") != owner_prefix:
+            continue
+        out.append({k: rec.get(k) for k in ("watch_id", "url", "last_status",
+                                            "checks", "created_at", "changed_at")})
+        if len(out) >= max(1, min(limit, 100)):
+            break
+    return out
+
+
 def update_watch(rec: dict) -> None:
     _blob_put(_watch_path(rec["watch_id"]), rec)
 
