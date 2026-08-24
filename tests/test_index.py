@@ -876,6 +876,29 @@ def test_delete_watch_edge_cases(monkeypatch):
     assert sc_t3.delete_watch("W2", "o" * 24) is False and len(purged) == 0
 
 
+def test_scan_url_allowlist_bypass_battery():
+    # PT-T70: klassische Allowlist-Umgehungen muessen scheitern (anchored regexes)
+    import index as idx2
+    blob_re = idx2.GITHUB_BLOB_RE
+    raw_re = idx2.GITHUB_RAW_RE
+    rejects = [
+        "https://evil.com/github.com/a/b/blob/main/SKILL.md",
+        "https://github.com.evil.com/a/b/blob/main/SKILL.md",
+        "https://github.com@evil.com/a/b/blob/main/SKILL.md",
+        "https://github.com:8443/a/b/blob/main/SKILL.md",
+        "https://gíthub.com/a/b/blob/main/SKILL.md",
+        "HTTPS://GITHUB.COM/a/b/blob/main/SKILL.md",
+        "https://raw.githubusercontent.com.evil.com/a/b/c/SKILL.md",
+        "http://github.com/a/b/blob/main/SKILL.md",
+    ]
+    for u in rejects:
+        assert not blob_re.match(u), u
+        assert not raw_re.match(u), u
+    # legitime URLs matchen weiterhin
+    assert blob_re.match("https://github.com/o/r/blob/main/SKILL.md")
+    assert raw_re.match("https://raw.githubusercontent.com/o/r/main/SKILL.md")
+
+
 def test_badge_styles(monkeypatch):
     """badge ?style= variants: flat (default), flat-square, round; invalid falls back."""
     monkeypatch.setattr(webapp, "get_scan_record",
