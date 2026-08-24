@@ -178,7 +178,7 @@ def test_publish_content_constants_and_wiring():
 def test_mcp_tools_list_registered():
     import mcp as mcp_mod
     names = {t["name"] for t in mcp_mod.TOOLS}
-    assert names == {"scan_skill", "lookup_hash", "get_skill_content", "list_safe_skills", "skillsmith_signup", "whoami", "analyze_behavior", "file_report", "find_similar"}
+    assert names == {"scan_skill", "lookup_hash", "get_skill_content", "list_safe_skills", "skillsmith_signup", "whoami", "analyze_behavior", "file_report", "find_similar", "watch_skill"}
 
 
 def test_mcp_initialize_and_unknown_method():
@@ -562,9 +562,9 @@ def test_similar_masks_unpublished_names(monkeypatch):
 def test_watch_wiring(monkeypatch):
     """PT-T4 follow-up: /api/watch validates auth + restricts URLs to GitHub."""
     import inspect
-    assert "handle_watch" in inspect.getsource(webapp._app_inner)
-    # SSRF-Schutz dokumentiert/praesent
-    assert "_fetch_skill_url" in inspect.getsource(webapp.handle_watch)
+    import inspect as _insp
+    src_all = _insp.getsource(webapp.handle_watch) + _insp.getsource(webapp.watch_create)
+    assert "_fetch_skill_url" in src_all  # SSRF-Schutz via Allow-list-Fetch
 
     # POST ohne key -> 401
     body = json.dumps({"url": "https://github.com/x/y/blob/main/SKILL.md"}).encode()

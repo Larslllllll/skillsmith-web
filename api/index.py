@@ -1060,6 +1060,66 @@ def handle_similar(environ, start_response):
         return [json.dumps({"error": str(e)}).encode()]
 
 
+def watch_create(api_key: str, url: str) -> dict:
+    """Create a rug-pull watch for one GitHub-hosted SKILL.md.
+    Raises ValueError with a client-safe message on any rejection."""
+    try:
+        from .scans import create_watch, update_watch, sha256_of
+        from .account import _blob_path as _bp, _blob_get as _bg, _blob_put as _bput
+    except ImportError:
+        from scans import create_watch, update_watch, sha256_of
+        from account import _blob_path as _bp, _blob_get as _bg, _blob_put as _bput
+    if get_account(api_key) is None:
+        raise PermissionError("unknown api_key")
+    if not isinstance(url, str) or not url.strip():
+        raise ValueError("url required (github.com blob or raw URL)")
+    day = time.strftime("%Y-%m-%d", time.gmtime())
+    rl_path = _bp(f"watch_rl/{api_key[:24]}-{day}.json")
+    rl = _bg(rl_path) or {"count": 0}
+    if rl.get("count", 0) >= 10:
+        raise ValueError("too many watches today (10/day/key)")
+    try:
+        text = _fetch_skill_url(url.strip())
+    except Exception as e:  # noqa: BLE001 - includes non-github URLs
+        raise ValueError(f"cannot fetch url: {e}; only github.com blob URLs and raw.githubusercontent.com URLs are allowed")
+    digest = sha256_of(text)
+    rec = create_watch(url.strip(), digest)
+    rec["owner"] = api_key[:24]  # PT-T11: ownership binding
+    update_watch(rec)
+    _bput(rl_path, {"count": rl.get("count", 0) + 1})
+    return {"watch_id": rec["watch_id"], "baseline_sha256": digest}
+
+
+def watch_check(api_key: str, watch_id: str) -> dict | None:
+    """On-demand rug-pull check for one owned watch. Returns None when the
+    watch does not exist or belongs to another account (no oracle)."""
+    try:
+        from .scans import get_watch, update_watch, sha256_of
+    except ImportError:
+        from scans import get_watch, update_watch, sha256_of
+    rec = get_watch(watch_id)
+    if rec is None or (rec.get("owner") and rec.get("owner") != api_key[:24]):
+        return None
+    current_sha, fetch_error = None, None
+    try:
+        text = _fetch_skill_url(rec["url"])
+        current_sha = sha256_of(text)
+    except Exception as e:  # noqa: BLE001 - unreachable is a valid state
+        fetch_error = str(e)[:200]
+    changed = bool(current_sha and current_sha != rec.get("baseline_sha256"))
+    rec["checks"] = int(rec.get("checks", 0)) + 1
+    rec["last_checked_at"] = time.time()
+    rec["last_sha256"] = current_sha
+    rec["last_status"] = "changed" if changed else ("unchanged" if current_sha else "unreachable")
+    if changed and not rec.get("changed_at"):
+        rec["changed_at"] = time.time()
+    update_watch(rec)
+    return {"watch_id": watch_id, "status": rec["last_status"],
+            "baseline_sha256": rec.get("baseline_sha256"), "current_sha256": current_sha,
+            "fetch_error": fetch_error, "checks": rec["checks"],
+            "last_checked_at": rec["last_checked_at"]}
+
+
 def handle_watch(environ, start_response):
     """POST /api/watch {api_key, url} -> watch a published GitHub SKILL.md for
     rug-pulls: we store the content hash as baseline. GET
@@ -1085,34 +1145,17 @@ def handle_watch(environ, start_response):
             if not isinstance(url, str) or not url.strip():
                 start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
                 return [json.dumps({"error": "url required (github.com blob or raw URL)"}).encode()]
-            # flood guard: 10 watches/key/day
             try:
-                from .account import _blob_path as _bp, _blob_get as _bg, _blob_put as _bput
-            except ImportError:
-                from account import _blob_path as _bp, _blob_get as _bg, _blob_put as _bput
-            day = time.strftime("%Y-%m-%d", time.gmtime())
-            rl_path = _bp(f"watch_rl/{api_key[:24]}-{day}.json")
-            rl = _bg(rl_path) or {"count": 0}
-            if rl.get("count", 0) >= 10:
-                start_response("429 Too Many Requests", [("Content-Type", "application/json")] + _CORS_HEADERS)
-                return [json.dumps({"error": "too many watches today (10/day/key)"}).encode()]
-            try:
-                text = _fetch_skill_url(url.strip())
-            except Exception as e:  # noqa: BLE001 - includes non-github URLs
-                start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
-                return [json.dumps({"error": f"cannot fetch url: {e}",
-                                    "hint": "only github.com blob URLs and raw.githubusercontent.com URLs are allowed"}).encode()]
-            digest = sha256_of(text)
-            rec = create_watch(url.strip(), digest)
-            # PT-T11: bind the watch to its creator so other accounts cannot
-            # read it or trigger checks against it (404, not 403: no oracle).
-            rec["owner"] = api_key[:24]
-            update_watch(rec)
-            _bput(rl_path, {"count": rl.get("count", 0) + 1})
+                out = watch_create(api_key, url)
+            except PermissionError:
+                start_response("401 Unauthorized", [("Content-Type", "application/json")] + _CORS_HEADERS)
+                return [json.dumps({"error": "unknown api_key"}).encode()]
+            except ValueError as e:
+                status = "429 Too Many Requests" if "too many watches" in str(e) else "400 Bad Request"
+                start_response(status, [("Content-Type", "application/json")] + _CORS_HEADERS)
+                return [json.dumps({"error": str(e)}).encode()]
             start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
-            return [json.dumps({"disclaimer": DISCLAIMER,
-                                "watch_id": rec["watch_id"],
-                                "baseline_sha256": digest,
+            return [json.dumps({"disclaimer": DISCLAIMER, **out,
                                 "note": "check anytime via GET /api/watch?watch_id=...&api_key=..."}).encode()]
 
         # GET: on-demand check
@@ -1125,33 +1168,13 @@ def handle_watch(environ, start_response):
         if not api_key or get_account(api_key) is None:
             start_response("401 Unauthorized", [("Content-Type", "application/json")] + _CORS_HEADERS)
             return [json.dumps({"error": "sign_in_required"}).encode()]
-        rec = get_watch(wid)
-        if rec is None or (rec.get("owner") and rec.get("owner") != api_key[:24]):
+        out = watch_check(api_key, wid)
+        if out is None:
             start_response("404 Not Found", [("Content-Type", "application/json")] + _CORS_HEADERS)
             return [json.dumps({"error": "unknown watch_id"}).encode()]
-        current_sha, fetch_error = None, None
-        try:
-            text = _fetch_skill_url(rec["url"])
-            current_sha = sha256_of(text)
-        except Exception as e:  # noqa: BLE001 - unreachable/removed file is a valid state
-            fetch_error = str(e)[:200]
-        changed = bool(current_sha and current_sha != rec.get("baseline_sha256"))
-        rec["checks"] = int(rec.get("checks", 0)) + 1
-        rec["last_checked_at"] = time.time()
-        rec["last_sha256"] = current_sha
-        rec["last_status"] = "changed" if changed else ("unchanged" if current_sha else "unreachable")
-        if changed and not rec.get("changed_at"):
-            rec["changed_at"] = time.time()
-        update_watch(rec)
         start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
-        return [json.dumps({"disclaimer": DISCLAIMER,
-                            "watch_id": wid,
-                            "status": rec["last_status"],
-                            "baseline_sha256": rec.get("baseline_sha256"),
-                            "current_sha256": current_sha,
-                            "fetch_error": fetch_error,
-                            "checks": rec["checks"],
-                            "last_checked_at": rec["last_checked_at"]}).encode()]
+        return [json.dumps({"disclaimer": DISCLAIMER, **out}).encode()]
+
     except Exception as e:  # noqa: BLE001
         start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({"error": str(e)}).encode()]

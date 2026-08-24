@@ -96,6 +96,19 @@ TOOLS = [
         "inputSchema": {"type": "object", "properties": {}},
     },
     {
+        "name": "watch_skill",
+        "description": "Rug-pull watch for a GitHub-hosted SKILL.md. Without watch_id: creates a watch (stores the content hash as baseline, 10/day/key). With watch_id: re-fetches the URL and reports whether the content CHANGED since you vetted it (status: changed/unchanged/unreachable). Only github.com/raw.githubusercontent.com URLs.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "api_key": {"type": "string"},
+                "url": {"type": "string", "description": "github.com blob or raw URL (required when creating)"},
+                "watch_id": {"type": "string", "description": "existing watch to check"}
+            },
+            "required": ["api_key"],
+        },
+    },
+    {
         "name": "find_similar",
         "description": "Skill-DNA near-duplicate search: given a scanned skill's sha256, return up to 5 stored skills whose simhash fingerprint is within Hamming distance 12 (renamed/cosmetically altered variants of known skills). Names of unpublished (private) skills are masked. Requires the hash to have been scanned before.",
         "inputSchema": {
@@ -274,6 +287,26 @@ def _call_tool(name, args, client_ip: str = ""):
             "bonus_credits": record.get("bonus_credits", 0),
             "bonus_lookup_credits": record.get("bonus_lookup_credits", 0),
         })
+
+    if name == "watch_skill":
+        watch_id = args.get("watch_id")
+        record = get_account(api_key)
+        if record is None:
+            return _tool_result({"error": "unknown api_key"})
+        if watch_id:
+            out = idx.watch_check(api_key, str(watch_id))
+            if out is None:
+                return _tool_result({"error": "unknown watch_id"})
+            return _tool_result({"disclaimer": idx.DISCLAIMER, **out})
+        url = args.get("url", "")
+        try:
+            out = idx.watch_create(api_key, url)
+        except PermissionError:
+            return _tool_result({"error": "unknown api_key"})
+        except ValueError as e:
+            return _tool_result({"error": str(e)})
+        return _tool_result({"disclaimer": idx.DISCLAIMER, **out,
+                             "note": "check anytime with watch_skill and this watch_id"})
 
     if name == "find_similar":
         digest = str(args.get("sha256", "")).lower().strip()
