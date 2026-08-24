@@ -1591,6 +1591,9 @@ def handle_mcp(environ, start_response):
         start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({"jsonrpc": "2.0", "id": None, "error": {"code": -32600, "message": "Invalid Request: batch requests are not supported, send a single JSON object"}}).encode()]
     status, body = _mcp.handle_jsonrpc(req, client_ip=_client_ip(environ))
+    if body is None:  # PT-T33: JSON-RPC notification -> no response body
+        start_response("204 No Content", _CORS_HEADERS)
+        return []
     start_response(f"{status} OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
     return [json.dumps(body).encode()]
 

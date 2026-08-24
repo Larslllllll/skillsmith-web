@@ -412,6 +412,9 @@ def handle_jsonrpc(req: dict, client_ip: str = "") -> tuple[int, dict]:
     response_body_dict)."""
     req_id = req.get("id")
     rpc_method = req.get("method", "")
+    # PT-T33: JSON-RPC notifications (no id) must not produce a response.
+    if "id" not in req:
+        return 204, None
     params = req.get("params") or {}
     # pentest PT-T3: params must be an object for our methods; arrays or
     # strings used to crash with a 500 instead of a structured RPC error.
@@ -429,7 +432,16 @@ def handle_jsonrpc(req: dict, client_ip: str = "") -> tuple[int, dict]:
     elif rpc_method == "tools/list":
         result = {"tools": TOOLS}
     elif rpc_method == "tools/call":
-        result = _call_tool(params.get("name", ""), params.get("arguments") or {}, client_ip=client_ip)
+        # PT-T33: unknown tool / missing tool name are invalid params, not a
+        # silent null result (JSON-RPC correctness; clients rely on errors).
+        tool_name = params.get("name")
+        if not isinstance(tool_name, str) or not tool_name:
+            return 200, {"jsonrpc": "2.0", "id": req_id,
+                         "error": {"code": -32602, "message": "invalid params: missing tool name"}}
+        if tool_name not in {t["name"] for t in TOOLS}:
+            return 200, {"jsonrpc": "2.0", "id": req_id,
+                         "error": {"code": -32602, "message": f"unknown tool: {tool_name}"}}
+        result = _call_tool(tool_name, params.get("arguments") or {}, client_ip=client_ip)
     elif rpc_method == "ping":
         result = {}
     else:
