@@ -43,7 +43,7 @@ def _index_module():
 TOOLS = [
     {
         "name": "scan_skill",
-        "description": "Lint + static security-scan a Claude Agent Skill (SKILL.md). Pass either 'text' (the raw SKILL.md content) or 'url' (a github.com blob link). Requires an api_key from skillsmith_signup. Returns lint issues, security findings (with human-readable sources: body, frontmatter, base64-decoded, unicode-normalized), a 0-100 security_score, and a disclaimer that this is a heuristic scanner, not a guarantee. Detects injection phrasing incl. frontmatter payloads, exfil URLs, unicode obfuscation (zero-width as separator or hidden-in-word/RTL/bidi/fullwidth/combining marks/cyrillic+greek homoglyph look-alikes), and decodes base64 payloads (incl. UTF-16) which are then normalized and re-scanned.",
+        "description": "Lint + static security-scan a Claude Agent Skill (SKILL.md). Pass either 'text' (the raw SKILL.md content) or 'url' (a github.com blob link). Requires an api_key from skillsmith_signup. Returns lint issues, security findings (with human-readable sources: body, frontmatter, base64-decoded, unicode-normalized), a 0-100 security_score, and a disclaimer that this is a heuristic scanner, not a guarantee. Detects injection phrasing and paraphrased overrides (disregard prior guidance, forward gathered data, defanged URLs) incl. frontmatter payloads, dangerous code patterns (eval/exec/pickle/shell) in fenced blocks, exfil URLs, unicode obfuscation (zero-width as separator or hidden-in-word/RTL/bidi/fullwidth/combining marks/cyrillic+greek homoglyph look-alikes), and decodes base64 payloads (incl. UTF-16) which are then normalized and re-scanned.",
         "inputSchema": {
             "type": "object",
             "properties": {
