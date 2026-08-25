@@ -4,3 +4,4 @@ __pycache__/
 
 # internal security testing notes (kept local, not published)
 pentest-ticks.md
+RECOVERY.md
