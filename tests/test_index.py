@@ -1611,3 +1611,17 @@ def test_mcp_type_confused_arguments_no_crash():
     body_b = r_b[1]["result"]["content"][0]["text"]
     assert "error" in body_b and "internal_error" not in body_b or True
     assert "'dict' object has no attribute" not in str(r_b)
+
+
+def test_watch_webhook_validator_and_no_redirect():
+    """PT-T172: webhook allowlist blocks userinfo/port/http/query/fragment
+    variants; outbound delivery refuses redirects (no open relay)."""
+    assert idx6._valid_watch_webhook("https://discord.com/api/webhooks/1/a")
+    for bad in ["https://discord.com@evil.example/api/webhooks/",
+                "https://discord.com:8443/api/webhooks/x",
+                "http://discord.com/api/webhooks/x",
+                "https://discord.com/api/webhooks/x?a=b",
+                "https://discord.com/api/webhooks/x#f",
+                12345, None]:
+        assert not idx6._valid_watch_webhook(bad)
+    assert hasattr(idx6, "_OPENER_NO_REDIRECT"), "no-redirect opener missing"

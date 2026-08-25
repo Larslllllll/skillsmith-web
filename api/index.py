@@ -1292,6 +1292,16 @@ def _valid_watch_webhook(url) -> bool:
             or url.startswith("https://hooks.slack.com/services/"))
 
 
+class _NoRedirectHandler(urllib.request.HTTPRedirectHandler):
+    """PT-T172/H-01: refuse all redirects for outbound webhooks."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: ANN001
+        return None
+
+
+_OPENER_NO_REDIRECT = urllib.request.build_opener(_NoRedirectHandler)
+
+
 def _deliver_watch_webhook(rec: dict) -> str:
     """Best-effort POST on status change. Returns delivery note for the record."""
     hook = rec.get("webhook_url") or ""
@@ -1305,7 +1315,11 @@ def _deliver_watch_webhook(rec: dict) -> str:
             "baseline_sha256": rec.get("baseline_sha256"), "current_sha256": rec.get("last_sha256"),
         }).encode()
         req_u = urllib.request.Request(hook, data=payload, headers={"Content-Type": "application/json"})
-        urllib.request.urlopen(req_u, timeout=5)
+        # PT-T172/H-01: never follow redirects -- the allowlist pins the
+        # host, so a 3xx to anywhere else must not turn the stored webhook
+        # into an open relay. A refused redirect surfaces as HTTPError and
+        # is swallowed by the best-effort handler below.
+        _OPENER_NO_REDIRECT.open(req_u, timeout=5)
         return "delivered"
     except Exception as e113:  # noqa: BLE001 - delivery is best-effort
         return f"failed:{str(e113)[:80]}"
