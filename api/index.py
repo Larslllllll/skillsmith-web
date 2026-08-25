@@ -313,12 +313,13 @@ def analyze(text: str) -> dict:
         "\u039a": "K", "\u039c": "M", "\u0392": "B",
     })
 
-    def _norm(t: str) -> str:
-        # PT-T98: also strip zero-width/invisible chars so mixed obfuscation
-        # (fullwidth + zero-width + combining) folds to the plain phrase.
-        # PT-T105: fold Cyrillic homoglyph look-alikes to Latin so a phrase
-        # like "\u0456gn\u043Bre" is caught by the word-boundary patterns too.
-        t = "".join(" " if ord(ch) in (0x200B, 0x200C, 0x200D, 0xFEFF, 0x2060) else ch for ch in t)
+    def _norm(t: str, zw_mode: str = "space") -> str:
+        # PT-T98/105: fold zero-width chars, homoglyph look-alikes, fullwidth
+        # and combining marks so obfuscated phrases match the patterns.
+        # PT-T108: zw_mode controls zero-width handling ("space" treats them
+        # as word separators; "delete" removes them for in-word hiding).
+        sep = " " if zw_mode == "space" else ""
+        t = "".join(sep if ord(ch) in (0x200B, 0x200C, 0x200D, 0xFEFF, 0x2060) else ch for ch in t)
         t = t.translate(_CYR_TO_LATIN)
         t = "".join(chr(ord(c) - 0xFEE0) if 0xFF01 <= ord(c) <= 0xFF5E else c for c in t)
         return "".join(c for c in _ud.normalize("NFKD", t) if not _ud.combining(c))
@@ -359,10 +360,11 @@ def analyze(text: str) -> dict:
         findings += _scan_text(dv, f"base64-decoded[{i130}]", _PROMPT_INJECTION_PATTERNS)
         findings += _scan_text(dv, f"base64-decoded[{i130}]", _PARAPHRASE_PATTERNS)
     for label, variant in (("body(normalized)", body), ("frontmatter(normalized)", fm_lines)):
-        nv = _norm(variant)
-        if nv != variant and nv.strip():
-            findings += _scan_text(nv, label, _PROMPT_INJECTION_PATTERNS)
-            findings += _scan_text(nv, label, _PARAPHRASE_PATTERNS)
+        # PT-T108: scan both zero-width interpretations (separator vs hidden-in-word)
+        for nv in {_norm(variant), _norm(variant, zw_mode="delete")}:
+            if nv != variant and nv.strip():
+                findings += _scan_text(nv, label, _PROMPT_INJECTION_PATTERNS)
+                findings += _scan_text(nv, label, _PARAPHRASE_PATTERNS)
     findings += _scan_text(text, "raw text (incl. code blocks)", _CODE_PATTERNS)
 
     findings += _scan_text(text, "raw text (incl. code blocks)", _DROPPER_PATTERNS)
