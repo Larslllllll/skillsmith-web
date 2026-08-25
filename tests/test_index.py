@@ -1066,3 +1066,29 @@ def test_mcp_find_similar(monkeypatch):
     res2 = mcp_mod._call_tool("find_similar", {"api_key": "sk_ok", "sha256": "c"*64})
     s2 = json.loads(res2[0]["text"] if isinstance(res2, list) else res2["content"][0]["text"])
     assert s2.get("error") == "dna_unknown"
+
+
+def test_blob_put_http_error_is_logged_and_raised(capsys, monkeypatch):
+    """PT-T64 lesson: storage outages must appear in platform logs as a
+    compact [blob-error] line instead of an opaque 500 (permanent logging)."""
+    import account as acc_mod
+    import io, urllib.error
+
+    class FakeHTTPError(urllib.error.HTTPError):
+        def __init__(self):
+            super().__init__("url", 503, "Service Unavailable", {}, io.BytesIO(b'{"error":{"code":"store_suspended"}}'))
+
+    def fake_urlopen(req, timeout=10):
+        raise FakeHTTPError()
+
+    monkeypatch.setattr(acc_mod.urllib.request, "urlopen", fake_urlopen)
+    monkeypatch.setattr(acc_mod, "_blob_headers", lambda: {"Authorization": "Bearer x"})
+    try:
+        acc_mod._blob_put("identities/test.json", {"a": 1})
+        raised = False
+    except urllib.error.HTTPError:
+        raised = True
+    assert raised
+    out = capsys.readouterr().out
+    assert "[blob-error] PUT identities/test.json -> HTTP 503" in out
+    assert "store_suspended" in out
