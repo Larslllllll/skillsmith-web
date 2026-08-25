@@ -1423,3 +1423,32 @@ def _run_gate_history_checks(_scans_mod):
     for _ in range(12):
         last = _rs(d, dict(ok_result))
     assert len(last.get("score_history", [])) <= 10
+
+
+def test_certificate_signing_and_tamper_matrix():
+    """PT-T158: HMAC certificates must be tamper-evident and fail closed."""
+    import os as _os
+    import time as _time
+    import features as _feat
+    _os.environ["SKILLSMITH_CERT_SECRET"] = "unit-test-secret"
+    try:
+        cert = _feat.make_certificate("b" * 64, "clean", 100)
+        assert _feat.verify_certificate(cert) is True
+        bad_score = dict(cert); bad_score["security_score"] = 99
+        assert not _feat.verify_certificate(bad_score)
+        bad_risk = dict(cert); bad_risk["risk_level"] = "high"
+        assert not _feat.verify_certificate(bad_risk)
+        old_ts = dict(cert); old_ts["issued_at"] = int(_time.time()) - 91 * 86400
+        assert not _feat.verify_certificate(old_ts)
+    finally:
+        del _os.environ["SKILLSMITH_CERT_SECRET"]
+    # no secret configured -> verify fails closed
+    saved = _os.environ.pop("SKILLSMITH_CERT_SECRET", None)
+    try:
+        assert _feat.verify_certificate(cert) is False
+        import pytest as _pt
+        with _pt.raises(RuntimeError):
+            _feat.make_certificate("b" * 64, "clean", 100)
+    finally:
+        if saved is not None:
+            _os.environ["SKILLSMITH_CERT_SECRET"] = saved
