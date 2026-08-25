@@ -136,7 +136,7 @@ _CODE_PATTERNS = [
     (re.compile(r"\bopen\s*\([^)]*['\"]\.gnupg"), 8, "reads from ~/.gnupg"),
     (re.compile(r"\bopen\s*\([^)]*(id_rsa|id_ed25519|\.npmrc|\.netrc|\.git-credentials)"), 8, "reads a known credential/secret file"),
     (re.compile(r"\bkeyring\.(get_password|get_credential)\s*\("), 6, "reads from the OS keyring/credential store"),
-    (re.compile(r"\bwallet\.json|\bprivate[_-]?key\s*[:=]"), 7, "references a wallet file or private key variable"),
+    (re.compile(r"\bwallet\.json|\bprivate[_-]?key\s*[:=]", re.I), 7, "references a wallet file or private key variable"),
 
     # --- network exfiltration ---
     (re.compile(r"\brequests\.(post|put|get)\s*\("), 3, "makes outbound network requests"),

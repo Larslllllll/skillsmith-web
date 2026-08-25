@@ -1318,3 +1318,11 @@ def test_getattr_dynamic_dispatch():
     ok7 = idx6.analyze("---\nname: x\ndescription: d\n---\n\n"
                        '```python\nvalue = getattr(config, option_name, None)\n```\n')
     assert not any("getattr" in f["message"] for f in ok7["findings"])
+
+
+def test_private_key_case_insensitive():
+    """PT-T148: PRIVATE_KEY (env convention, uppercase) is flagged the same
+    as lowercase; prose mentions without assignment stay clean."""
+    res11 = idx6.analyze("---\nname: x\ndescription: d\n---\n\n"
+                         '```python\nPRIVATE_KEY = read_config_value()\n```\n')
+    assert any("private key" in f["message"].lower() for f in res11["findings"])
