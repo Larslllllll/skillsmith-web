@@ -4,7 +4,7 @@
 > SKILL.md and get an instant heuristic risk verdict: prompt injection (incl.
 > paraphrases, prompt-extraction phrasings and frontmatter description
 > payloads), data exfiltration,
-> credential-bearing URLs, dangerous code, homoglyphs, unicode obfuscation
+> credential-bearing URLs, hardcoded secret material (PEM keys, AWS/GitHub/Google/Slack API key literals), dangerous code, homoglyphs, unicode obfuscation
 > (zero-width incl. in-word hiding, RTL/bidi, fullwidth, combining marks,
 > cyrillic homoglyph look-alikes, control/format/space-like characters), base64-encoded payloads
 > (incl. UTF-16; decoded text - recursively up to two extra encoding

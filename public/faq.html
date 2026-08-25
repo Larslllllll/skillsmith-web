@@ -101,7 +101,7 @@ roleplay jailbreaks (including restriction-free personas), guideline overrides (
 "ignore the safety guidelines"; linter-style usage stays clean), prompt-extraction attempts (phrasings that try to make
 the agent reveal its system prompt or hidden rules) and text hidden in the
 <code>description</code> frontmatter, credential and
-secret snooping (in code and in prose instructions), exfiltration instructions, concealment of agent operations (hidden
+secret snooping (in code and in prose instructions), hardcoded secret material (embedded PEM private keys, AWS/GitHub/Google/Slack API key literals; documentation examples stay clean), exfiltration instructions, concealment of agent operations (hidden
 logging, invisible actions, fake success reports), dangerous code patterns
 (<code>eval</code>, pickle, raw sockets, destructive shell commands), and URLs
 that carry credential-looking query parameters. It also normalizes common
