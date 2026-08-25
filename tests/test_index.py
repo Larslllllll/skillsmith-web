@@ -1452,3 +1452,38 @@ def test_certificate_signing_and_tamper_matrix():
     finally:
         if saved is not None:
             _os.environ["SKILLSMITH_CERT_SECRET"] = saved
+
+
+def test_payment_signature_single_use_registry():
+    """PT-T159: a claimed signature is permanently bound to the first
+    (account, kind); replays and cross-purpose reuse are rejected."""
+    import index as _ix
+    import account as _acct
+    import hashlib as _hl
+    store2 = {}
+    orig_get = _acct._blob_get
+    orig_put = _acct._blob_put
+    _acct._blob_get = lambda p: store2.get(p)
+    def _put2(p, obj):
+        store2[p] = obj
+        return True
+    _acct._blob_put = _put2
+    try:
+        sig1 = "sig-" + "a" * 40
+        ok1, d1 = _ix._claim_payment_signature(sig1, "acct1111xyz", "scan")
+        assert ok1, d1
+        # replay same account+kind:
+        ok2, _d2 = _ix._claim_payment_signature(sig1, "acct1111xyz", "scan")
+        assert not ok2
+        # cross-purpose on another account:
+        ok3, _d3 = _ix._claim_payment_signature(sig1, "acct2222xyz", "activate_pro")
+        assert not ok3
+        # different signatures are independent:
+        sig2 = "sig-" + "b" * 40
+        ok4, d4 = _ix._claim_payment_signature(sig2, "acct2222xyz", "activate_pro")
+        assert ok4, d4
+        # registry path binds sha256 of the signature:
+        expect_path = "payments/" + _hl.sha256(sig1.encode()).hexdigest() + ".json"
+        assert expect_path in store2
+    finally:
+        _ix._blob_get, _ix._blob_put = orig_get, orig_put
