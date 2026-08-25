@@ -43,7 +43,7 @@ def _index_module():
 TOOLS = [
     {
         "name": "scan_skill",
-        "description": "Lint + static security-scan a Claude Agent Skill (SKILL.md). Pass either 'text' (the raw SKILL.md content) or 'url' (a github.com blob link). Requires an api_key from skillsmith_signup. Returns lint issues, security findings, a 0-100 security_score, and a disclaimer that this is a heuristic scanner, not a guarantee.",
+        "description": "Lint + static security-scan a Claude Agent Skill (SKILL.md). Pass either 'text' (the raw SKILL.md content) or 'url' (a github.com blob link). Requires an api_key from skillsmith_signup. Returns lint issues, security findings (with human-readable sources: body, frontmatter, base64-decoded, unicode-normalized), a 0-100 security_score, and a disclaimer that this is a heuristic scanner, not a guarantee. Detects injection phrasing incl. frontmatter payloads, exfil URLs, unicode obfuscation (zero-width/RTL/fullwidth), and decodes base64 payloads.",
         "inputSchema": {
             "type": "object",
             "properties": {
