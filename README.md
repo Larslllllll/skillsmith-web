@@ -135,5 +135,6 @@ auto-start locations), obfuscation techniques (long base64/hex blobs,
 zero-width unicode characters, Latin/Cyrillic homoglyph mixing), and a
 much broader prompt-injection phrasing list (jailbreak framing,
 instruction-override phrasing, hidden HTML-comment instructions,
-prompt-extraction phrasing). Still a static heuristic scanner -- see the
+prompt-extraction phrasing incl. repeat/spell-out/summarize-rules
+variants). Still a static heuristic scanner -- see the
 disclaimer in the UI and in every scan response.

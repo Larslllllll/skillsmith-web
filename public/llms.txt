@@ -2,7 +2,8 @@
 
 > Security scanner for Claude Agent Skills (SKILL.md files). Paste or link any
 > SKILL.md and get an instant heuristic risk verdict: prompt injection (incl.
-> paraphrases and frontmatter description payloads), data exfiltration,
+> paraphrases, prompt-extraction phrasings and frontmatter description
+> payloads), data exfiltration,
 > credential-bearing URLs, dangerous code, homoglyphs, unicode obfuscation
 > (zero-width incl. in-word hiding, RTL/bidi, fullwidth, combining marks,
 > cyrillic homoglyph look-alikes), base64-encoded payloads
