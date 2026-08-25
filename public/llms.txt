@@ -4,8 +4,8 @@
 > SKILL.md and get an instant heuristic risk verdict: prompt injection (incl.
 > paraphrases and frontmatter description payloads), data exfiltration,
 > credential-bearing URLs, dangerous code, homoglyphs, unicode obfuscation
-> (zero-width, RTL/bidi, fullwidth, combining marks, cyrillic homoglyph
-> look-alikes), base64-encoded payloads
+> (zero-width incl. in-word hiding, RTL/bidi, fullwidth, combining marks,
+> cyrillic homoglyph look-alikes), base64-encoded payloads
 > (incl. UTF-16, decoded and re-scanned), long encoded blobs hidden across wrapped lines,
 > and dependency vulnerabilities via OSV.
 > Free tier (5 scans/day, sign-in via GitHub), pay-as-you-go via USDC.
