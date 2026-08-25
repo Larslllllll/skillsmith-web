@@ -296,10 +296,23 @@ def analyze(text: str) -> dict:
     # combining-mark stacks are pure obfuscation and fold losslessly to ASCII
     import unicodedata as _ud
 
+    _CYR_TO_LATIN = str.maketrans({
+        # only unambiguous visual look-alikes (NVIDIA-style homoglyph list)
+        "\u0456": "i", "\u0455": "s", "\u0430": "a", "\u0435": "e",
+        "\u043e": "o", "\u0440": "p", "\u0441": "c", "\u0443": "y",
+        "\u0445": "x", "\u0458": "j", "\u04bb": "h", "\u04cf": "l",
+        "\u0412": "B", "\u0410": "A", "\u0415": "E", "\u041e": "O",
+        "\u0420": "P", "\u0421": "C", "\u0425": "X", "\u041d": "H",
+        "\u041a": "K", "\u041c": "M", "\u0422": "T",
+    })
+
     def _norm(t: str) -> str:
         # PT-T98: also strip zero-width/invisible chars so mixed obfuscation
         # (fullwidth + zero-width + combining) folds to the plain phrase.
+        # PT-T105: fold Cyrillic homoglyph look-alikes to Latin so a phrase
+        # like "\u0456gn\u043Bre" is caught by the word-boundary patterns too.
         t = "".join(" " if ord(ch) in (0x200B, 0x200C, 0x200D, 0xFEFF, 0x2060) else ch for ch in t)
+        t = t.translate(_CYR_TO_LATIN)
         t = "".join(chr(ord(c) - 0xFEE0) if 0xFF01 <= ord(c) <= 0xFF5E else c for c in t)
         return "".join(c for c in _ud.normalize("NFKD", t) if not _ud.combining(c))
 
