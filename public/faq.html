@@ -96,8 +96,9 @@ The CLI works offline: <code>pip install skillsmith-scanner</code>, then
 <code>skillsmith scan ./SKILL.md</code>.</p>
 
 <h2>What kinds of attacks does the scanner detect?</h2>
-<p>The static engine checks prompt-injection phrasing (including paraphrases
-and text hidden in the <code>description</code> frontmatter), credential and
+<p>The static engine checks prompt-injection phrasing including paraphrases,
+roleplay jailbreaks, guideline overrides and text hidden in the
+<code>description</code> frontmatter, credential and
 secret snooping, exfiltration instructions, dangerous code patterns
 (<code>eval</code>, pickle, raw sockets, destructive shell commands), and URLs
 that carry credential-looking query parameters. It also normalizes common
