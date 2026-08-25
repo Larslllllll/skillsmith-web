@@ -286,7 +286,20 @@ def analyze(text: str) -> dict:
     # PT-T73: frontmatter values (esp. `description`) are the FIRST thing an
     # agent reads -- injection payloads hidden there must be scanned too.
     try:
-        fm_lines = "\n".join(f"{k}: {v}" for k, v in fm.items() if isinstance(v, str))
+        def _fm_flat(obj, prefix=""):
+            # PT-T119: multiline block scalars nest values as dicts/lists - flatten
+            # them so hidden injection text is scanned too (previously dropped).
+            parts = []
+            if isinstance(obj, dict):
+                for kk, vv in obj.items():
+                    parts.extend(_fm_flat(vv, f"{prefix}{kk}: "))
+            elif isinstance(obj, list):
+                for item in obj:
+                    parts.extend(_fm_flat(item, prefix))
+            else:
+                parts.append(f"{prefix}{obj}")
+            return parts
+        fm_lines = "\n".join(_fm_flat(fm))
     except Exception:  # noqa: BLE001 - never let scanning crash the scan
         fm_lines = ""
     if fm_lines:
