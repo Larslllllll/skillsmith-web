@@ -779,7 +779,7 @@ def handle_scan(environ, start_response):
             pass
         start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps(result).encode()]
-    except Exception as e:  # noqa: BLE001
+    except Exception:  # noqa: BLE001  # noqa: BLE001
         start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({"error": "internal_error"}).encode()]
 
@@ -887,7 +887,7 @@ def handle_scan_pro(environ, start_response):
 
         start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({"quota": quota_info, "results": results}).encode()]
-    except Exception as e:  # noqa: BLE001
+    except Exception:  # noqa: BLE001  # noqa: BLE001
         start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({"error": "internal_error"}).encode()]
 
@@ -932,7 +932,7 @@ def handle_get_skill(environ, start_response):
 
         start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({"sha256": digest, "text": text, "quota": quota_info}).encode()]
-    except Exception as e:  # noqa: BLE001
+    except Exception:  # noqa: BLE001  # noqa: BLE001
         start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({"error": "internal_error"}).encode()]
 
@@ -1008,7 +1008,7 @@ def handle_buy_credit(environ, start_response):
         record = add_pay_per_use_credit(api_key, detail)
         start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({"credited": True, "kind": "scan", "payment": detail, "bonus_credits": record.get("bonus_credits", 0)}).encode()]
-    except Exception as e:  # noqa: BLE001
+    except Exception:  # noqa: BLE001  # noqa: BLE001
         start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({"error": "internal_error"}).encode()]
 
@@ -1050,7 +1050,7 @@ def handle_registry(environ, start_response):
             "count": len(entries),
             "skills": entries,
         }).encode()]
-    except Exception as e:  # noqa: BLE001
+    except Exception:  # noqa: BLE001  # noqa: BLE001
         start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({"error": "internal_error"}).encode()]
 
@@ -1088,7 +1088,7 @@ def handle_lookup(environ, start_response):
         record = get_scan_record(digest)
         start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({"disclaimer": DISCLAIMER, "quota": quota_info, "found": record is not None, "record": record}).encode()]
-    except Exception as e:  # noqa: BLE001
+    except Exception:  # noqa: BLE001  # noqa: BLE001
         start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({"error": "internal_error"}).encode()]
 
@@ -1151,7 +1151,7 @@ def handle_report(environ, start_response):
         })
         start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({"disclaimer": DISCLAIMER, **result}).encode()]
-    except Exception as e:  # noqa: BLE001
+    except Exception:  # noqa: BLE001  # noqa: BLE001
         start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({"error": "internal_error"}).encode()]
 
@@ -1179,7 +1179,7 @@ def handle_stats(environ, start_response):
                             "by_risk": stats.get("by_risk", {}),
                             "published": _stats_cache["published"],
                             "updated_at": stats.get("updated_at")}).encode()]
-    except Exception as e:  # noqa: BLE001
+    except Exception:  # noqa: BLE001  # noqa: BLE001
         start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({"error": "internal_error"}).encode()]
 
@@ -1246,7 +1246,7 @@ def handle_similar(environ, start_response):
         start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({"disclaimer": DISCLAIMER, "sha256": digest,
                             "similar": similar}).encode()]
-    except Exception as e:  # noqa: BLE001
+    except Exception:  # noqa: BLE001  # noqa: BLE001
         start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({"error": "internal_error"}).encode()]
 
@@ -1460,7 +1460,7 @@ def handle_watch(environ, start_response):
         start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({"disclaimer": DISCLAIMER, **out}).encode()]
 
-    except Exception as e:  # noqa: BLE001
+    except Exception:  # noqa: BLE001  # noqa: BLE001
         start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({"error": "internal_error"}).encode()]
 
@@ -1520,7 +1520,7 @@ def handle_feed(environ, start_response):
         start_response("200 OK", [("Content-Type", "application/atom+xml; charset=utf-8"),
                                   ("Cache-Control", "public, max-age=300")] + _CORS_HEADERS)
         return [body]
-    except Exception as e:  # noqa: BLE001
+    except Exception:  # noqa: BLE001  # noqa: BLE001
         start_response("500 Internal Server Error", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({"error": "internal_error"}).encode()]
 
@@ -1614,7 +1614,7 @@ def handle_hook_scan(environ, start_response):
         body["disclaimer"] = DISCLAIMER
         start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps(body).encode()]
-    except Exception as e:  # noqa: BLE001
+    except Exception:  # noqa: BLE001  # noqa: BLE001
         start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({"error": "internal_error"}).encode()]
 
@@ -1662,7 +1662,7 @@ def handle_certificate(environ, start_response):
                                 rec.get("security_score"))
         start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({"disclaimer": DISCLAIMER, "certificate": cert}).encode()]
-    except Exception as e:  # noqa: BLE001
+    except Exception:  # noqa: BLE001  # noqa: BLE001
         start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({"error": "internal_error"}).encode()]
 
