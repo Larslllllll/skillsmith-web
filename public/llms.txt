@@ -1,8 +1,11 @@
 # skillsmith
 
 > Security scanner for Claude Agent Skills (SKILL.md files). Paste or link any
-> SKILL.md and get an instant heuristic risk verdict: prompt injection, data
-> exfiltration, dangerous code, homoglyphs, dependency vulnerabilities.
+> SKILL.md and get an instant heuristic risk verdict: prompt injection (incl.
+> paraphrases and frontmatter description payloads), data exfiltration,
+> credential-bearing URLs, dangerous code, homoglyphs, unicode obfuscation
+> (zero-width, RTL/bidi, fullwidth, combining marks), base64-encoded payloads
+> (decoded and re-scanned) and dependency vulnerabilities via OSV.
 > Free tier (5 scans/day, sign-in via GitHub), pay-as-you-go via USDC.
 
 Site: https://skillsmith.ch
