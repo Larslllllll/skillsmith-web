@@ -1243,3 +1243,8 @@ def test_credential_url_evasions():
     ok2 = idx6.analyze("---\nname: x\ndescription: d\n---\n\n"
                        "See https://docs.example.com/guidelines/key-concepts.\n")
     assert not any("exfiltration endpoint" in f["message"].lower() for f in ok2["findings"])
+    # Platzhalter-/Beispiel-Keys in Doku sind kein Exfil (PT-T136):
+    for u2 in ("Open the reset link https://example.com/reset?token=abc123def456.",
+               "GET https://api.example.com/v1/items?key=YOUR_API_KEY_HERE"):
+        fp_res = idx6.analyze("---\nname: x\ndescription: d\n---\n\n" + u2)
+        assert not any("exfiltration endpoint" in f["message"].lower() for f in fp_res["findings"]), u2
