@@ -376,6 +376,15 @@ def analyze(text: str) -> dict:
 
     def _decoded_variants(t: str, depth: int = 0) -> list[str]:
         out = []
+        # PT-T143: Python-style \xNN escapes auto-decode at runtime; decode
+        # runs of >=4 and scan the printable result too.
+        for _hx in _re.finditer(r"(?:\\x[0-9a-fA-F]{2}){4,}", t):
+            try:
+                _hd = bytes.fromhex(_hx.group(0).replace("\\x", "")).decode("latin-1")
+            except Exception:  # noqa: BLE001
+                continue
+            if _hd and sum(32 <= ord(c) < 127 for c in _hd) / len(_hd) > 0.8:
+                out.append(_hd)
         for run in _re.findall(r"[A-Za-z0-9+/=]{16,}", t):
             try:
                 pad = "=" * (-len(run) % 4)
