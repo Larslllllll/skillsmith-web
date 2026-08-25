@@ -781,7 +781,7 @@ def handle_scan(environ, start_response):
         return [json.dumps(result).encode()]
     except Exception as e:  # noqa: BLE001
         start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
-        return [json.dumps({"error": str(e)}).encode()]
+        return [json.dumps({"error": "internal_error"}).encode()]
 
 
 def handle_scan_pro(environ, start_response):
@@ -889,7 +889,7 @@ def handle_scan_pro(environ, start_response):
         return [json.dumps({"quota": quota_info, "results": results}).encode()]
     except Exception as e:  # noqa: BLE001
         start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
-        return [json.dumps({"error": str(e)}).encode()]
+        return [json.dumps({"error": "internal_error"}).encode()]
 
 
 def handle_get_skill(environ, start_response):
@@ -934,7 +934,7 @@ def handle_get_skill(environ, start_response):
         return [json.dumps({"sha256": digest, "text": text, "quota": quota_info}).encode()]
     except Exception as e:  # noqa: BLE001
         start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
-        return [json.dumps({"error": str(e)}).encode()]
+        return [json.dumps({"error": "internal_error"}).encode()]
 
 def _claim_payment_signature(signature: str, api_key: str, kind: str) -> tuple[bool, str]:
     """Atomically-enough used-signature registry (pentest v2 F-03).
@@ -1010,7 +1010,7 @@ def handle_buy_credit(environ, start_response):
         return [json.dumps({"credited": True, "kind": "scan", "payment": detail, "bonus_credits": record.get("bonus_credits", 0)}).encode()]
     except Exception as e:  # noqa: BLE001
         start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
-        return [json.dumps({"error": str(e)}).encode()]
+        return [json.dumps({"error": "internal_error"}).encode()]
 
 
 def _get_qs_api_key(environ):
@@ -1052,7 +1052,7 @@ def handle_registry(environ, start_response):
         }).encode()]
     except Exception as e:  # noqa: BLE001
         start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
-        return [json.dumps({"error": str(e)}).encode()]
+        return [json.dumps({"error": "internal_error"}).encode()]
 
 
 def handle_lookup(environ, start_response):
@@ -1090,7 +1090,7 @@ def handle_lookup(environ, start_response):
         return [json.dumps({"disclaimer": DISCLAIMER, "quota": quota_info, "found": record is not None, "record": record}).encode()]
     except Exception as e:  # noqa: BLE001
         start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
-        return [json.dumps({"error": str(e)}).encode()]
+        return [json.dumps({"error": "internal_error"}).encode()]
 
 
 def handle_report(environ, start_response):
@@ -1153,7 +1153,7 @@ def handle_report(environ, start_response):
         return [json.dumps({"disclaimer": DISCLAIMER, **result}).encode()]
     except Exception as e:  # noqa: BLE001
         start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
-        return [json.dumps({"error": str(e)}).encode()]
+        return [json.dumps({"error": "internal_error"}).encode()]
 
 
 _stats_cache = {"t": 0.0, "published": None}
@@ -1181,7 +1181,7 @@ def handle_stats(environ, start_response):
                             "updated_at": stats.get("updated_at")}).encode()]
     except Exception as e:  # noqa: BLE001
         start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
-        return [json.dumps({"error": str(e)}).encode()]
+        return [json.dumps({"error": "internal_error"}).encode()]
 
 
 def similar_payload(digest: str) -> list | None:
@@ -1248,7 +1248,7 @@ def handle_similar(environ, start_response):
                             "similar": similar}).encode()]
     except Exception as e:  # noqa: BLE001
         start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
-        return [json.dumps({"error": str(e)}).encode()]
+        return [json.dumps({"error": "internal_error"}).encode()]
 
 
 def _valid_watch_webhook(url) -> bool:
@@ -1462,7 +1462,7 @@ def handle_watch(environ, start_response):
 
     except Exception as e:  # noqa: BLE001
         start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
-        return [json.dumps({"error": str(e)}).encode()]
+        return [json.dumps({"error": "internal_error"}).encode()]
 
 
 _feed_cache = {"t": 0.0, "body": b""}
@@ -1522,7 +1522,7 @@ def handle_feed(environ, start_response):
         return [body]
     except Exception as e:  # noqa: BLE001
         start_response("500 Internal Server Error", [("Content-Type", "application/json")] + _CORS_HEADERS)
-        return [json.dumps({"error": str(e)}).encode()]
+        return [json.dumps({"error": "internal_error"}).encode()]
 
 
 def handle_hook_scan(environ, start_response):
@@ -1616,7 +1616,7 @@ def handle_hook_scan(environ, start_response):
         return [json.dumps(body).encode()]
     except Exception as e:  # noqa: BLE001
         start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
-        return [json.dumps({"error": str(e)}).encode()]
+        return [json.dumps({"error": "internal_error"}).encode()]
 
 
 def handle_certificate(environ, start_response):
@@ -1664,7 +1664,7 @@ def handle_certificate(environ, start_response):
         return [json.dumps({"disclaimer": DISCLAIMER, "certificate": cert}).encode()]
     except Exception as e:  # noqa: BLE001
         start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
-        return [json.dumps({"error": str(e)}).encode()]
+        return [json.dumps({"error": "internal_error"}).encode()]
 
 
 def handle_signup(environ, start_response, method):

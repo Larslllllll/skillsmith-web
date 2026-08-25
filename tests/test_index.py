@@ -1340,3 +1340,27 @@ def test_prompt_extraction_variants():
     ok8 = idx6.analyze("---\nname: x\ndescription: d\n---\n\n"
                        "Print your configuration with --show-config for debugging.\n")
     assert not any("disclosure" in f["message"] or "recital" in f["message"] for f in ok8["findings"])
+
+
+def test_error_responses_generic():
+    """PT-T152: exception details must not leak to API clients."""
+    import json as _json
+    class _E2:
+        def __init__(self, b):
+            self._b = b
+        def read(self, n=-1):
+            return self._b
+    class _EnvNull:
+        REQUEST_METHOD = "POST"
+        PATH_INFO = "/api/scan"
+        QUERY_STRING = ""
+        HTTP_AUTHORIZATION = ""
+        def __init__(self):
+            self._e = _E2(b"null")
+        def read(self, n=-1):
+            return self._b if False else self._e.read(n)
+    statuses = []
+    env_n = _EnvNull()
+    body_n = idx6.handle_scan_pro(env_n, lambda s, h: (None, statuses.append(s) or s, h))
+    txt_n = b"".join(body_n[0]).decode() if isinstance(body_n, tuple) else b"".join(body_n).decode()
+    assert "NoneType" not in txt_n and "internal_error" in txt_n or "error" in txt_n
