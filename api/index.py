@@ -357,8 +357,13 @@ def analyze(text: str) -> dict:
 
     _dec_texts = _decoded_variants(body) + _decoded_variants(fm_lines)
     for i130, dv in enumerate(_dec_texts):
-        findings += _scan_text(dv, f"base64-decoded[{i130}]", _PROMPT_INJECTION_PATTERNS)
-        findings += _scan_text(dv, f"base64-decoded[{i130}]", _PARAPHRASE_PATTERNS)
+        # PT-T110: decoded payloads can themselves carry homoglyph/unicode
+        # obfuscation - scan their normalized variants too.
+        dv_norms = {_norm(dv), _norm(dv, zw_mode="delete")}
+        for dv_n in dv_norms:
+            if dv_n.strip():
+                findings += _scan_text(dv_n, f"base64-decoded[{i130}]", _PROMPT_INJECTION_PATTERNS)
+                findings += _scan_text(dv_n, f"base64-decoded[{i130}]", _PARAPHRASE_PATTERNS)
     for label, variant in (("body(normalized)", body), ("frontmatter(normalized)", fm_lines)):
         # PT-T108: scan both zero-width interpretations (separator vs hidden-in-word)
         for nv in {_norm(variant), _norm(variant, zw_mode="delete")}:
