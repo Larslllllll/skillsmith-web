@@ -285,7 +285,8 @@ def analyze(text: str) -> dict:
 
     lint_issues = []
     for key in REQUIRED_KEYS:
-        if not fm.get(key):
+        _v = fm.get(key)
+        if not isinstance(_v, str) or not _v.strip():
             lint_issues.append({"level": "error", "code": "missing-field", "message": f"frontmatter is missing required key '{key}'"})
     name = fm.get("name")
     if isinstance(name, str) and not NAME_RE.match(name):

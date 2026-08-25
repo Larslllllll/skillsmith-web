@@ -1487,3 +1487,18 @@ def test_payment_signature_single_use_registry():
         assert expect_path in store2
     finally:
         _ix._blob_get, _ix._blob_put = orig_get, orig_put
+
+
+def test_frontmatter_type_confusion_not_publishable():
+    """PT-T161: non-string required fields must fail lint (publish gate)."""
+    probes3 = [
+        "---\nname: [a, b]\ndescription: d\n---\n\nBody\n",
+        "---\nname: x\ndescription: 12345\n---\n\nBody\n",
+        "---\nname: {a: b}\ndescription: d\n---\n\nBody\n",
+    ]
+    for sk2 in probes3:
+        res13 = idx6.analyze(sk2)
+        assert res13["parse_ok"] is True
+        assert res13["lint_ok"] is False, f"type-confused FM passed lint: {sk2[:40]}"
+    ok9 = idx6.analyze("---\nname: x\ndescription: d\n---\n\nBody\n")
+    assert ok9["lint_ok"] is True and ok9["risk_level"] == "clean"
