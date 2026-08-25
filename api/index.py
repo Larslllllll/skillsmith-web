@@ -362,7 +362,7 @@ def analyze(text: str) -> dict:
     import base64 as _b64
     import re as _re
 
-    def _decoded_variants(t: str) -> list[str]:
+    def _decoded_variants(t: str, depth: int = 0) -> list[str]:
         out = []
         for run in _re.findall(r"[A-Za-z0-9+/=]{16,}", t):
             try:
@@ -385,6 +385,10 @@ def analyze(text: str) -> dict:
                     continue
                 dec = best
             out.append(dec)
+            # PT-T126: recursive layer - double-encoded payloads (b64 of b64)
+            # are decoded up to 2 extra levels, each result scanned.
+            if depth < 2 and _re.fullmatch(r"[A-Za-z0-9+/=]{16,}", dec or ""):
+                out.extend(_decoded_variants(dec, depth + 1))
         return out
 
     _dec_texts = _decoded_variants(body) + _decoded_variants(fm_lines)
