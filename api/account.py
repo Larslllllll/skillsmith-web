@@ -117,9 +117,13 @@ def _blob_put(path: str, data: dict) -> None:
         with urllib.request.urlopen(req, timeout=10) as resp:
             resp.read()
     except urllib.error.HTTPError as _he:
-        import os as _os
-        print(f"[blob-debug] PUT {path} -> {_he.code}; token_len="
-              f"{len(_os.environ.get('BLOB_READ_WRITE_TOKEN', ''))}; body={_he.read()[:300]!r}")
+        # PT-T64 lesson: storage outages were invisible as opaque 500s. Log a
+        # compact, secret-free line so platform logs tell the story directly.
+        try:
+            _body = _he.read()[:200].decode("utf-8", "replace")
+        except Exception:  # noqa: BLE001
+            _body = "<unreadable>"
+        print(f"[blob-error] PUT {path} -> HTTP {_he.code}: {_body}", flush=True)
         raise
 
 
