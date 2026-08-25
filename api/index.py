@@ -286,16 +286,35 @@ def analyze(text: str) -> dict:
     # PT-T73: frontmatter values (esp. `description`) are the FIRST thing an
     # agent reads -- injection payloads hidden there must be scanned too.
     try:
-        def _fm_flat(obj, prefix=""):
+        def _fm_flat(obj, prefix="", seen=None, budget=None):
             # PT-T119: multiline block scalars nest values as dicts/lists - flatten
             # them so hidden injection text is scanned too (previously dropped).
+            # PT-T120: YAML aliases share object references - walk each object
+            # once (memo by id) and cap total nodes so alias bombs cannot burn CPU.
+            if seen is None:
+                seen = set()
+            if budget is None:
+                budget = [20000]
+            if budget[0] <= 0:
+                return []
+            oid = id(obj)
+            if isinstance(obj, (dict, list)):
+                if oid in seen:
+                    return []
+                seen.add(oid)
             parts = []
             if isinstance(obj, dict):
                 for kk, vv in obj.items():
-                    parts.extend(_fm_flat(vv, f"{prefix}{kk}: "))
+                    budget[0] -= 1
+                    if budget[0] <= 0:
+                        break
+                    parts.extend(_fm_flat(vv, f"{prefix}{kk}: ", seen, budget))
             elif isinstance(obj, list):
                 for item in obj:
-                    parts.extend(_fm_flat(item, prefix))
+                    budget[0] -= 1
+                    if budget[0] <= 0:
+                        break
+                    parts.extend(_fm_flat(item, prefix, seen, budget))
             else:
                 parts.append(f"{prefix}{obj}")
             return parts
