@@ -1683,8 +1683,11 @@ def handle_certificate(environ, start_response):
             start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
             return [json.dumps({"disclaimer": DISCLAIMER,
                                 "valid": bool(valid),
+                                # PT-T173/Fix #55: verdict details only for VALID
+                                # certs -- an invalid cert must not become an
+                                # unauthenticated lookup oracle.
                                 "matches_current_verdict": matches_current if valid else None,
-                                "current_risk_level": (current or {}).get("risk_level"),
+                                "current_risk_level": current.get("risk_level") if valid else None,
                                 "note": "valid means signed by skillsmith and within 90 days; "
                                         "matches_current_verdict means the hash still carries that verdict today."}).encode()]
 

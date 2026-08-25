@@ -1638,3 +1638,34 @@ def test_explainer_covers_every_pattern_message():
         all_msgs += [t[2] for t in tl]
     gaps = [m for m in all_msgs if not any(n.lower() in m.lower() for n in ns_rules)]
     assert not gaps, f"unexplained pattern messages: {gaps[:5]}"
+
+
+def test_invalid_certificate_leaks_no_verdict_details():
+    """PT-T173/Fix #55: an invalid certificate must not reveal the current
+    stored risk level (no unauthenticated lookup oracle)."""
+    import features as _feat3
+    old_gsr = idx6.get_scan_record
+    import os as _os53
+    old_secret = _os53.environ.pop("SKILLSMITH_CERT_SECRET", None)
+    _os53.environ["SKILLSMITH_CERT_SECRET"] = "unit-test-cert-secret-pt173"
+    idx6.get_scan_record = lambda d: {"risk_level": "high", "security_score": 42}
+    try:
+        c_ok = _feat3.make_certificate("a" * 64, "high", 42)
+        c_bad = dict(c_ok); c_bad["signature"] = "f" * 32
+        s_bad, b_bad = run_cert2(c_bad) if False else (None, None)
+        # direkt ueber WSGI-Handler:
+        import io as _io
+        payload2 = json.dumps({"certificate": c_bad}).encode()
+        env2 = {"REQUEST_METHOD": "POST", "CONTENT_LENGTH": str(len(payload2)),
+                "QUERY_STRING": "", "wsgi.input": _io.BytesIO(payload2)}
+        statuses = []
+        body2 = idx6.handle_certificate(env2, lambda st, hd: statuses.append(st))
+        parsed = json.loads(b"".join(body2))
+        assert parsed["valid"] is False
+        assert parsed.get("current_risk_level") is None, "verdict leaked via invalid cert"
+    finally:
+        idx6.get_scan_record = old_gsr
+        if old_secret is None:
+            _os53.environ.pop("SKILLSMITH_CERT_SECRET", None)
+        else:
+            _os53.environ["SKILLSMITH_CERT_SECRET"] = old_secret
