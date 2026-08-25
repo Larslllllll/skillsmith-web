@@ -370,7 +370,17 @@ def analyze(text: str) -> dict:
         sep = " " if zw_mode == "space" else ""
         # PT-T166/Fix #49: C0/C1 control chars (NUL/BEL/VT/ESC/DEL etc.) break
         # phrase detection just like zero-width chars -- strip them first.
-        t = "".join(ch for ch in t if ord(ch) >= 0x20 and ord(ch) != 0x7F and not (0x80 <= ord(ch) <= 0x9F) or ch in "\t\n\r")
+        # PT-T167/Fix #50: same for ALL Unicode format characters (Cf category:
+        # LRM/RLM U+200E/F, FUNCTION APPLICATION U+2061, INVISIBLE TIMES
+        # U+2062, ARABIC LETTER MARK U+061C, ...) except the ones already
+        # handled by zw_mode below.
+        t = "".join(
+            ch for ch in t
+            if (ord(ch) >= 0x20 and ord(ch) != 0x7F and not (0x80 <= ord(ch) <= 0x9F)
+                and _ud.category(ch) != "Cf")
+            or ch in "\t\n\r"
+            or ord(ch) in (0x200B, 0x200C, 0x200D, 0xFEFF, 0x2060)
+        )
         t = "".join(sep if ord(ch) in (0x200B, 0x200C, 0x200D, 0xFEFF, 0x2060) else ch for ch in t)
         t = t.translate(_CYR_TO_LATIN)
         t = "".join(chr(ord(c) - 0xFEE0) if 0xFF01 <= ord(c) <= 0xFF5E else c for c in t)
