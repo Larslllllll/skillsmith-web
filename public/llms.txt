@@ -15,6 +15,7 @@
 > language-independent layer.
 > Also flags concealment instructions (hiding agent operations from logs,
 > the user, or via fake success reports).
+> Python-style hex-escape runs are decoded and the plaintext is scanned.
 > Free tier (5 scans/day, sign-in via GitHub), pay-as-you-go via USDC.
 
 Site: https://skillsmith.ch
