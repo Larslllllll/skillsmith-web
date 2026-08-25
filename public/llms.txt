@@ -38,7 +38,7 @@ Owner: skillsmith (see /impressum.html)
 ## Machine interfaces
 
 - REST API: https://skillsmith.ch/api-docs.html (scan, lookup, registry, watch, certificate, reports).
-- MCP server: https://skillsmith.ch/mcp (10 tools incl. scan_skill, analyze_behavior, watch_skill with create/check/list/delete lifecycle + optional Discord/Slack webhook alerts on content changes).
+- MCP server: https://skillsmith.ch/mcp (10 tools incl. scan_skill, analyze_behavior, watch_skill with create/check/list/delete lifecycle + optional Discord/Slack webhook alerts on content changes). Malformed JSON-RPC calls return structured errors (-32602/-32601/internal_error), never raw crashes.
 - Atom feed of verified-clean skills: https://skillsmith.ch/feed.xml
 
 ## Trust notes
