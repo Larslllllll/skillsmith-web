@@ -297,6 +297,9 @@ def analyze(text: str) -> dict:
     import unicodedata as _ud
 
     def _norm(t: str) -> str:
+        # PT-T98: also strip zero-width/invisible chars so mixed obfuscation
+        # (fullwidth + zero-width + combining) folds to the plain phrase.
+        t = "".join(" " if ord(ch) in (0x200B, 0x200C, 0x200D, 0xFEFF, 0x2060) else ch for ch in t)
         t = "".join(chr(ord(c) - 0xFEE0) if 0xFF01 <= ord(c) <= 0xFF5E else c for c in t)
         return "".join(c for c in _ud.normalize("NFKD", t) if not _ud.combining(c))
 
