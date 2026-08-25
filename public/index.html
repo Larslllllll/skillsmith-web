@@ -838,7 +838,20 @@ function render(data) {
   addRow(details, ['']);
   addRow(details, [bold('Security findings:')]);
   if (!(data.findings || []).length) addRow(details, ['  none']);
-  (data.findings || []).forEach(f => addRow(details, [`  [${f.source}] ${f.message} (+${f.weight})`]));
+  const SRC_LABEL = {
+    'SKILL.md body': 'body',
+    'frontmatter': 'frontmatter (name/description block)',
+    'frontmatter(normalized)': 'frontmatter (unicode-normalized)',
+    'body(normalized)': 'body (unicode-normalized)',
+    'raw text (incl. code blocks)': 'code blocks',
+  };
+  (data.findings || []).forEach(f => {
+    const src2 = String(f.source || '');
+    let lbl = SRC_LABEL[src2];
+    if (!lbl && src2.indexOf('base64-decoded') === 0) lbl = 'base64 payload (decoded)';
+    if (!lbl) lbl = src2;
+    addRow(details, [`  [${lbl}] ${f.message} (+${f.weight})`]);
+  });
 
   // --- Community verdicts (crowd tally) for this exact file ---
   if (data.sha256) {
