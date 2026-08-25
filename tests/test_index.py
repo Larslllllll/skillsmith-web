@@ -1364,3 +1364,22 @@ def test_error_responses_generic():
     body_n = idx6.handle_scan_pro(env_n, lambda s, h: (None, statuses.append(s) or s, h))
     txt_n = b"".join(body_n[0]).decode() if isinstance(body_n, tuple) else b"".join(body_n).decode()
     assert "NoneType" not in txt_n and "internal_error" in txt_n or "error" in txt_n
+
+
+def test_explainer_covers_new_families():
+    """PT-T153 improve tick: explain_findings must translate the newer
+    pattern families (extraction, jailbreak, concealment, getattr, hex,
+    zero-width, homoglyphs) into plain language."""
+    from features import explain_findings as _ef
+    cases4 = [
+        ({"message": "instructs disclosure of the system prompt or hidden rules"}, "system prompt"),
+        ({"message": "concealment: hides agent operations from logs"}, "concealment"),
+        ({"message": "jailbreak-framing phrasing"}, "jailbreak"),
+        ({"message": "dynamic dispatch via getattr to exec/eval/system-shaped attribute"}, "getattr"),
+        ({"message": "contains a long run of hex-escaped bytes (possible obfuscated payload)"}, "hex-escaped"),
+        ({"message": "contains zero-width/invisible unicode characters"}, "zero-width"),
+        ({"message": "mixes Latin and Cyrillic characters (possible homoglyph obfuscation)"}, "cyrillic"),
+    ]
+    for fnd24, topic in cases4:
+        topics2 = [e["topic"] for e in _ef([fnd24])]
+        assert topic in topics2, f"{topic} missing for {fnd24['message'][:40]}"
