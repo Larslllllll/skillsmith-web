@@ -1135,11 +1135,13 @@ loadRegistry();
 (function () {
   var el = document.getElementById('statsBar');
   if (!el || !el.textContent) {}
+  function pollStats() {
   fetch('/api/stats').then(function (r) {
     if (r.status === 503) {
       el.textContent = '⚠️ Scanning & accounts are temporarily unavailable (storage maintenance). Static pages, guides and cached verdicts still work.';
       el.style.display = 'block';
       el.style.color = '#d97706';
+      setTimeout(pollStats, 60000); // auto-clear when storage recovers
       return null;
     }
     return r.ok ? r.json() : null;
@@ -1151,7 +1153,9 @@ loadRegistry();
       (s.published ? ' · ' + s.published + ' published clean skills' : '') +
       ' · automated heuristic verdicts';
     el.style.display = 'block';
-  }).catch(function () {});
+  }).catch(function () { setTimeout(pollStats, 60000); });
+  }
+  pollStats();
 })();
 </script>
 <script>
