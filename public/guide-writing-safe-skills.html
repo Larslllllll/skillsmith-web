@@ -81,6 +81,12 @@ scans clean, and stays clean &mdash; so users (and their agents) can trust it.</
 </ul>
 
 <h2>What the scanner treats as red flags (2026 engine)</h2>
+<p class="muted" style="font-size:.9rem;">Heads-up for authors: URLs that start with
+<code>api.</code>, <code>data.</code> or <code>telemetry.</code> subdomains add a
+small score penalty (+4), because exfiltration endpoints often hide there. Calling
+a legitimate API like <code>api.github.com</code> is fine &mdash; expect one
+informational finding, not a bad verdict. Combined findings can push a skill to
+"medium"; check the finding list to see exactly which line triggered it.</p>
 <p>Recent engine updates catch obfuscation that used to slip past keyword
 scans &mdash; avoid all of these, even unintentionally:</p>
 <ul>
