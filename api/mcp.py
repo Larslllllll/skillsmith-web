@@ -198,8 +198,14 @@ def _call_tool(name, args, client_ip: str = ""):
                                  "tip": "call skillsmith_signup first (free), then pass the key as api_key"})
 
     if name == "scan_skill":
+        # PT-T171/Fix #54: JSON-RPC args can be any JSON type; non-string
+        # text/url crashed sha256_of/_fetch_skill_url with an AttributeError.
         text = args.get("text", "")
+        if not isinstance(text, str):
+            return _tool_result({"error": "text must be a string"})
         url = args.get("url", "")
+        if not isinstance(url, str):
+            return _tool_result({"error": "url must be a string"})
         if url and not text:
             try:
                 text = idx._fetch_skill_url(url)
@@ -462,7 +468,16 @@ def handle_jsonrpc(req: dict, client_ip: str = "") -> tuple[int, dict]:
         if tool_name not in {t["name"] for t in TOOLS}:
             return 200, {"jsonrpc": "2.0", "id": req_id,
                          "error": {"code": -32602, "message": f"unknown tool: {tool_name}"}}
-        result = _call_tool(tool_name, params.get("arguments") or {}, client_ip=client_ip)
+        # PT-T171/Fix #54: arguments must be an object; lists/strings crashed
+        # _call_tool with an unhandled AttributeError.
+        tool_args = params.get("arguments")
+        if not isinstance(tool_args, dict):
+            return 200, {"jsonrpc": "2.0", "id": req_id,
+                         "error": {"code": -32602, "message": "invalid params: arguments must be an object"}}
+        try:
+            result = _call_tool(tool_name, tool_args, client_ip=client_ip)
+        except Exception as e:  # noqa: BLE001 - never crash the MCP session
+            result = {"content": [{"type": "text", "text": '{"error": "internal_error"}'}], "isError": True}
     elif rpc_method == "ping":
         result = {}
     else:

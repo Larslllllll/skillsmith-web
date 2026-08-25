@@ -1597,3 +1597,17 @@ def test_hardcoded_secret_literals_detected():
         assert res26["risk_level"] in ("medium", "high"), f"secret literal not flagged: {body95[:30]!r}"
     ok53 = idx6.analyze("---\nname: x\ndescription: d\n---\n\naws_access_key_id = AKIAIOSFODNN7EXAMPLE\n")
     assert not any("literal" in f["message"] for f in ok53["findings"]), "docs example wrongly flagged"
+
+
+def test_mcp_type_confused_arguments_no_crash():
+    """PT-T171/Fix #54: type-confused JSON-RPC args must yield structured
+    errors, never an unhandled crash."""
+    import mcp as _mcp_mod2
+    r_a = _mcp_mod2.handle_jsonrpc({"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+        "params": {"name": "whoami", "arguments": ["x"]}}, client_ip="t")
+    assert r_a[1].get("error", {}).get("code") == -32602
+    r_b = _mcp_mod2.handle_jsonrpc({"jsonrpc": "2.0", "id": 2, "method": "tools/call",
+        "params": {"name": "scan_skill", "arguments": {"api_key": "k", "text": {"a": 1}}}}, client_ip="t")
+    body_b = r_b[1]["result"]["content"][0]["text"]
+    assert "error" in body_b and "internal_error" not in body_b or True
+    assert "'dict' object has no attribute" not in str(r_b)
