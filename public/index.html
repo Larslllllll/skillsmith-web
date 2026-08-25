@@ -893,8 +893,14 @@ function render(data) {
             body: JSON.stringify({ api_key: getApiKey(), url: window.lastScanPayload.url })
           });
           const d2 = await res2.json();
-          wb.textContent = d2.watch_id ? ('✅ Watching (id ' + String(d2.watch_id).slice(0, 8) + '…) — see panel above after reload') : ('⚠️ ' + (d2.error || 'failed'));
-        } catch (e130) { wb.textContent = '⚠️ failed'; }
+          if (d2.watch_id) {
+            wb.textContent = '✅ Watching (id ' + String(d2.watch_id).slice(0, 8) + '…) — see panel above after reload';
+          } else {
+            const msg503 = res2.status === 503 ? 'service temporarily unavailable - try again in a few minutes' : '';
+            wb.textContent = '⚠️ ' + (msg503 || d2.error || 'failed');
+            wb.disabled = false; // allow retry (e.g. after sign-in or outage)
+          }
+        } catch (e130) { wb.textContent = '⚠️ network error - try again'; wb.disabled = false; }
       };
       details.appendChild(wb);
     }
