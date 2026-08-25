@@ -374,10 +374,18 @@ def analyze(text: str) -> dict:
         # LRM/RLM U+200E/F, FUNCTION APPLICATION U+2061, INVISIBLE TIMES
         # U+2062, ARABIC LETTER MARK U+061C, ...) except the ones already
         # handled by zw_mode below.
+        # PT-T168/Fix #51: space-like chars (Zs: NBSP variants, OGHAM SPACE)
+        # become ASCII spaces (word separators); Private Use (Co), line/para
+        # separators (Zl/Zp) are stripped like controls.
+        # PT-T168/Fix #51: non-ASCII spaces (Zs) follow zw_mode: separator in
+        # "space" mode, removed in "delete" mode. Plain ASCII space is kept.
+        t = "".join(
+            sep if _ud.category(ch) == "Zs" and ch != " " else ch for ch in t
+        )
         t = "".join(
             ch for ch in t
             if (ord(ch) >= 0x20 and ord(ch) != 0x7F and not (0x80 <= ord(ch) <= 0x9F)
-                and _ud.category(ch) != "Cf")
+                and _ud.category(ch) not in ("Cf", "Co", "Zl", "Zp"))
             or ch in "\t\n\r"
             or ord(ch) in (0x200B, 0x200C, 0x200D, 0xFEFF, 0x2060)
         )
