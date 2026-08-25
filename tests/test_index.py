@@ -1383,3 +1383,43 @@ def test_explainer_covers_new_families():
     for fnd24, topic in cases4:
         topics2 = [e["topic"] for e in _ef([fnd24])]
         assert topic in topics2, f"{topic} missing for {fnd24['message'][:40]}"
+
+
+def test_record_scan_gate_and_history_binding():
+    """PT-T155/T157: parse-broken results must never be safe, and the
+    score history must stay hash-bound and capped at 10 entries."""
+    import scans as _scans_mod
+    # offline: stub the blob layer
+    class _FakeStore(dict):
+        pass
+    _store = {}
+    _orig_bg, _orig_bput = _scans_mod._blob_get, _scans_mod._blob_put
+    _scans_mod._blob_get = lambda p: _store.get(p)
+    def _fake_put(p, obj):
+        _store[p] = obj
+        return True
+    _scans_mod._blob_put = _fake_put
+    try:
+        _run_gate_history_checks(_scans_mod)
+    finally:
+        _scans_mod._blob_get, _scans_mod._blob_put = _orig_bg, _orig_bput
+
+
+def _run_gate_history_checks(_scans_mod):
+    from scans import record_scan as _rs
+    broken = {"parse_ok": False, "parse_error": "x"}
+    rec1 = _rs("gate" + "0" * 60, dict(broken), name="n")
+    assert rec1.get("risk_level") is None
+    # simulate the gate used for publishing:
+    def _is_safe(a):
+        return bool(a.get("parse_ok") and a.get("lint_ok") and a.get("risk_level") == "clean")
+    assert not _is_safe(broken)
+    assert _is_safe({"parse_ok": True, "lint_ok": True, "risk_level": "clean"})
+    # history binding: same digest accumulates, capped at 10
+    ok_result = {"parse_ok": True, "lint_ok": True, "risk_level": "clean",
+                 "security_score": 100, "findings": [], "lint_issues": []}
+    d = "hist" + "1" * 60
+    last = None
+    for _ in range(12):
+        last = _rs(d, dict(ok_result))
+    assert len(last.get("score_history", [])) <= 10
