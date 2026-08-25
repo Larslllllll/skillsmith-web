@@ -158,7 +158,7 @@ _CODE_PATTERNS = [
     # --- obfuscation ---
     (re.compile(r"base64\.b64decode\s*\([^)]*\)\s*\)?\s*(#.*)?\n[^\n]*\bexec\s*\("), 9, "decodes base64 then executes the result (classic obfuscated payload)"),
     (re.compile(r"[A-Za-z0-9+/]{200,}={0,2}"), 4, "contains a very long base64-like blob (possible obfuscated payload)"),
-    (re.compile(r"(?:\\x[0-9a-fA-F]{2}){20,}"), 5, "contains a long run of hex-escaped bytes (possible obfuscated payload)"),
+    (re.compile(r"(?:\\x[0-9a-fA-F]{2}[\s,]*){20,}"), 5, "contains a long run of hex-escaped bytes (possible obfuscated payload)"),
     (re.compile(r"[\u200b\u200c\u200d\ufeff]"), 7, "contains zero-width/invisible unicode characters (common prompt-injection hiding technique)"),
     (re.compile(r"[\u202a-\u202e\u2066-\u2069]"), 8, "contains RTL/bidi direction override characters (can silently reverse displayed text - classic instruction-hiding trick)"),
     # PT-T75: short base64 payloads that decode to injection phrasing are
@@ -404,9 +404,9 @@ def analyze(text: str) -> dict:
         out = []
         # PT-T143: Python-style \xNN escapes auto-decode at runtime; decode
         # runs of >=4 and scan the printable result too.
-        for _hx in _re.finditer(r"(?:\\x[0-9a-fA-F]{2}){4,}", t):
+        for _hx in _re.finditer(r"(?:\\x[0-9a-fA-F]{2}[\s,]*){4,}", t):
             try:
-                _hd = bytes.fromhex(_hx.group(0).replace("\\x", "")).decode("latin-1")
+                _hd = bytes.fromhex(_re.sub(r"[\s,]", "", _hx.group(0).replace("\\x", ""))).decode("latin-1")
             except Exception:  # noqa: BLE001
                 continue
             if _hd and sum(32 <= ord(c) < 127 for c in _hd) / len(_hd) > 0.8:
