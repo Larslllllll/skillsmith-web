@@ -1,3 +1,6 @@
 __pycache__/
 .vercel
 .env*
+
+# internal security testing notes (kept local, not published)
+pentest-ticks.md
