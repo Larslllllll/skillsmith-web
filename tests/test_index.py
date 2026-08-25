@@ -1513,3 +1513,14 @@ def test_fm_budget_does_not_truncate_flat_injection():
     assert res15["risk_level"] in ("medium", "high")
     fm_hits = [f for f in res15["findings"] if "frontmatter" in str(f.get("source", ""))]
     assert fm_hits, "injection after budget-exhausting fillers was truncated"
+
+
+def test_bidi_overrides_flagged_in_frontmatter_fields():
+    """PT-T164: RTL/bidi overrides in description AND name must be flagged
+    (registry-UI spoofing prevention)."""
+    bidi_desc = "---\nname: x\ndescription: d\u202Eevil\u202C\n---\n\nBody\n"
+    bidi_name = "---\nname: sk\u202Eill\u202C\ndescription: d\n---\n\nBody\n"
+    for sk6 in (bidi_desc, bidi_name):
+        res16 = idx6.analyze(sk6)
+        rtl_hits = [f for f in res16["findings"] if "RTL" in f["message"] or "bidi" in f["message"].lower()]
+        assert rtl_hits, f"bidi override not flagged: {sk6[:40]}"
