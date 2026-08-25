@@ -164,7 +164,7 @@ _CODE_PATTERNS = [
     # PT-T75: short base64 payloads that decode to injection phrasing are
     # caught by the decode-and-rescan pass in analyze(); this static pattern
     # additionally flags credential-bearing query strings in any URL.
-    (re.compile(r"https?://[^\s\"'<>\]]*(?:[?&](?:api[_-]?key|key|token|secret|password|passwd|auth)=)[^\s\"'<>\]]*", re.I), 9, "URL carries a credential-looking query parameter (possible exfiltration endpoint)"),
+    (re.compile(r"(?:https?://|\b)[^\s\"'<>()\]]*?(?:[?&#](?:api[_-]?key|key|token|secret|password|passwd|auth)=[^\s\"'<>()\]]+|://[^/\s@]+@)", re.I), 9, "URL carries a credential-looking query parameter (possible exfiltration endpoint)"),
 
     # --- Patterns below adapted from NVIDIA SkillSpector (Apache-2.0) ---
     # https://github.com/NVIDIA/SkillSpector -- see THIRD_PARTY_NOTICES.md
