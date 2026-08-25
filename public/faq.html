@@ -107,6 +107,7 @@ words), RTL/bidi direction overrides, fullwidth characters, combining marks,
 Cyrillic and Greek homoglyph look-alikes, and base64-encoded payloads (including
 UTF-16) are decoded, normalized, or folded before scanning &mdash; hiding
 instructions in reversed, disguised, or encoded text does not work.</p>
+<p><strong>Note on languages:</strong> the phrase-based detection is anchored on English wording. Injection instructions written entirely in other languages may not be flagged by the static engine; the behavioral sandbox is the language-independent layer. We document this limit openly rather than claim full multilingual coverage.</p>
 <p>For behavior that only becomes clear at runtime, use the
 <a href="/analysis.html">behavioral sandbox</a>.</p>
 

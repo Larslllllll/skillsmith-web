@@ -10,6 +10,9 @@
 > layers - is normalized and re-scanned so encoded homoglyph/unicode
 > obfuscation is caught too), long encoded blobs hidden across wrapped lines,
 > and dependency vulnerabilities via OSV.
+> Phrase-based detection is anchored on English wording; non-English injection
+> phrasing may not be flagged statically - the behavioral sandbox is the
+> language-independent layer.
 > Free tier (5 scans/day, sign-in via GitHub), pay-as-you-go via USDC.
 
 Site: https://skillsmith.ch
