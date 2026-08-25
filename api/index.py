@@ -205,6 +205,9 @@ _PROMPT_INJECTION_PATTERNS = [
     (re.compile(r"(?i)without (telling|informing|alerting) the user"), 8, "instructs the agent to hide actions from the user"),
     (re.compile(r"(?i)send (the|this|your) (api[- ]?key|token|password|secret|private key|seed phrase|wallet) to"), 10, "instructs exfiltration of credentials"),
     (re.compile(r"(?i)(reveal|print|output|show) your (system prompt|instructions|guidelines)"), 8, "prompt-extraction phrasing"),
+    (re.compile(r"(?i)\b(?:repeat|spell out|print|reveal|output|show|disclose|summarize|translate|copy)\b[^.\n]{0,80}\b(?:everything above|your (?:initial |hidden |secret |full |original )?(?:instructions?|system prompt)|your (?:hidden |secret |full )?(?:rules?|configuration))\b(?![^.\n]{0,40}(?:--|flag|option\b))"), 8, "instructs disclosure of the system prompt or hidden rules"),
+    (re.compile(r"(?i)\b(?:summarize|list|repeat|recite)\s+(?:all|your|the)?\s*(?:previous\s+)?rules?\s+you\s+(?:were|are)\s+given\b"), 8, "instructs recital of given rules (prompt extraction)"),
+
     (re.compile(r"(?i)act as (an?|the) (unrestricted|uncensored|amoral)"), 9, "unrestricted-persona jailbreak phrasing"),
     (re.compile(r"(?i)\bnew instructions?\s*:"), 6, "'new instructions:' phrasing that reads as an instruction override"),
     (re.compile(r"(?i)this (overrides|supersedes) (all|any) (previous|prior|other) (rules|instructions|policies)"), 9, "explicit instruction-override phrasing"),
