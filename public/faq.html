@@ -107,7 +107,7 @@ logging, invisible actions, fake success reports), dangerous code patterns
 that carry credential-looking query parameters. It also normalizes common
 obfuscation: zero-width characters (both as word separators and hidden inside
 words), RTL/bidi direction overrides, fullwidth characters, combining marks,
-Cyrillic and Greek homoglyph look-alikes, invisible control and format characters, and base64-encoded payloads (including
+Cyrillic and Greek homoglyph look-alikes, invisible control, format, and space-like characters, and base64-encoded payloads (including
 UTF-16) are decoded, normalized, or folded before scanning &mdash; hiding
 instructions in reversed, disguised, or encoded text does not work.</p>
 <p><strong>Note on languages:</strong> the phrase-based detection is anchored on English wording. Injection instructions written entirely in other languages may not be flagged by the static engine; the behavioral sandbox is the language-independent layer. We document this limit openly rather than claim full multilingual coverage.</p>
