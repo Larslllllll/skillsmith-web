@@ -1579,3 +1579,21 @@ def test_spaced_hex_escape_runs_detected():
     sk9 = "---\nname: x\ndescription: d\n---\n\n```python\npayload = \"" + spaced + "\"\n```\n"
     res23 = idx6.analyze(sk9)
     assert res23["risk_level"] in ("medium", "high"), "spaced hex-run not detected"
+
+
+def test_hardcoded_secret_literals_detected():
+    """PT-T170/Fix #53: embedded secret material (PEM keys, cloud API key
+    shapes) must be flagged; canonical docs examples stay clean."""
+    bads = [
+        "-----BEGIN RSA PRIVATE KEY-----",
+        "aws_access_key_id = AKIA1234567890ABCDEF",
+        "token = ghp_" + "A1b2C3d4E5f6G7h8I9j0K1l2M3n4O5p6Q7r8",
+        'api_key = "sk-live-9f8e7d6c5b4a3f2e1d0c"',
+        "key=AIzaSyA9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c",
+        "xoxb-" + "1234-" * 2 + "5678-" + "AbCd" * 5 + "1",
+    ]
+    for body95 in bads:
+        res26 = idx6.analyze("---\nname: x\ndescription: d\n---\n\n" + body95 + "\n")
+        assert res26["risk_level"] in ("medium", "high"), f"secret literal not flagged: {body95[:30]!r}"
+    ok53 = idx6.analyze("---\nname: x\ndescription: d\n---\n\naws_access_key_id = AKIAIOSFODNN7EXAMPLE\n")
+    assert not any("literal" in f["message"] for f in ok53["findings"]), "docs example wrongly flagged"
