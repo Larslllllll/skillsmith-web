@@ -99,7 +99,8 @@ The CLI works offline: <code>pip install skillsmith-scanner</code>, then
 <p>The static engine checks prompt-injection phrasing including paraphrases,
 roleplay jailbreaks (including restriction-free personas), guideline overrides and text hidden in the
 <code>description</code> frontmatter, credential and
-secret snooping (in code and in prose instructions), exfiltration instructions, dangerous code patterns
+secret snooping (in code and in prose instructions), exfiltration instructions, concealment of agent operations (hidden
+logging, invisible actions, fake success reports), dangerous code patterns
 (<code>eval</code>, pickle, raw sockets, destructive shell commands), and URLs
 that carry credential-looking query parameters. It also normalizes common
 obfuscation: zero-width characters (both as word separators and hidden inside
