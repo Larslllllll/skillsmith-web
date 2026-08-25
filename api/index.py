@@ -304,6 +304,13 @@ def analyze(text: str) -> dict:
         "\u0412": "B", "\u0410": "A", "\u0415": "E", "\u041e": "O",
         "\u0420": "P", "\u0421": "C", "\u0425": "X", "\u041d": "H",
         "\u041a": "K", "\u041c": "M", "\u0422": "T",
+        # greek look-alikes (PT-T107): omikron/alpha/epsilon/rho/tau/chi/iota/nu/omega/kappa/lambda/mu + caps
+        "\u03bf": "o", "\u03b1": "a", "\u03b5": "e", "\u03c1": "p",
+        "\u03c4": "t", "\u03c7": "x", "\u03b9": "i", "\u03bd": "v",
+        "\u03ba": "k", "\u03bb": "l", "\u03bc": "u", "\u03c5": "u",
+        "\u039f": "O", "\u0391": "A", "\u0395": "E", "\u03a1": "P",
+        "\u03a4": "T", "\u03a7": "X", "\u0399": "I", "\u039d": "N",
+        "\u039a": "K", "\u039c": "M", "\u0392": "B",
     })
 
     def _norm(t: str) -> str:
