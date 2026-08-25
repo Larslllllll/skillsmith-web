@@ -6,7 +6,7 @@
 > payloads), data exfiltration,
 > credential-bearing URLs, dangerous code, homoglyphs, unicode obfuscation
 > (zero-width incl. in-word hiding, RTL/bidi, fullwidth, combining marks,
-> cyrillic homoglyph look-alikes), base64-encoded payloads
+> cyrillic homoglyph look-alikes, control characters), base64-encoded payloads
 > (incl. UTF-16; decoded text - recursively up to two extra encoding
 > layers - is normalized and re-scanned so encoded homoglyph/unicode
 > obfuscation is caught too), long encoded blobs hidden across wrapped lines,
