@@ -101,10 +101,11 @@ and text hidden in the <code>description</code> frontmatter), credential and
 secret snooping, exfiltration instructions, dangerous code patterns
 (<code>eval</code>, pickle, raw sockets, destructive shell commands), and URLs
 that carry credential-looking query parameters. It also normalizes common
-obfuscation: zero-width characters, RTL/bidi direction overrides, fullwidth
-characters, combining marks, and base64-encoded payloads are decoded or folded
-before scanning &mdash; hiding instructions in reversed or disguised text does
-not work.</p>
+obfuscation: zero-width characters (both as word separators and hidden inside
+words), RTL/bidi direction overrides, fullwidth characters, combining marks,
+Cyrillic and Greek homoglyph look-alikes, and base64-encoded payloads (including
+UTF-16) are decoded, normalized, or folded before scanning &mdash; hiding
+instructions in reversed, disguised, or encoded text does not work.</p>
 <p>For behavior that only becomes clear at runtime, use the
 <a href="/analysis.html">behavioral sandbox</a>.</p>
 
