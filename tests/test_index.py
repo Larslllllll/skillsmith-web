@@ -1625,3 +1625,16 @@ def test_watch_webhook_validator_and_no_redirect():
                 12345, None]:
         assert not idx6._valid_watch_webhook(bad)
     assert hasattr(idx6, "_OPENER_NO_REDIRECT"), "no-redirect opener missing"
+
+
+def test_explainer_covers_every_pattern_message():
+    """Every detection message must be explained by at least one
+    _EXPLAIN_RULES needle -- prevents explainer drift when new patterns land."""
+    import features as _feat_mod2
+    ns_rules = [n for n, _w, _a in _feat_mod2._EXPLAIN_RULES]
+    all_msgs = []
+    for tl in (idx6._PROMPT_INJECTION_PATTERNS, idx6._PARAPHRASE_PATTERNS,
+               idx6._CODE_PATTERNS, idx6._DROPPER_PATTERNS):
+        all_msgs += [t[2] for t in tl]
+    gaps = [m for m in all_msgs if not any(n.lower() in m.lower() for n in ns_rules)]
+    assert not gaps, f"unexplained pattern messages: {gaps[:5]}"
