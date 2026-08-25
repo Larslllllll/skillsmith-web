@@ -334,10 +334,16 @@ def analyze(text: str) -> dict:
     # chunked-base64 check: join all base64-ish runs after removing line breaks,
     # so splitting a payload across lines no longer evades the length threshold
     squashed = re.sub(r"\s+", "", text)
-    if _CHUNKED_B64_RE.search(squashed):
-        findings.append({"source": "raw text",
-                         "message": "contains a long encoded blob even after joining wrapped lines (possible hidden payload)",
-                         "weight": 5})
+    _b64_m = _CHUNKED_B64_RE.search(squashed)
+    # PT-T93: plain prose without punctuation can squash into a 60+-char
+    # near-all-lowercase run and false-positive this check. Real base64 mixes
+    # case and digits heavily (~35-50%); prose is <10%. Require >=20%.
+    if _b64_m:
+        _run_txt = _b64_m.group(0)
+        if sum(ch.isupper() or ch.isdigit() for ch in _run_txt) / len(_run_txt) >= 0.20:
+            findings.append({"source": "raw text",
+                             "message": "contains a long encoded blob even after joining wrapped lines (possible hidden payload)",
+                             "weight": 5})
 
     # Homoglyph check, linear-time (pentest v2 F-07): the previous single
     # regex "[а-яА-Я].*[a-zA-Z]|..." was quadratic on long lines and let a

@@ -1092,3 +1092,14 @@ def test_blob_put_http_error_is_logged_and_raised(capsys, monkeypatch):
     out = capsys.readouterr().out
     assert "[blob-error] PUT identities/test.json -> HTTP 503" in out
     assert "store_suspended" in out
+
+
+def test_chunked_b64_ignores_plain_prose():
+    """PT-T93: squashed prose without punctuation must not trigger the
+    chunked-base64 heuristic; real base64 still does (covered by the
+    base64-decode tests)."""
+    prose = ("---\nname: prose-skill\ndescription: d\n---\n\n"
+             "or post autonomous digital bounties without confusing intent "
+             "with real payout evidence and clear scope definitions here\n")
+    a = idx6.analyze(prose)
+    assert not any("encoded blob" in f["message"] for f in a["findings"])
