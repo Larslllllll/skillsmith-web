@@ -31,9 +31,6 @@ try:
         PAY_PER_USE_PRICE_USDC,
         LOOKUP_PAY_PER_USE_PRICE_USDC,
         PREMIUM_PRICE_USDC,
-        PREMIUM_DURATION_DAYS,
-        LOOKUP_FREE_DAILY_LIMIT,
-        LOOKUP_PRO_DAILY_LIMIT,
         activate_pro,
         activate_premium,
         add_pay_per_use_credit,
@@ -49,7 +46,7 @@ try:
     )
     from .scans import (sha256_of, get_scan_record, record_scan, list_safe_registry,
                         get_published_content, add_report, get_reports, bump_stats, get_stats,
-                        create_watch, get_watch, update_watch, store_dna, find_similar_dna)
+                        store_dna)
 except ImportError:  # local/script execution without package context
     from account import (
         PRO_PRICE_USDC,
@@ -58,10 +55,7 @@ except ImportError:  # local/script execution without package context
         PAY_PER_USE_PRICE_USDC,
         LOOKUP_PAY_PER_USE_PRICE_USDC,
         PREMIUM_PRICE_USDC,
-        PREMIUM_DURATION_DAYS,
-        LOOKUP_FREE_DAILY_LIMIT,
-        LOOKUP_PRO_DAILY_LIMIT,
-        activate_pro,
+                    activate_pro,
         activate_premium,
         add_pay_per_use_credit,
         add_lookup_pay_per_use_credit,
@@ -76,7 +70,7 @@ except ImportError:  # local/script execution without package context
     )
     from scans import (sha256_of, get_scan_record, record_scan, list_safe_registry,
                        get_published_content, add_report, get_reports, bump_stats, get_stats,
-                       create_watch, get_watch, update_watch, store_dna, find_similar_dna)
+                       store_dna)
 
 GITHUB_CLIENT_ID = os.environ.get("GITHUB_CLIENT_ID", "")
 GITHUB_CLIENT_SECRET = os.environ.get("GITHUB_CLIENT_SECRET", "")
@@ -1264,10 +1258,8 @@ def handle_watch(environ, start_response):
     github.com / raw.githubusercontent.com (same allow-list as /api/scan's
     url mode) so this can never be used as an SSRF proxy."""
     try:
-        try:
-            from .scans import create_watch, get_watch, update_watch
-        except ImportError:  # local/test context
-            from scans import create_watch, get_watch, update_watch
+        # watch helpers (scans.create_watch/get_watch/update_watch) are imported
+        # lazily by watch_create/watch_check - no module-level import needed.
         if environ.get("REQUEST_METHOD") == "POST":
             payload = _read_json(environ)
             api_key = payload.get("api_key", "")

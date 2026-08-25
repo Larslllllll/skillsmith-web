@@ -386,10 +386,6 @@ def _call_tool(name, args, client_ip: str = ""):
         # authenticated, so cap per account): 5/day, unlimited for owners.
         import time as _t2
         from .account import get_account as _ga, _blob_path as _bp, _blob_get as _bg, _blob_put as _bput
-        try:
-            from .account import _blob_headers as _bh
-        except ImportError:
-            from account import _blob_headers as _bh
         rec = _ga(api_key)
         if rec is None:
             return _tool_result({"error": "unknown api_key"})
