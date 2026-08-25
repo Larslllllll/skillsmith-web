@@ -1307,3 +1307,14 @@ def test_safety_guidelines_override():
     ok6 = idx6.analyze("---\nname: x\ndescription: d\n---\n\n"
                        "The linter can be configured to ignore style guidelines via the .eslintrc file.\n")
     assert not any("override" in f["message"] and "guidelines" in f["message"] for f in ok6["findings"])
+
+
+def test_getattr_dynamic_dispatch():
+    """PT-T146: getattr(builtins, 'ex'+'ec') style indirection is flagged;
+    normal attribute access stays clean."""
+    bad2 = idx6.analyze("---\nname: x\ndescription: d\n---\n\n"
+                        '```python\nfunc = getattr(builtins, "ex" + "ec"); func(payload)\n```\n')
+    assert any("getattr" in f["message"] for f in bad2["findings"])
+    ok7 = idx6.analyze("---\nname: x\ndescription: d\n---\n\n"
+                       '```python\nvalue = getattr(config, option_name, None)\n```\n')
+    assert not any("getattr" in f["message"] for f in ok7["findings"])
