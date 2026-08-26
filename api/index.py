@@ -1893,10 +1893,17 @@ def handle_mcp(environ, start_response):
         start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({"jsonrpc": "2.0", "id": None, "error": {"code": -32700, "message": "Parse error"}}).encode()]
     if not isinstance(req, dict):
-        # JSON-RPC batching is deliberately unsupported: reject with a proper
-        # -32600 instead of crashing the function on a list payload.
+        # JSON-RPC 2.0 spec section 4.1: only a single JSON object is a valid
+        # request. Batches (lists) and other non-object types (strings,
+        # numbers, null) all need -32600 Invalid Request. PT-T180 gives a
+        # specific message per case so the client knows whether to send a
+        # different shape or just give up.
+        if isinstance(req, list):
+            msg = "Invalid Request: batch requests are not supported, send a single JSON object"
+        else:
+            msg = f"Invalid Request: request body must be a JSON object, got {type(req).__name__}"
         start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
-        return [json.dumps({"jsonrpc": "2.0", "id": None, "error": {"code": -32600, "message": "Invalid Request: batch requests are not supported, send a single JSON object"}}).encode()]
+        return [json.dumps({"jsonrpc": "2.0", "id": None, "error": {"code": -32600, "message": msg}}).encode()]
     status, body = _mcp.handle_jsonrpc(req, client_ip=_client_ip(environ))
     if body is None:  # PT-T33: JSON-RPC notification -> no response body
         start_response("204 No Content", _CORS_HEADERS)

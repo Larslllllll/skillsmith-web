@@ -9,6 +9,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "api"))
 
+import json
+
 import mcp as mcp_mod
 
 
@@ -110,3 +112,57 @@ def test_jsonrpc_unknown_method():
     assert status == 200
     assert body["error"]["code"] == -32601
     assert "tools/explode" in body["error"]["message"]
+
+
+def test_handle_mcp_rejects_non_object_with_specific_type():
+    """PT-T180: non-object JSON-RPC requests get a clear type-specific error.
+    Previously the message said "batch requests are not supported" for ANY
+    non-dict type (strings, numbers, null), misleading the client."""
+    import io as _io
+    import index as _idx
+
+    # string body
+    body = b'"hello"'
+    env = {"REQUEST_METHOD": "POST", "CONTENT_LENGTH": str(len(body)),
+           "QUERY_STRING": "", "wsgi.input": _io.BytesIO(body)}
+    statuses = []
+    out = _idx.handle_mcp(env, lambda st, hd: statuses.append(st))
+    parsed = json.loads(b"".join(out))
+    assert statuses[0].startswith("200"), f"expected 200, got {statuses[0]}"
+    assert parsed["error"]["code"] == -32600
+    assert "must be a JSON object" in parsed["error"]["message"]
+    assert "str" in parsed["error"]["message"]
+
+    # number body
+    body = b"12345"
+    env = {"REQUEST_METHOD": "POST", "CONTENT_LENGTH": str(len(body)),
+           "QUERY_STRING": "", "wsgi.input": _io.BytesIO(body)}
+    statuses = []
+    out = _idx.handle_mcp(env, lambda st, hd: statuses.append(st))
+    parsed = json.loads(b"".join(out))
+    assert parsed["error"]["code"] == -32600
+    assert "int" in parsed["error"]["message"]
+
+    # null body
+    body = b"null"
+    env = {"REQUEST_METHOD": "POST", "CONTENT_LENGTH": str(len(body)),
+           "QUERY_STRING": "", "wsgi.input": _io.BytesIO(body)}
+    statuses = []
+    out = _idx.handle_mcp(env, lambda st, hd: statuses.append(st))
+    parsed = json.loads(b"".join(out))
+    assert parsed["error"]["code"] == -32600
+    assert "NoneType" in parsed["error"]["message"]
+
+
+def test_handle_mcp_rejects_batch_with_batch_message():
+    """PT-T180: a JSON array (batch) still gets the batch-specific message."""
+    import io as _io
+    import index as _idx
+    body = b'[{"jsonrpc": "2.0", "id": 1, "method": "tools/list"}]'
+    env = {"REQUEST_METHOD": "POST", "CONTENT_LENGTH": str(len(body)),
+           "QUERY_STRING": "", "wsgi.input": _io.BytesIO(body)}
+    statuses = []
+    out = _idx.handle_mcp(env, lambda st, hd: statuses.append(st))
+    parsed = json.loads(b"".join(out))
+    assert parsed["error"]["code"] == -32600
+    assert "batch" in parsed["error"]["message"]
