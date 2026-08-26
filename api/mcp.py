@@ -437,6 +437,13 @@ def handle_jsonrpc(req: dict, client_ip: str = "") -> tuple[int, dict]:
     entrypoint; Vercel's Python builder only supports one per project),
     not deployed as its own serverless function. Returns (http_status,
     response_body_dict)."""
+    # PT-T177: JSON-RPC 2.0 spec section 4.1 requires -32600 Invalid Request
+    # when the "jsonrpc" field is present but not exactly "2.0".
+    # Previously accepted any version string (1.0, 99.0, etc.).
+    rpc_version = req.get("jsonrpc")
+    if rpc_version is not None and rpc_version != "2.0":
+        return 200, {"jsonrpc": "2.0", "id": req.get("id"),
+                      "error": {"code": -32600, "message": f"Invalid Request: unsupported jsonrpc version '{rpc_version}', only 2.0 is supported"}}
     req_id = req.get("id")
     rpc_method = req.get("method", "")
     # PT-T33: JSON-RPC notifications (no id) must not produce a response.
