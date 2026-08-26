@@ -1669,3 +1669,39 @@ def test_invalid_certificate_leaks_no_verdict_details():
             _os53.environ.pop("SKILLSMITH_CERT_SECRET", None)
         else:
             _os53.environ["SKILLSMITH_CERT_SECRET"] = old_secret
+
+
+def test_scan_text_type_confusion_returns_clear_error():
+    """PT-T176/Fix-#56: non-string text fields return a clear 400 error,
+    not a generic internal_error -- reduces attack surface for probing."""
+    import io as _io
+    # text as integer
+    body = json.dumps({"text": 12345}).encode()
+    env = {"REQUEST_METHOD": "POST", "CONTENT_LENGTH": str(len(body)),
+           "QUERY_STRING": "", "wsgi.input": _io.BytesIO(body),
+           "HTTP_X_FORWARDED_FOR": "127.0.0.1"}
+    statuses = []
+    out = idx6.handle_scan(env, lambda st, hd: statuses.append(st))
+    parsed = json.loads(b"".join(out))
+    assert statuses[0].startswith("400"), f"expected 400, got {statuses[0]}"
+    assert parsed.get("error") == "text must be a string", f"got: {parsed}"
+    # text as dict
+    body = json.dumps({"text": {"evil": "object"}}).encode()
+    env = {"REQUEST_METHOD": "POST", "CONTENT_LENGTH": str(len(body)),
+           "QUERY_STRING": "", "wsgi.input": _io.BytesIO(body),
+           "HTTP_X_FORWARDED_FOR": "127.0.0.1"}
+    statuses = []
+    out = idx6.handle_scan(env, lambda st, hd: statuses.append(st))
+    parsed = json.loads(b"".join(out))
+    assert statuses[0].startswith("400"), f"expected 400, got {statuses[0]}"
+    assert parsed.get("error") == "text must be a string", f"got: {parsed}"
+    # text as list
+    body = json.dumps({"text": ["evil", "array"]}).encode()
+    env = {"REQUEST_METHOD": "POST", "CONTENT_LENGTH": str(len(body)),
+           "QUERY_STRING": "", "wsgi.input": _io.BytesIO(body),
+           "HTTP_X_FORWARDED_FOR": "127.0.0.1"}
+    statuses = []
+    out = idx6.handle_scan(env, lambda st, hd: statuses.append(st))
+    parsed = json.loads(b"".join(out))
+    assert statuses[0].startswith("400"), f"expected 400, got {statuses[0]}"
+    assert parsed.get("error") == "text must be a string", f"got: {parsed}"

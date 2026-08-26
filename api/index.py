@@ -711,7 +711,10 @@ def handle_scan(environ, start_response):
                 start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
                 return [json.dumps({"error": "could not fetch url: %s" % e}).encode()]
 
-        if not isinstance(text, str) or len(text) > 100_000:
+        if not isinstance(text, str):
+            start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": "text must be a string"}).encode()]
+        if len(text) > 100_000:
             raise ValueError("text must be a string under 100,000 chars")
 
         explicit_api_key = payload.get("api_key") if isinstance(payload.get("api_key"), str) else ""
@@ -1587,7 +1590,10 @@ def handle_hook_scan(environ, start_response):
             except (ValueError, urllib.error.URLError, TimeoutError) as e:
                 start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
                 return [json.dumps({"error": "could not fetch url: %s" % e}).encode()]
-        if not isinstance(text, str) or len(text) > 100_000:
+        if not isinstance(text, str):
+            start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": "text must be a string"}).encode()]
+        if len(text) > 100_000:
             raise ValueError("text must be a string under 100,000 chars")
         explicit_api_key = payload.get("api_key") if isinstance(payload.get("api_key"), str) else ""
         explicit_api_key = explicit_api_key[:200]
