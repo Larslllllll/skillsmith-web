@@ -1739,3 +1739,113 @@ def test_scan_url_unicode_via_mcp_also_sanitized():
     assert statuses[0].startswith("400")
     err = parsed.get("error", "")
     assert "ascii codec" not in err, f"hook_scan leak still present: {err}"
+
+
+
+# ----------------------------------------------------------------------------
+# PT-T182: Security helper unit tests
+# _valid_watch_webhook prevents stored SSRF via the watch endpoint;
+# _client_ip must prefer x-real-ip over spoofable XFF.
+# ----------------------------------------------------------------------------
+
+class TestWatchWebhookValidator:
+    """PT-T38/T39: outbound webhooks must be Discord or Slack only,
+    no query strings, no fragments."""
+
+    def test_discord_url_accepted(self):
+        assert webapp._valid_watch_webhook(
+            "https://discord.com/api/webhooks/12345/abcdef"
+        ) is True
+
+    def test_discordapp_url_accepted(self):
+        # legacy discord URL
+        assert webapp._valid_watch_webhook(
+            "https://discordapp.com/api/webhooks/12345/abcdef"
+        ) is True
+
+    def test_slack_url_accepted(self):
+        assert webapp._valid_watch_webhook(
+            "https://hooks.slack.com/services/T0/B0/XXX"
+        ) is True
+
+    def test_query_string_rejected(self):
+        # PT-T39: query strings can carry hidden params
+        assert webapp._valid_watch_webhook(
+            "https://discord.com/api/webhooks/12345/abcdef?exfil=true"
+        ) is False
+
+    def test_fragment_rejected(self):
+        assert webapp._valid_watch_webhook(
+            "https://discord.com/api/webhooks/12345/abcdef#exfil"
+        ) is False
+
+    def test_http_rejected(self):
+        # only https
+        assert webapp._valid_watch_webhook(
+            "http://discord.com/api/webhooks/12345/abcdef"
+        ) is False
+
+    def test_unrelated_host_rejected(self):
+        # would let attacker use stored watch to probe internal network
+        assert webapp._valid_watch_webhook(
+            "https://evil.com/webhook"
+        ) is False
+
+    def test_empty_string_rejected(self):
+        assert webapp._valid_watch_webhook("") is False
+
+    def test_non_string_rejected(self):
+        assert webapp._valid_watch_webhook(12345) is False
+        assert webapp._valid_watch_webhook(None) is False
+        assert webapp._valid_watch_webhook(["https://discord.com/api/webhooks/x"]) is False
+
+    def test_subdomain_trick_rejected(self):
+        # attacker-controlled "discord.com.evil.com" must NOT match
+        assert webapp._valid_watch_webhook(
+            "https://discord.com.evil.com/api/webhooks/12345/abcdef"
+        ) is False
+
+
+class TestClientIpExtraction:
+    """_client_ip must prefer x-real-ip (set by Vercel edge) over the
+    first entry of XFF (which is fully client-controlled and trivially
+    spoofed). PT-T30: spoofable client IP = trivially bypassable per-IP
+    rate limit."""
+
+    def test_prefers_x_real_ip(self):
+        env = {
+            "HTTP_X_REAL_IP": "1.2.3.4",
+            "HTTP_X_FORWARDED_FOR": "99.99.99.99, 10.0.0.1",
+            "REMOTE_ADDR": "127.0.0.1",
+        }
+        assert webapp._client_ip(env) == "1.2.3.4"
+
+    def test_falls_back_to_last_xff_entry(self):
+        # No x-real-ip; XFF is multi-hop. The LAST entry was appended by
+        # our edge, not the client -- so it's trustworthy.
+        env = {
+            "HTTP_X_FORWARDED_FOR": "99.99.99.99, 10.0.0.1",
+            "REMOTE_ADDR": "127.0.0.1",
+        }
+        assert webapp._client_ip(env) == "10.0.0.1"
+
+    def test_single_xff_entry(self):
+        env = {"HTTP_X_FORWARDED_FOR": "1.2.3.4"}
+        assert webapp._client_ip(env) == "1.2.3.4"
+
+    def test_falls_back_to_remote_addr(self):
+        env = {"REMOTE_ADDR": "127.0.0.1"}
+        assert webapp._client_ip(env) == "127.0.0.1"
+
+    def test_ignores_first_xff_when_no_real_ip(self):
+        # The first XFF entry is client-controlled and must NOT be trusted.
+        # If the only signal is XFF, we use the LAST entry (edge-appended).
+        env = {"HTTP_X_FORWARDED_FOR": "spoofed-by-client, 10.0.0.1"}
+        assert webapp._client_ip(env) == "10.0.0.1"
+
+    def test_empty_environ(self):
+        assert webapp._client_ip({}) == ""
+
+    def test_strips_whitespace(self):
+        env = {"HTTP_X_REAL_IP": "  1.2.3.4  "}
+        assert webapp._client_ip(env) == "1.2.3.4"
