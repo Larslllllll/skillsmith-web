@@ -201,6 +201,8 @@ _EXPLAIN_RULES = [
 
 def explain_findings(findings: list) -> list:
     """Translate raw pattern hits into plain-language explanations."""
+    if not findings:
+        return []
     out, seen = [], set()
     joined = " ".join(str(f.get("message", "")) for f in findings).lower()
     text_blob = joined
