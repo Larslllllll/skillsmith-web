@@ -1849,3 +1849,37 @@ class TestClientIpExtraction:
     def test_strips_whitespace(self):
         env = {"HTTP_X_REAL_IP": "  1.2.3.4  "}
         assert webapp._client_ip(env) == "1.2.3.4"
+
+
+
+def test_scan_text_too_large_returns_clear_400():
+    """PT-T183: text > 100,000 chars returns a clear 400, not internal_error."""
+    import io as _io
+    body = json.dumps({"text": "A" * 100001}).encode()
+    env = {"REQUEST_METHOD": "POST", "CONTENT_LENGTH": str(len(body)),
+           "QUERY_STRING": "", "wsgi.input": _io.BytesIO(body),
+           "HTTP_X_FORWARDED_FOR": "127.0.0.1"}
+    statuses = []
+    out = idx6.handle_scan(env, lambda st, hd: statuses.append(st))
+    parsed = json.loads(b"".join(out))
+    assert statuses[0].startswith("400"), f"expected 400, got {statuses[0]}"
+    err = parsed.get("error", "")
+    assert "text too large" in err, f"expected 'text too large', got: {err}"
+    assert "100001" in err or "100000" in err, f"expected size in message, got: {err}"
+    assert "internal_error" not in err
+
+
+def test_hook_scan_text_too_large_returns_clear_400():
+    """PT-T183: same size fix for /api/hook-scan."""
+    import io as _io
+    body = json.dumps({"text": "B" * 100500}).encode()
+    env = {"REQUEST_METHOD": "POST", "CONTENT_LENGTH": str(len(body)),
+           "QUERY_STRING": "", "wsgi.input": _io.BytesIO(body),
+           "HTTP_X_FORWARDED_FOR": "127.0.0.1"}
+    statuses = []
+    out = idx6.handle_hook_scan(env, lambda st, hd: statuses.append(st))
+    parsed = json.loads(b"".join(out))
+    assert statuses[0].startswith("400"), f"expected 400, got {statuses[0]}"
+    err = parsed.get("error", "")
+    assert "text too large" in err
+    assert "internal_error" not in err

@@ -725,7 +725,11 @@ def handle_scan(environ, start_response):
             start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
             return [json.dumps({"error": "text must be a string"}).encode()]
         if len(text) > 100_000:
-            raise ValueError("text must be a string under 100,000 chars")
+            # PT-T183: was raising ValueError which the generic except turned
+            # into 400 internal_error. Match the type-check pattern and
+            # return a clear 400 so the client knows the size limit.
+            start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": f"text too large ({len(text)} > 100000 chars); use the 'url' field for larger files"}).encode()]
 
         explicit_api_key = payload.get("api_key") if isinstance(payload.get("api_key"), str) else ""
         explicit_api_key = explicit_api_key[:200]
@@ -1611,7 +1615,10 @@ def handle_hook_scan(environ, start_response):
             start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
             return [json.dumps({"error": "text must be a string"}).encode()]
         if len(text) > 100_000:
-            raise ValueError("text must be a string under 100,000 chars")
+            # PT-T183: same size-check fix as handle_scan -- clear 400
+            # instead of internal_error.
+            start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": f"text too large ({len(text)} > 100000 chars); use the 'url' field for larger files"}).encode()]
         explicit_api_key = payload.get("api_key") if isinstance(payload.get("api_key"), str) else ""
         explicit_api_key = explicit_api_key[:200]
         auth_header = environ.get("HTTP_AUTHORIZATION", "")
