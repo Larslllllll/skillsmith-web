@@ -166,3 +166,63 @@ def test_handle_mcp_rejects_batch_with_batch_message():
     parsed = json.loads(b"".join(out))
     assert parsed["error"]["code"] == -32600
     assert "batch" in parsed["error"]["message"]
+
+
+def test_mcp_unknown_api_key_surfaces_correctly():
+    """PT-T184: invalid api_key in MCP tools should return "unknown api_key",
+    not "quota_exceeded" (which would mislead the user into thinking they
+    hit a quota limit)."""
+    import mcp as _mcp2
+    # scan_skill with bad api_key
+    status, body = _mcp2.handle_jsonrpc({
+        "jsonrpc": "2.0", "id": 1, "method": "tools/call",
+        "params": {"name": "scan_skill", "arguments": {"text": "x", "api_key": "sk_definitely-not-a-real-key-1234567890"}}
+    })
+    assert status == 200
+    text = json.loads(body["result"]["content"][0]["text"])
+    assert text.get("error") == "unknown api_key, sign in again", f"got: {text}"
+    assert "tip" in text
+
+
+def test_mcp_lookup_hash_unknown_api_key_surfaces_correctly():
+    """PT-T184: same fix for lookup_hash."""
+    import mcp as _mcp2
+    status, body = _mcp2.handle_jsonrpc({
+        "jsonrpc": "2.0", "id": 1, "method": "tools/call",
+        "params": {"name": "lookup_hash", "arguments": {
+            "sha256": "0" * 64,
+            "api_key": "sk_definitely-not-a-real-key-1234567890"
+        }}
+    })
+    assert status == 200
+    text = json.loads(body["result"]["content"][0]["text"])
+    assert text.get("error") == "unknown api_key, sign in again", f"got: {text}"
+
+
+def test_mcp_list_safe_skills_unknown_api_key_surfaces_correctly():
+    """PT-T184: same fix for list_safe_skills (no sha256 param)."""
+    import mcp as _mcp2
+    status, body = _mcp2.handle_jsonrpc({
+        "jsonrpc": "2.0", "id": 1, "method": "tools/call",
+        "params": {"name": "list_safe_skills", "arguments": {
+            "api_key": "sk_definitely-not-a-real-key-1234567890"
+        }}
+    })
+    assert status == 200
+    text = json.loads(body["result"]["content"][0]["text"])
+    assert text.get("error") == "unknown api_key, sign in again", f"got: {text}"
+
+
+def test_mcp_get_skill_content_unknown_api_key_surfaces_correctly():
+    """PT-T184: same fix for get_skill_content."""
+    import mcp as _mcp2
+    status, body = _mcp2.handle_jsonrpc({
+        "jsonrpc": "2.0", "id": 1, "method": "tools/call",
+        "params": {"name": "get_skill_content", "arguments": {
+            "sha256": "0" * 64,
+            "api_key": "sk_definitely-not-a-real-key-1234567890"
+        }}
+    })
+    assert status == 200
+    text = json.loads(body["result"]["content"][0]["text"])
+    assert text.get("error") == "unknown api_key, sign in again", f"got: {text}"

@@ -215,6 +215,13 @@ def _call_tool(name, args, client_ip: str = ""):
             return _tool_result({"error": "provide either 'text' or 'url'"})
         allowed, quota_info = check_and_consume_quota(api_key or None)
         if not allowed:
+            # PT-T184: when the api_key itself is unknown (vs. quota exhausted),
+            # the existing message "quota_exceeded" + "unknown api_key" inside
+            # the quota object is misleading -- users think they hit a limit
+            # when actually they need to sign in again. Surface the real cause.
+            if quota_info.get("error", "").startswith("unknown api_key"):
+                return _tool_result({"error": "unknown api_key, sign in again",
+                                     "tip": "call skillsmith_signup to get a free api_key, or sign in via /api/auth/github/start"})
             return _tool_result({"error": "quota_exceeded", "quota": quota_info})
         digest = sha256_of(text)
         result = idx.analyze(text)
@@ -247,6 +254,11 @@ def _call_tool(name, args, client_ip: str = ""):
             return _tool_result({"error": "sha256 must be a 64-char hex digest"})
         allowed, quota_info = check_and_consume_lookup_quota(api_key or None)
         if not allowed:
+            # PT-T184: surface "unknown api_key" before "quota_exceeded" -- a
+            # bogus key shouldn't be reported as a quota problem.
+            if quota_info.get("error", "").startswith("unknown api_key"):
+                return _tool_result({"error": "unknown api_key, sign in again",
+                                     "tip": "call skillsmith_signup to get a free api_key, or sign in via /api/auth/github/start"})
             return _tool_result({"error": "quota_exceeded", "quota": quota_info})
         record = get_scan_record(digest)
         return _tool_result({"disclaimer": idx.DISCLAIMER, "found": record is not None, "record": record, "quota": quota_info})
@@ -258,6 +270,11 @@ def _call_tool(name, args, client_ip: str = ""):
             return _tool_result({"error": "sha256 must be a 64-char hex digest"})
         allowed, quota_info = check_and_consume_lookup_quota(api_key or None)
         if not allowed:
+            # PT-T184: surface "unknown api_key" before "quota_exceeded" -- a
+            # bogus key shouldn't be reported as a quota problem.
+            if quota_info.get("error", "").startswith("unknown api_key"):
+                return _tool_result({"error": "unknown api_key, sign in again",
+                                     "tip": "call skillsmith_signup to get a free api_key, or sign in via /api/auth/github/start"})
             return _tool_result({"error": "quota_exceeded", "quota": quota_info})
         text = get_published_content(digest)
         if text is None:
@@ -267,6 +284,11 @@ def _call_tool(name, args, client_ip: str = ""):
     if name == "list_safe_skills":
         allowed, quota_info = check_and_consume_lookup_quota(api_key or None)
         if not allowed:
+            # PT-T184: surface "unknown api_key" before "quota_exceeded" --
+            # see scan_skill/lookup_hash/get_skill_content for the same fix.
+            if quota_info.get("error", "").startswith("unknown api_key"):
+                return _tool_result({"error": "unknown api_key, sign in again",
+                                     "tip": "call skillsmith_signup to get a free api_key, or sign in via /api/auth/github/start"})
             return _tool_result({"error": "quota_exceeded", "quota": quota_info})
         try:
             limit = max(1, min(int(args.get("limit", 20)), 200))
