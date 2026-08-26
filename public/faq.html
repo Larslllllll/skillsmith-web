@@ -120,6 +120,17 @@ SkillSpector research (Apache-2.0, credited in-file). Audit the scanner
 itself at <a href="https://github.com/Larslllllll/skillsmith-web">GitHub</a>;
 we eat our own dog food by scanning every contributed change.</p>
 
+<h2>Is there a size limit on skills I can scan?</h2>
+<p>The <code>text</code> field accepts up to 100,000 characters (about 100 KB).
+For larger files, use the <code>url</code> field with a
+<a href="https://github.com/owner/repo/blob/branch/SKILL.md">github.com blob link</a>
+or a <a href="https://raw.githubusercontent.com/">raw.githubusercontent.com</a> URL;
+the scanner fetches the file server-side and applies the same 200 KB fetch cap.
+Both modes produce identical risk verdicts.</p>
+<p><strong>Behavioral sandbox</strong> has the same 100 KB limit on submitted text;
+URL-mode is not supported there (the sandbox reads the file inside an isolated
+container, not the scanner process).</p>
+
 <h2>I found a bug or a false positive.</h2>
 <p>Please open an issue at
 <a href="https://github.com/Larslllllll/skillsmith-web/issues">GitHub Issues</a>
