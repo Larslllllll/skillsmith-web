@@ -78,9 +78,12 @@ reuse skills directly, without shelling out to curl. Same detection
 engine, same accounts/quota as the REST API and the web UI -- one
 account works everywhere.</p>
 <p>Malformed calls always return structured JSON-RPC errors, never a raw
-crash: non-object <code>params</code>/<code>arguments</code> yield code
-<code>-32602</code>, unknown tools yield <code>-32601</code>, and any
-unexpected internal failure returns an <code>isError</code> tool result with
+crash: any <code>jsonrpc</code> value other than exactly <code>"2.0"</code>
+(including <code>"1.0"</code>, <code>"99.0"</code>, or <code>"2"</code>)
+yields code <code>-32600</code> (Invalid Request); non-object
+<code>params</code>/<code>arguments</code> yield code <code>-32602</code>;
+unknown tools/methods yield <code>-32601</code>; and any unexpected
+internal failure returns an <code>isError</code> tool result with
 <code>{"error": "internal_error"}</code>.</p>
 <h3>Connect your agent</h3>
 <pre>{
