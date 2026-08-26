@@ -1705,3 +1705,37 @@ def test_scan_text_type_confusion_returns_clear_error():
     parsed = json.loads(b"".join(out))
     assert statuses[0].startswith("400"), f"expected 400, got {statuses[0]}"
     assert parsed.get("error") == "text must be a string", f"got: {parsed}"
+
+
+def test_scan_url_unicode_error_sanitized():
+    """PT-T181: UnicodeError in URL fetch leaks Python internals; sanitize."""
+    import io as _io
+    body = json.dumps({"url": "https://github.com/\u013auser/repo/blob/main/SKILL.md"}).encode()
+    env = {"REQUEST_METHOD": "POST", "CONTENT_LENGTH": str(len(body)),
+           "QUERY_STRING": "", "wsgi.input": _io.BytesIO(body),
+           "HTTP_X_FORWARDED_FOR": "127.0.0.1"}
+    statuses = []
+    out = idx6.handle_scan(env, lambda st, hd: statuses.append(st))
+    parsed = json.loads(b"".join(out))
+    assert statuses[0].startswith("400")
+    err = parsed.get("error", "")
+    # The new message is sanitized
+    assert "ASCII" in err or "ASCII" in err
+    # Old leaks that are now gone
+    assert "ascii codec" not in err, f"old leak still present: {err}"
+    assert "ordinal not in range" not in err, f"old leak still present: {err}"
+
+
+def test_scan_url_unicode_via_mcp_also_sanitized():
+    """PT-T181: hook_scan should also sanitize UnicodeError messages."""
+    import io as _io
+    body = json.dumps({"url": "https://github.com/\u4e2duser/repo/blob/main/SKILL.md"}).encode()
+    env = {"REQUEST_METHOD": "POST", "CONTENT_LENGTH": str(len(body)),
+           "QUERY_STRING": "", "wsgi.input": _io.BytesIO(body),
+           "HTTP_X_FORWARDED_FOR": "127.0.0.1"}
+    statuses = []
+    out = idx6.handle_hook_scan(env, lambda st, hd: statuses.append(st))
+    parsed = json.loads(b"".join(out))
+    assert statuses[0].startswith("400")
+    err = parsed.get("error", "")
+    assert "ascii codec" not in err, f"hook_scan leak still present: {err}"

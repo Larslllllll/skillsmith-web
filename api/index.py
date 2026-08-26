@@ -708,8 +708,18 @@ def handle_scan(environ, start_response):
             try:
                 text = _fetch_skill_url(url)
             except (ValueError, urllib.error.URLError, TimeoutError) as e:
+                # PT-T181: UnicodeEncodeError/DecodeError leak the offending
+                # character + position + codec ("'ascii' codec can't encode
+                # character 'ĺ' in position 5") which discloses server
+                # internals (Python default encoding, url parsing depth).
+                # Sanitize the message for those classes; pass the rest
+                # through unchanged so legit errors stay actionable.
+                if isinstance(e, UnicodeError):
+                    msg = "url contains characters that cannot be encoded as ASCII; use a regular github.com or raw.githubusercontent.com link with ASCII characters only"
+                else:
+                    msg = "could not fetch url: %s" % e
                 start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
-                return [json.dumps({"error": "could not fetch url: %s" % e}).encode()]
+                return [json.dumps({"error": msg}).encode()]
 
         if not isinstance(text, str):
             start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
@@ -1588,8 +1598,15 @@ def handle_hook_scan(environ, start_response):
             try:
                 text = _fetch_skill_url(url)
             except (ValueError, urllib.error.URLError, TimeoutError) as e:
+                # PT-T181: same UnicodeError sanitization as handle_scan --
+                # the hook endpoint also discloses Python internals on
+                # non-ASCII URLs.
+                if isinstance(e, UnicodeError):
+                    msg = "url contains characters that cannot be encoded as ASCII; use a regular github.com or raw.githubusercontent.com link with ASCII characters only"
+                else:
+                    msg = "could not fetch url: %s" % e
                 start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
-                return [json.dumps({"error": "could not fetch url: %s" % e}).encode()]
+                return [json.dumps({"error": msg}).encode()]
         if not isinstance(text, str):
             start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
             return [json.dumps({"error": "text must be a string"}).encode()]
