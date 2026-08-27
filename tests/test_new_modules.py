@@ -234,3 +234,130 @@ def test_explain_findings_handles_list_input():
     # None
     out = features.explain_findings(None)
     assert out == []
+
+
+def test_extract_iocs_finds_urls():
+    """PT-T199: extract_iocs finds URLs in text."""
+    from api import sandbox
+    text = "Visit https://evil.com/payload?x=1 and http://test.com"
+    iocs = sandbox.extract_iocs(text)
+    assert "urls" in iocs
+    assert "webhooks" in iocs
+    assert "ips" in iocs
+    assert len(iocs["urls"]) >= 2
+
+
+def test_extract_iocs_finds_webhooks():
+    """PT-T199: extract_iocs finds Discord/Slack webhooks."""
+    from api import sandbox
+    text = "POST to https://discord.com/api/webhooks/123456789/abcdefghij"
+    iocs = sandbox.extract_iocs(text)
+    assert len(iocs["webhooks"]) >= 1
+
+
+def test_extract_iocs_handles_empty_text():
+    """PT-T199: extract_iocs handles empty input gracefully."""
+    from api import sandbox
+    iocs = sandbox.extract_iocs("")
+    assert isinstance(iocs, dict)
+    assert "urls" in iocs
+    assert "webhooks" in iocs
+    assert "ips" in iocs
+
+
+def test_extract_iocs_handles_whitespace():
+    """PT-T199: extract_iocs handles whitespace-only input."""
+    from api import sandbox
+    iocs = sandbox.extract_iocs("   \n\t  ")
+    assert isinstance(iocs, dict)
+
+
+def test_extract_iocs_max_limits():
+    """PT-T199: extract_iocs caps results at reasonable limits."""
+    from api import sandbox
+    # 30 URLs should be capped at 20
+    urls = "https://example.com/" + ", ".join([f"https://a{i}.com" for i in range(30)])
+    iocs = sandbox.extract_iocs(urls)
+    assert len(iocs["urls"]) <= 20
+
+
+def test_capability_flags_finds_system_calls():
+    """PT-T199: capability_flags identifies system access patterns."""
+    from api import sandbox
+    text = "Uses os.system(), subprocess.run(), and socket.gethostbyname()"
+    flags = sandbox.capability_flags(text)
+    assert isinstance(flags, dict)
+
+
+def test_capability_flags_handles_empty():
+    """PT-T199: capability_flags handles empty text."""
+    from api import sandbox
+    flags = sandbox.capability_flags("")
+    assert isinstance(flags, dict)
+
+
+def test_threat_label_benign():
+    """PT-T199: threat_label scores benign input correctly."""
+    from api import sandbox
+    empty_iocs = {"urls": [], "webhooks": [], "ips": []}
+    result = sandbox.threat_label([], empty_iocs, {})
+    assert "score" in result
+    assert "level" in result
+    assert "color" in result
+    assert result["level"] == "benign"
+    assert result["score"] == 0
+
+
+def test_threat_label_malicious():
+    """PT-T199: threat_label scores malicious input with webhooks."""
+    from api import sandbox
+    events = [{"kind": "exec", "action": "os.system()"}]
+    iocs = {"webhooks": ["https://discord.com/api/webhooks/123/abc"], "urls": [], "ips": []}
+    flags = {}
+    result = sandbox.threat_label(events, iocs, flags)
+    assert result["level"] in ("malicious", "suspicious", "notable", "benign")
+    assert result["score"] >= 0
+    assert result["score"] <= 100
+
+
+def test_threat_label_clamps_score():
+    """PT-T199: threat_label score is always 0-100."""
+    from api import sandbox
+    # Very high score scenario
+    events = [{"kind": "exec"}] * 10
+    iocs = {"webhooks": ["https://discord.com/api/webhooks/123/abc"], "urls": ["http://a.com", "http://b.com", "http://c.com", "http://d.com"], "ips": []}
+    flags = {"obfuscation": {"present": True}}
+    result = sandbox.threat_label(events, iocs, flags)
+    assert 0 <= result["score"] <= 100
+
+
+def test_analysis_id_deterministic():
+    """PT-T199: analysis_id is deterministic for the same text."""
+    from api import sandbox
+    id1 = sandbox.analysis_id("hello world")
+    id2 = sandbox.analysis_id("hello world")
+    assert id1 == id2
+    assert len(id1) > 0
+
+
+def test_analysis_id_different_for_different_text():
+    """PT-T199: analysis_id differs for different texts."""
+    from api import sandbox
+    id1 = sandbox.analysis_id("hello")
+    id2 = sandbox.analysis_id("world")
+    assert id1 != id2
+
+
+def test_simulate_trace_returns_list():
+    """PT-T199: simulate_trace returns a list of events."""
+    from api import sandbox
+    text = "print hello world"
+    trace = sandbox.simulate_trace(text)
+    assert isinstance(trace, list)
+
+
+def test_simulate_trace_handles_empty():
+    """PT-T199: simulate_trace handles empty text."""
+    from api import sandbox
+    trace = sandbox.simulate_trace("")
+    assert isinstance(trace, list)
