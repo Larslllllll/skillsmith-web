@@ -2026,3 +2026,36 @@ def test_valid_watch_webhook_rejects_subdomain():
     import api.index as idx2
     assert not idx2._valid_watch_webhook("https://discord.com.evil.com/api/webhooks/123/abc")
     assert not idx2._valid_watch_webhook("https://hooks.slack.com.evil.com/services/T0/B0/xxx")
+
+
+def test_lookup_invalid_sha256_returns_clear_400(monkeypatch):
+    """PT-T191: invalid sha256 in /api/lookup returns clear 400, not internal_error."""
+    # Simulate blob store down by making _soft_rate_limit throw
+    def failing_rate_limit(*a, **kw):
+        raise RuntimeError("blob store down")
+    monkeypatch.setattr(webapp, "_soft_rate_limit", failing_rate_limit)
+    environ = {"REQUEST_METHOD": "GET", "PATH_INFO": "/api/lookup",
+               "QUERY_STRING": "sha256=abc&api_key=sk_test",
+               "wsgi.input": io.BytesIO(b"")}
+    statuses = []
+    resp = b"".join(webapp.handle_lookup(environ, lambda s, h: statuses.append(s)))
+    data = json.loads(resp)
+    assert statuses[0].startswith("400"), f"expected 400, got {statuses[0]}"
+    assert data.get("error") == "sha256 query param must be a 64-char hex digest", f"got: {data}"
+    assert "internal_error" not in data.get("error", "")
+
+
+def test_get_skill_invalid_sha256_returns_clear_400(monkeypatch):
+    """PT-T191: same fix for /api/skill."""
+    def failing_rate_limit(*a, **kw):
+        raise RuntimeError("blob store down")
+    monkeypatch.setattr(webapp, "_soft_rate_limit", failing_rate_limit)
+    environ = {"REQUEST_METHOD": "GET", "PATH_INFO": "/api/skill",
+               "QUERY_STRING": "sha256=invalid&api_key=sk_test",
+               "wsgi.input": io.BytesIO(b"")}
+    statuses = []
+    resp = b"".join(webapp.handle_get_skill(environ, lambda s, h: statuses.append(s)))
+    data = json.loads(resp)
+    assert statuses[0].startswith("400"), f"expected 400, got {statuses[0]}"
+    assert data.get("error") == "sha256 query param must be a 64-char hex digest", f"got: {data}"
+    assert "internal_error" not in data.get("error", "")

@@ -953,18 +953,19 @@ def handle_get_skill(environ, start_response):
                 "error": "sign_in_required",
                 "message": "Sign in (free) to fetch a published skill's content.",
             }).encode()]
+        qs = urllib.parse.parse_qs(environ.get("QUERY_STRING", ""))
+        digest = (qs.get("sha256") or [""])[0].lower()
+        # PT-T191: validate sha256 BEFORE soft_rate_limit (see handle_lookup
+        # for the same fix).
+        if not _valid_sha256(digest):
+            start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": "sha256 query param must be a 64-char hex digest"}).encode()]
         # PT-T30: soft per-key cap -- each call lists the dna prefix and fetches
         # neighbour blobs; make bulk graph-mapping expensive too.
         allowed_sim, sim_err = _soft_rate_limit(explicit_api_key[:24], 1000, "simrl_")
         if not allowed_sim:
             start_response("429 Too Many Requests", [("Content-Type", "application/json")] + _CORS_HEADERS)
             return [json.dumps({"error": sim_err}).encode()]
-        qs = urllib.parse.parse_qs(environ.get("QUERY_STRING", ""))
-        digest = (qs.get("sha256") or [""])[0].lower()
-        if not _valid_sha256(digest):  # logic audit L11+L12: validate BEFORE
-            # consuming quota, so a malformed request never costs a unit.
-            start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
-            return [json.dumps({"error": "sha256 query param must be a 64-char hex digest"}).encode()]
         allowed, quota_info = check_and_consume_lookup_quota(explicit_api_key)
         if not allowed:
             status = "401 Unauthorized" if quota_info.get("error", "").startswith("unknown api_key") else "429 Too Many Requests"
@@ -1114,18 +1115,21 @@ def handle_lookup(environ, start_response):
                 "error": "sign_in_required",
                 "message": "Sign in (free) to look up a hash. 5 lookups/day free, 150/day Pro, unlimited Premium.",
             }).encode()]
+        qs = urllib.parse.parse_qs(environ.get("QUERY_STRING", ""))
+        digest = (qs.get("sha256") or [""])[0].lower()
+        # PT-T191: validate sha256 BEFORE soft_rate_limit so malformed requests
+        # get a clear 400 even when the blob store is down (which would
+        # otherwise make _soft_rate_limit throw and fall through to the
+        # generic "internal_error" handler).
+        if not _valid_sha256(digest):
+            start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"error": "sha256 query param must be a 64-char hex digest"}).encode()]
         # PT-T30: soft per-key cap -- each call lists the dna prefix and fetches
         # neighbour blobs; make bulk graph-mapping expensive too.
         allowed_sim, sim_err = _soft_rate_limit(explicit_api_key[:24], 1000, "simrl_")
         if not allowed_sim:
             start_response("429 Too Many Requests", [("Content-Type", "application/json")] + _CORS_HEADERS)
             return [json.dumps({"error": sim_err}).encode()]
-        qs = urllib.parse.parse_qs(environ.get("QUERY_STRING", ""))
-        digest = (qs.get("sha256") or [""])[0].lower()
-        if not _valid_sha256(digest):  # logic audit L11+L12: validate BEFORE
-            # consuming quota, so a malformed request never costs a unit.
-            start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
-            return [json.dumps({"error": "sha256 query param must be a 64-char hex digest"}).encode()]
         allowed, quota_info = check_and_consume_lookup_quota(explicit_api_key)
         if not allowed:
             status = "401 Unauthorized" if quota_info.get("error", "").startswith("unknown api_key") else "429 Too Many Requests"
