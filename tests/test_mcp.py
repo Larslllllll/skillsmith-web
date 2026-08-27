@@ -226,3 +226,106 @@ def test_mcp_get_skill_content_unknown_api_key_surfaces_correctly():
     assert status == 200
     text = json.loads(body["result"]["content"][0]["text"])
     assert text.get("error") == "unknown api_key, sign in again", f"got: {text}"
+
+
+def test_mcp_analyze_behavior_requires_text():
+    """PT-T193: analyze_behavior must return a clear error for empty/missing text."""
+    import mcp as _mcp3
+    # No text
+    status, body = _mcp3.handle_jsonrpc({
+        "jsonrpc": "2.0", "id": 1, "method": "tools/call",
+        "params": {"name": "analyze_behavior", "arguments": {"api_key": "sk_test"}}
+    })
+    assert status == 200
+    text = json.loads(body["result"]["content"][0]["text"])
+    assert "text" in text.get("error", "").lower(), f"expected text error, got: {text}"
+    # Whitespace-only
+    status, body = _mcp3.handle_jsonrpc({
+        "jsonrpc": "2.0", "id": 2, "method": "tools/call",
+        "params": {"name": "analyze_behavior", "arguments": {"text": "   \n\t  ", "api_key": "sk_test"}}
+    })
+    text = json.loads(body["result"]["content"][0]["text"])
+    assert "text" in text.get("error", "").lower(), f"expected text error, got: {text}"
+
+
+def test_mcp_analyze_behavior_rejects_non_string_text():
+    """PT-T193: non-string text is rejected with a clear error, not internal_error."""
+    import mcp as _mcp3
+    for bad in [{"text": 123}, {"text": ["a", "b"]}, {"text": {"k": "v"}}, {"text": True}]:
+        status, body = _mcp3.handle_jsonrpc({
+            "jsonrpc": "2.0", "id": 1, "method": "tools/call",
+            "params": {"name": "analyze_behavior", "arguments": bad}
+        })
+        text = json.loads(body["result"]["content"][0]["text"])
+        assert "error" in text, f"expected error for {bad}, got: {text}"
+        assert "internal_error" not in text.get("error", ""), f"got internal_error for {bad}: {text}"
+
+
+def test_mcp_analyze_behavior_rejects_oversized_text():
+    """PT-T193: text > 100,000 chars returns a clear size error."""
+    import mcp as _mcp3
+    status, body = _mcp3.handle_jsonrpc({
+        "jsonrpc": "2.0", "id": 1, "method": "tools/call",
+        "params": {"name": "analyze_behavior", "arguments": {"text": "A" * 100001, "api_key": "sk_test"}}
+    })
+    text = json.loads(body["result"]["content"][0]["text"])
+    assert "too large" in text.get("error", ""), f"expected size error, got: {text}"
+
+
+def test_mcp_whoami_unknown_api_key():
+    """PT-T193: whoami with invalid api_key returns 'unknown api_key'."""
+    import mcp as _mcp3
+    status, body = _mcp3.handle_jsonrpc({
+        "jsonrpc": "2.0", "id": 1, "method": "tools/call",
+        "params": {"name": "whoami", "arguments": {"api_key": "sk_definitely-not-a-real-key"}}
+    })
+    text = json.loads(body["result"]["content"][0]["text"])
+    assert text.get("error") == "unknown api_key", f"got: {text}"
+
+
+def test_mcp_whoami_missing_api_key():
+    """PT-T193: whoami without api_key returns 'api_key required'."""
+    import mcp as _mcp3
+    status, body = _mcp3.handle_jsonrpc({
+        "jsonrpc": "2.0", "id": 1, "method": "tools/call",
+        "params": {"name": "whoami", "arguments": {}}
+    })
+    text = json.loads(body["result"]["content"][0]["text"])
+    assert "api_key" in text.get("error", "").lower(), f"got: {text}"
+
+
+def test_mcp_find_similar_invalid_sha256():
+    """PT-T193: find_similar with invalid sha256 returns clear error, not internal_error."""
+    import mcp as _mcp3
+    for bad_sha in ["abc", "0" * 63, "0" * 65, "x" * 64, 123, None]:
+        args = {"sha256": bad_sha, "api_key": "sk_test"} if bad_sha is not None else {"api_key": "sk_test"}
+        status, body = _mcp3.handle_jsonrpc({
+            "jsonrpc": "2.0", "id": 1, "method": "tools/call",
+            "params": {"name": "find_similar", "arguments": args}
+        })
+        text = json.loads(body["result"]["content"][0]["text"])
+        assert "error" in text, f"expected error for sha={bad_sha!r}, got: {text}"
+        assert "internal_error" not in text.get("error", ""), f"internal_error for {bad_sha!r}: {text}"
+
+
+def test_mcp_list_safe_skills_negative_limit():
+    """PT-T193: list_safe_skills with negative limit is handled (not crash)."""
+    import mcp as _mcp3
+    status, body = _mcp3.handle_jsonrpc({
+        "jsonrpc": "2.0", "id": 1, "method": "tools/call",
+        "params": {"name": "list_safe_skills", "arguments": {"limit": -10, "api_key": "sk_test"}}
+    })
+    # Should not crash; either returns a result or a clear error
+    assert status == 200
+    assert "result" in body or "error" in body
+
+
+def test_mcp_get_skill_content_invalid_sha256():
+    """PT-T193: get_skill_content with invalid sha256 returns clear error."""
+    import mcp as _mcp3
+    status, body = _mcp3.handle_jsonrpc({
+        "jsonrpc": "2.0", "id": 1, "method": "tools/call",
+        "params": {"name": "get_skill_content", "arguments": {"sha256": "not-a-hash", "api_key": "sk_test"}}
+    })
+    text = json.loads(body["result"]["content"][0]["text"])
+    assert "sha256" in text.get("error", "").lower(), f"expected sha256 error, got: {text}"
