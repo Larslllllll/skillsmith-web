@@ -414,6 +414,123 @@ def test_scan_trend_and_explanation_fields(monkeypatch):
     assert data2["trend"]["previous_security_score"] == data2["security_score"]
 
 
+def test_scan_trend_improved_when_score_higher(monkeypatch):
+    """PT-T188: second scan with HIGHER security_score reports 'improved' trend."""
+    recs = {}
+    monkeypatch.setattr(webapp, "get_scan_record", lambda d: recs.get(d))
+    def fake_record(digest, result, **kw):
+        rec = {"security_score": result.get("security_score", 0),
+               "risk_level": result.get("risk_level", ""),
+               "seen_count": 1, "first_seen_at": 0, "has_content": False}
+        recs[digest] = rec
+        return rec
+    monkeypatch.setattr(webapp, "record_scan", fake_record)
+    monkeypatch.setattr(webapp, "check_and_consume_quota",
+                        lambda k: (True, {"tier": "free", "used": 1, "limit": 5}))
+
+    body = json.dumps({"text": GOOD_SKILL, "api_key": "sk_test"}).encode()
+    environ1 = {"REQUEST_METHOD": "POST", "PATH_INFO": "/api/scan",
+                "CONTENT_LENGTH": str(len(body)),
+                "wsgi.input": io.BytesIO(body)}
+
+    statuses = []
+    resp = b"".join(webapp.handle_scan(environ1, lambda s, h: statuses.append(s)))
+    data1 = json.loads(resp)
+    assert statuses[0].startswith("200"), data1
+    digest = data1["sha256"]
+    current_score = data1["security_score"]
+    # Manually set baseline lower so the next scan shows improvement
+    recs[digest]["security_score"] = max(0, current_score - 20)
+
+    environ2 = {"REQUEST_METHOD": "POST", "PATH_INFO": "/api/scan",
+                "CONTENT_LENGTH": str(len(body)),
+                "wsgi.input": io.BytesIO(body)}
+    statuses.clear()
+    resp2 = b"".join(webapp.handle_scan(environ2, lambda s, h: statuses.append(s)))
+    data2 = json.loads(resp2)
+    assert statuses[0].startswith("200"), data2
+    assert data2["trend"]["direction"] == "improved", f"expected improved, got {data2['trend']}"
+    assert data2["trend"]["delta"] == 20  # current (100) - previous (80)
+    assert data2["trend"]["previous_security_score"] == 80
+
+
+def test_scan_trend_declined_when_score_lower(monkeypatch):
+    """PT-T188: second scan with LOWER security_score reports 'declined' trend."""
+    recs = {}
+    monkeypatch.setattr(webapp, "get_scan_record", lambda d: recs.get(d))
+    def fake_record(digest, result, **kw):
+        rec = {"security_score": result.get("security_score", 0),
+               "risk_level": result.get("risk_level", ""),
+               "seen_count": 1, "first_seen_at": 0, "has_content": False}
+        recs[digest] = rec
+        return rec
+    monkeypatch.setattr(webapp, "record_scan", fake_record)
+    monkeypatch.setattr(webapp, "check_and_consume_quota",
+                        lambda k: (True, {"tier": "free", "used": 1, "limit": 5}))
+
+    body = json.dumps({"text": GOOD_SKILL, "api_key": "sk_test"}).encode()
+    environ1 = {"REQUEST_METHOD": "POST", "PATH_INFO": "/api/scan",
+                "CONTENT_LENGTH": str(len(body)),
+                "wsgi.input": io.BytesIO(body)}
+    statuses = []
+    resp = b"".join(webapp.handle_scan(environ1, lambda s, h: statuses.append(s)))
+    data1 = json.loads(resp)
+    assert statuses[0].startswith("200"), data1
+    digest = data1["sha256"]
+    # Set baseline very high so current score is lower -> declined
+    recs[digest]["security_score"] = 999
+
+    environ2 = {"REQUEST_METHOD": "POST", "PATH_INFO": "/api/scan",
+                "CONTENT_LENGTH": str(len(body)),
+                "wsgi.input": io.BytesIO(body)}
+    statuses.clear()
+    resp2 = b"".join(webapp.handle_scan(environ2, lambda s, h: statuses.append(s)))
+    data2 = json.loads(resp2)
+    assert statuses[0].startswith("200"), data2
+    assert data2["trend"]["direction"] == "declined", f"expected declined, got {data2['trend']}"
+    assert data2["trend"]["delta"] < 0
+    assert data2["trend"]["previous_security_score"] == 999
+
+
+def test_scan_trend_history_field_shape(monkeypatch):
+    """PT-T188: trend data includes a history list (for UI sparkline) capped at 10."""
+    recs = {}
+    # 12 entries to verify the -10 cap
+    score_history = [[i, 90 - i] for i in range(12)]
+    monkeypatch.setattr(webapp, "get_scan_record", lambda d: recs.get(d))
+    def fake_record(digest, result, **kw):
+        rec = {"security_score": result.get("security_score", 0),
+               "risk_level": result.get("risk_level", ""),
+               "seen_count": 1, "first_seen_at": 0, "has_content": False,
+               "score_history": score_history}
+        recs[digest] = rec
+        return rec
+    monkeypatch.setattr(webapp, "record_scan", fake_record)
+    monkeypatch.setattr(webapp, "check_and_consume_quota",
+                        lambda k: (True, {"tier": "free", "used": 1, "limit": 5}))
+    body = json.dumps({"text": GOOD_SKILL, "api_key": "sk_test"}).encode()
+    environ1 = {"REQUEST_METHOD": "POST", "PATH_INFO": "/api/scan",
+                "CONTENT_LENGTH": str(len(body)),
+                "wsgi.input": io.BytesIO(body)}
+    statuses = []
+    resp = b"".join(webapp.handle_scan(environ1, lambda s, h: statuses.append(s)))
+    data1 = json.loads(resp)
+    digest = data1["sha256"]
+
+    environ2 = {"REQUEST_METHOD": "POST", "PATH_INFO": "/api/scan",
+                "CONTENT_LENGTH": str(len(body)),
+                "wsgi.input": io.BytesIO(body)}
+    statuses.clear()
+    resp2 = b"".join(webapp.handle_scan(environ2, lambda s, h: statuses.append(s)))
+    data2 = json.loads(resp2)
+    assert statuses[0].startswith("200"), data2
+    assert "trend" in data2
+    assert data2["trend"]["direction"] in ("improved", "declined", "unchanged")
+    assert "history" in data2["trend"]
+    assert isinstance(data2["trend"]["history"], list)
+    assert len(data2["trend"]["history"]) <= 10, f"expected <=10, got {len(data2['trend']['history'])}"
+
+
 def test_mcp_invalid_params_type():
     """PT-T3: params as array/string must yield -32602, not a 500 crash."""
     import mcp as mcp_mod
