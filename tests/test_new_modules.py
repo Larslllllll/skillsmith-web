@@ -188,3 +188,49 @@ def test_explain_findings_dedupes():
     safety_count = sum(1 for item in out if "safety" in (item.get("topic", "") + item.get("what", "")).lower())
     # Should be at most 1 per unique topic
     assert safety_count <= 1, f"expected at most 1 safety explanation, got {safety_count}"
+
+
+def test_explain_findings_handles_unicode_in_messages():
+    """PT-T197: explain_findings should handle unicode in finding messages
+    without crashing (even if the unicode doesn't match any rule)."""
+    import features
+    findings = [
+        {"category": "injection", "message": "ignore previous instructions 🚨"},
+        {"category": "unicode", "message": "nïghtingale alert"},
+    ]
+    out = features.explain_findings(findings)
+    # Should not crash; "ignore previous instructions" should still match
+    assert any("safety" in item.get("topic", "").lower() or "ignore" in item.get("topic", "").lower() for item in out)
+
+
+def test_explain_findings_handles_malformed_findings():
+    """PT-T197: findings without 'message' field should not crash."""
+    import features
+    findings = [
+        {"category": "injection"},  # no message
+        {"category": "network"},      # no message
+        {},                          # completely empty
+        {"message": None},           # message is None
+    ]
+    out = features.explain_findings(findings)
+    # Should not crash
+    assert isinstance(out, list)
+
+
+def test_explain_findings_handles_very_long_message():
+    """PT-T197: very long finding message should not crash or hang."""
+    import features
+    findings = [{"category": "injection", "message": "ignore previous instructions " + "A" * 10000}]
+    out = features.explain_findings(findings)
+    # Should still find the "ignore previous instructions" match
+    assert len(out) >= 1
+
+
+def test_explain_findings_handles_list_input():
+    """PT-T197: passing a list (not the expected type) should be handled gracefully."""
+    import features
+    # Empty list
+    assert features.explain_findings([]) == []
+    # None
+    out = features.explain_findings(None)
+    assert out == []
