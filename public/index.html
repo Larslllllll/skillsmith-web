@@ -818,6 +818,55 @@ function render(data) {
     barBg.appendChild(barFill);
     gaugeWrap.appendChild(scoreLine); gaugeWrap.appendChild(barBg);
     overview.appendChild(gaugeWrap);
+    // --- Score trend indicator (PT-T186): show improvement/decline vs previous scan ---
+    if (data.trend && data.trend.direction) {
+      const t = data.trend;
+      const trendRow = document.createElement('div');
+      trendRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin:.1rem 0 .8rem;font-size:.75rem;';
+      const tLabel = document.createElement('span');
+      tLabel.textContent = 'Score trend';
+      tLabel.style.color = 'var(--text-muted)';
+      const tVal = document.createElement('span');
+      tVal.style.fontWeight = '600';
+      const arrow = t.direction === 'improved' ? '↑' : t.direction === 'declined' ? '↓' : '→';
+      const color = t.direction === 'improved' ? 'var(--accent)' : t.direction === 'declined' ? '#ff8080' : 'var(--text-muted)';
+      const prevStr = (typeof t.previous_security_score === 'number') ? ` (from ${t.previous_security_score})` : '';
+      const deltaStr = (typeof t.delta === 'number' && t.delta !== 0) ? ` ${t.delta > 0 ? '+' : ''}${t.delta}` : '';
+      tVal.textContent = `${arrow} ${t.direction}${deltaStr}${prevStr}`;
+      tVal.style.color = color;
+      trendRow.appendChild(tLabel); trendRow.appendChild(tVal);
+      // --- Mini sparkline of score history (last up to 10 scans) ---
+      if (Array.isArray(t.history) && t.history.length >= 2) {
+        const sparkW = 120, sparkH = 24, pad = 2;
+        const min = Math.min(...t.history), max = Math.max(...t.history);
+        const range = (max - min) || 1;
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('width', sparkW); svg.setAttribute('height', sparkH);
+        svg.setAttribute('viewBox', `0 0 ${sparkW} ${sparkH}`);
+        svg.style.cssText = 'margin-left:.5rem;vertical-align:middle;';
+        const pts = t.history.map((v, i) => {
+          const x = pad + (i / (t.history.length - 1 || 1)) * (sparkW - 2 * pad);
+          const y = sparkH - pad - ((v - min) / range) * (sparkH - 2 * pad);
+          return [x, y];
+        });
+        const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+        polyline.setAttribute('points', pts.map(p => p.join(',')).join(' '));
+        polyline.setAttribute('fill', 'none');
+        polyline.setAttribute('stroke', color);
+        polyline.setAttribute('stroke-width', '1.5');
+        polyline.setAttribute('stroke-linecap', 'round');
+        polyline.setAttribute('stroke-linejoin', 'round');
+        svg.appendChild(polyline);
+        // Current point dot
+        const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        const last = pts[pts.length - 1];
+        dot.setAttribute('cx', last[0]); dot.setAttribute('cy', last[1]); dot.setAttribute('r', '2');
+        dot.setAttribute('fill', color);
+        svg.appendChild(dot);
+        trendRow.appendChild(svg);
+      }
+      overview.appendChild(trendRow);
+    }
   }
   addRow(overview, [bold('name:'), ' ' + (data.name || '(missing)')]);
   addRow(overview, [bold('Lint:'), ' ', badge(data.lint_ok ? 'OK' : 'ISSUES', data.lint_ok ? 'clean' : 'high')]);
