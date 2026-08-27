@@ -239,6 +239,8 @@ curl -X POST https://skillsmith.ch/api/buy_credit \
 <tr><td>429</td><td>Daily quota exceeded for your current tier</td></tr>
 <tr><td>503</td><td>Storage temporarily unavailable (rare) — retry later; honor the <code>Retry-After</code> header</td></tr>
 </table>
+<p><strong>MCP JSON-RPC errors:</strong> MCP calls return the same HTTP status codes as above, but also use JSON-RPC error codes inside the <code>isError</code> response object: <code>-32700</code> (Parse error), <code>-32600</code> (Invalid Request: bad jsonrpc version, non-object body, batch not supported), <code>-32601</code> (Method not found), <code>-32602</code> (Invalid params: missing tool name, arguments not an object). Successful calls return HTTP 200 with the result.</p>
+
 <p><strong>Common 400 triggers:</strong> <code>text</code> exceeding 100 000 chars, passing a non-string for <code>text</code>/<code>url</code>/<code>api_key</code>, invalid SHA-256 digest format, JSON-RPC <code>jsonrpc</code> field not equal to <code>"2.0"</code>, MCP batch requests (arrays) not supported.</p>
 
 <h2>Source</h2>
