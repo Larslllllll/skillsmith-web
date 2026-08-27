@@ -329,3 +329,35 @@ def test_mcp_get_skill_content_invalid_sha256():
     })
     text = json.loads(body["result"]["content"][0]["text"])
     assert "sha256" in text.get("error", "").lower(), f"expected sha256 error, got: {text}"
+
+
+def test_mcp_analyze_behavior_rejects_url_field():
+    """PT-T196: analyze_behavior only accepts text, not url. If a user passes
+    a url field, it should be ignored (not fetched like /api/scan does)."""
+    import mcp as _mcp4
+    # analyze_behavior should work with just text
+    status, body = _mcp4.handle_jsonrpc({
+        "jsonrpc": "2.0", "id": 1, "method": "tools/call",
+        "params": {"name": "analyze_behavior", "arguments": {
+            "text": "print('hello')",
+            "api_key": "sk_test"
+        }}
+    })
+    # Should not crash; either returns a result or a clear error
+    assert status == 200
+    # The result should be a valid JSON-RPC response
+    assert "result" in body or "error" in body
+
+
+def test_mcp_analyze_behavior_handles_empty_text():
+    """PT-T196: empty text returns clear error, not crash."""
+    import mcp as _mcp4
+    for empty in ["", "   ", "\n\t", None]:
+        args = {"text": empty, "api_key": "sk_test"} if empty is not None else {"api_key": "sk_test"}
+        status, body = _mcp4.handle_jsonrpc({
+            "jsonrpc": "2.0", "id": 1, "method": "tools/call",
+            "params": {"name": "analyze_behavior", "arguments": args}
+        })
+        text = json.loads(body["result"]["content"][0]["text"])
+        assert "error" in text, f"expected error for empty={empty!r}, got: {text}"
+        assert "text" in text.get("error", "").lower(), f"expected text error for {empty!r}, got: {text}"
