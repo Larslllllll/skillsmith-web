@@ -233,12 +233,13 @@ curl -X POST https://skillsmith.ch/api/buy_credit \
 <h2>Errors</h2>
 <table>
 <tr><th>Status</th><th>Meaning</th></tr>
-<tr><td>400</td><td>Bad request (missing/invalid field, malformed hash, etc.)</td></tr>
+<tr><td>400</td><td>Bad request — missing/invalid field, malformed hash, text too large (> 100 000 chars; use <code>url</code> field instead), non-string <code>text</code> or <code>url</code>, invalid JSON-RPC version (must be <code>"2.0"</code>)</td></tr>
 <tr><td>401</td><td>Sign in required, or your api_key is unknown/invalid</td></tr>
 <tr><td>402</td><td>Payment required or not yet verified on-chain</td></tr>
 <tr><td>429</td><td>Daily quota exceeded for your current tier</td></tr>
 <tr><td>503</td><td>Storage temporarily unavailable (rare) — retry later; honor the <code>Retry-After</code> header</td></tr>
 </table>
+<p><strong>Common 400 triggers:</strong> <code>text</code> exceeding 100 000 chars, passing a non-string for <code>text</code>/<code>url</code>/<code>api_key</code>, invalid SHA-256 digest format, JSON-RPC <code>jsonrpc</code> field not equal to <code>"2.0"</code>, MCP batch requests (arrays) not supported.</p>
 
 <h2>Source</h2>
 <p>Full implementation: <a href="https://github.com/Larslllllll/skillsmith-web">github.com/Larslllllll/skillsmith-web</a>
