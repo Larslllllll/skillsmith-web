@@ -1304,9 +1304,17 @@ def _valid_watch_webhook(url) -> bool:
         # PT-T39: no query strings / fragments -- nothing extra should ride
         # along to the provider, and params make payload confusion possible.
         return False
-    return (url.startswith("https://discord.com/api/webhooks/")
-            or url.startswith("https://discordapp.com/api/webhooks/")
-            or url.startswith("https://hooks.slack.com/services/"))
+    # PT-T187: use urlparse to extract the actual netloc (hostname), preventing
+    # the https://discord.com@evil.com/... SSRF trick where the @ makes
+    # urllib send the request to evil.com despite the startswith check.
+    parsed = urllib.parse.urlparse(url)
+    host = parsed.netloc.lower()
+    # Strip any userinfo (user:pass@) before checking
+    if "@" in host:
+        host = host.split("@", 1)[1]
+    return (host == "discord.com" and url.startswith("https://discord.com/api/webhooks/")
+            or host == "discordapp.com" and url.startswith("https://discordapp.com/api/webhooks/")
+            or host == "hooks.slack.com" and url.startswith("https://hooks.slack.com/services/"))
 
 
 class _NoRedirectHandler(urllib.request.HTTPRedirectHandler):

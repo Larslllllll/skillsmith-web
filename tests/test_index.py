@@ -1883,3 +1883,29 @@ def test_hook_scan_text_too_large_returns_clear_400():
     err = parsed.get("error", "")
     assert "text too large" in err
     assert "internal_error" not in err
+
+
+def test_valid_watch_webhook_rejects_at_trick():
+    """PT-T187: https://discord.com@evil.com/... should be rejected even though
+    it starts with https://discord.com/ -- the @ makes the real host evil.com."""
+    import api.index as idx2
+    # These must all be rejected
+    assert not idx2._valid_watch_webhook("https://discord.com@evil.com/api/webhooks/123/abc")
+    assert not idx2._valid_watch_webhook("https://discord.com:443@evil.com/api/webhooks/123/abc")
+    assert not idx2._valid_watch_webhook("https://hooks.slack.com@evil.com/services/T0/B0/xxx")
+    assert not idx2._valid_watch_webhook("https://discord.com.evil.com/api/webhooks/123/abc")
+
+
+def test_valid_watch_webhook_accepts_valid():
+    """PT-T187: legitimate Discord/Slack webhooks are still accepted."""
+    import api.index as idx2
+    assert idx2._valid_watch_webhook("https://discord.com/api/webhooks/SANITIZED/SANITIZED")
+    assert idx2._valid_watch_webhook("https://discordapp.com/api/webhooks/REDACTED/REDACTED")
+    assert idx2._valid_watch_webhook("https://hooks.slack.com/services/REDACTED/REDACTED/REDACTED")
+
+
+def test_valid_watch_webhook_rejects_subdomain():
+    """PT-T187: subdomain trick (discord.com.evil.com) is rejected."""
+    import api.index as idx2
+    assert not idx2._valid_watch_webhook("https://discord.com.evil.com/api/webhooks/123/abc")
+    assert not idx2._valid_watch_webhook("https://hooks.slack.com.evil.com/services/T0/B0/xxx")
