@@ -131,6 +131,18 @@ Both modes produce identical risk verdicts.</p>
 URL-mode is not supported there (the sandbox reads the file inside an isolated
 container, not the scanner process).</p>
 
+<h2>Does skillsmith track changes over time?</h2>
+<p>Yes. When you re-scan the same SKILL.md content (same sha256 hash), the
+result includes a <code>trend</code> field with:
+<code>direction</code> (<code>improved</code> / <code>declined</code> /
+<code>unchanged</code>), <code>delta</code> (score difference vs. the
+previous scan), <code>previous_security_score</code>, and a
+<code>history</code> array of the last 10 scores.</p>
+<p>The web UI shows this as an arrow indicator (↑ improved, ↓ declined,
+→ unchanged) and a mini sparkline of the score history. The
+<code>explanation</code> field translates each raw pattern hit into
+plain-language advice.</p>
+
 <h2>I found a bug or a false positive.</h2>
 <p>Please open an issue at
 <a href="https://github.com/Larslllllll/skillsmith-web/issues">GitHub Issues</a>
