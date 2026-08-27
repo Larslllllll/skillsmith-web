@@ -1923,8 +1923,13 @@ def handle_mcp(environ, start_response):
         import mcp as _mcp
     try:
         length = int(environ.get("CONTENT_LENGTH") or 0)
-        raw = environ["wsgi.input"].read(length) if length else b"{}"
-        req = json.loads(raw or b"{}")
+        raw = environ["wsgi.input"].read(length) if length else b""
+        # PT-T200: truly empty body (no bytes) is not a valid notification
+        # -- return 400 Parse Error instead of treating it as an empty {}.
+        if not raw.strip():
+            start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
+            return [json.dumps({"jsonrpc": "2.0", "id": None, "error": {"code": -32700, "message": "Parse error"}}).encode()]
+        req = json.loads(raw)
     except Exception:  # noqa: BLE001
         start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({"jsonrpc": "2.0", "id": None, "error": {"code": -32700, "message": "Parse error"}}).encode()]

@@ -2059,3 +2059,14 @@ def test_get_skill_invalid_sha256_returns_clear_400(monkeypatch):
     assert statuses[0].startswith("400"), f"expected 400, got {statuses[0]}"
     assert data.get("error") == "sha256 query param must be a 64-char hex digest", f"got: {data}"
     assert "internal_error" not in data.get("error", "")
+
+
+def test_mcp_empty_body_returns_400():
+    """PT-T200: empty body should return 400 Parse Error, not 204."""
+    environ = {"REQUEST_METHOD": "POST", "PATH_INFO": "/mcp",
+               "CONTENT_LENGTH": "0", "wsgi.input": io.BytesIO(b"")}
+    statuses = []
+    resp = b"".join(webapp.handle_mcp(environ, lambda s, h: statuses.append(s)))
+    assert statuses[0].startswith("400"), f"expected 400, got {statuses[0]}"
+    data = json.loads(resp)
+    assert data.get("error", {}).get("code") == -32700, f"expected -32700, got: {data}"
