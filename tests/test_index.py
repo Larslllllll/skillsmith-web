@@ -2540,3 +2540,68 @@ def test_compute_score_trend_floats_to_int():
     # to a number type that survives JSON round-trip
     assert result["delta"] in (30, 30.5)
 
+
+
+def test_similar_invalid_sha256_returns_400(monkeypatch):
+    """PT-T224: invalid sha256 returns 400, not 500 or generic error."""
+    monkeypatch.setattr(webapp, "get_account", lambda k: {"created_at": 0})
+    # Patch _soft_rate_limit so blob-store-down doesn't mask the sha check
+    monkeypatch.setattr(webapp, "_soft_rate_limit", lambda *a, **k: (True, None))
+    for bad in ["abc", "0" * 63, "0" * 65, "G" * 64, "", "xyzzy"]:
+        status, body = _wsgi("GET", f"/api/similar?sha256={bad}&api_key=test12345")
+        assert status == 400, f"sha={bad!r}: got {status}, {json.loads(body)}"
+        assert "sha256 query param must be a 64-char hex digest" in json.loads(body).get("error", ""), f"sha={bad!r}: got {json.loads(body)}"
+
+
+def test_similar_unknown_dna_returns_404(monkeypatch):
+    """PT-T224: known api_key + valid sha256 but no DNA returns 404."""
+    monkeypatch.setattr(webapp, "get_account", lambda k: {"created_at": 0})
+    monkeypatch.setattr(webapp, "_soft_rate_limit", lambda *a, **k: (True, None))
+    monkeypatch.setattr(webapp, "similar_payload", lambda d: None)
+    status, body = _wsgi("GET", "/api/similar?sha256=" + "0" * 64 + "&api_key=test12345")
+    assert status == 404, f"got {status}"
+    body_parsed = json.loads(body)
+    assert body_parsed.get("error") == "dna_unknown"
+    assert "Scan it first" in body_parsed.get("message", "")
+
+
+def test_similar_no_api_key_returns_401():
+    """PT-T224: /api/similar without api_key returns 401 sign_in_required."""
+    status, body = _wsgi("GET", "/api/similar?sha256=" + "0" * 64)
+    assert status == 401
+    assert json.loads(body).get("error") == "sign_in_required"
+
+
+def test_similar_unknown_api_key_returns_401():
+    """PT-T224: /api/similar with unknown api_key returns 401."""
+    status, body = _wsgi("GET", "/api/similar?sha256=" + "0" * 64 + "&api_key=sk_unknown_xxxxxxxxxxxx")
+    assert status == 401
+    assert json.loads(body).get("error") == "sign_in_required"
+
+
+def test_similar_case_insensitive_sha256(monkeypatch):
+    """PT-T224: uppercase sha256 in query is normalized to lowercase."""
+    monkeypatch.setattr(webapp, "get_account", lambda k: {"created_at": 0})
+    monkeypatch.setattr(webapp, "_soft_rate_limit", lambda *a, **k: (True, None))
+    captured = {}
+    monkeypatch.setattr(webapp, "similar_payload", lambda d: captured.update(digest=d) or [])
+    upper = "ABCDEF" + "0" * 58
+    lower = "abcdef" + "0" * 58
+    status, body = _wsgi("GET", f"/api/similar?sha256={upper}&api_key=test12345")
+    assert status == 200, f"got {status}: {body}"
+    assert captured["digest"] == lower, f"expected lowercased, got {captured['digest']}"
+
+
+def test_similar_multiple_sha256_params(monkeypatch):
+    """PT-T224: only the first sha256 query param is honored."""
+    monkeypatch.setattr(webapp, "get_account", lambda k: {"created_at": 0})
+    monkeypatch.setattr(webapp, "_soft_rate_limit", lambda *a, **k: (True, None))
+    captured = {}
+    monkeypatch.setattr(webapp, "similar_payload", lambda d: captured.update(digest=d) or [])
+    first = "1" * 64
+    second = "2" * 64
+    status, body = _wsgi("GET", f"/api/similar?sha256={first}&sha256={second}&api_key=test12345")
+    assert status == 200, f"got {status}: {body}"
+    # parse_qs with keep_blank_values=True; our code uses qs.get() which returns last
+    # But our code: (qs.get("sha256") or [""])[0] = FIRST one (qs.get returns first key)
+    assert captured["digest"] == first, f"expected first sha, got {captured['digest']}"
