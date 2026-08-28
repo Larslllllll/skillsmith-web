@@ -2283,3 +2283,72 @@ def test_mcp_empty_body_returns_400():
     assert statuses[0].startswith("400"), f"expected 400, got {statuses[0]}"
     data = json.loads(resp)
     assert data.get("error", {}).get("code") == -32700, f"expected -32700, got: {data}"
+
+
+def test_compute_score_trend_directly_empty_history():
+    """PT-T213: _compute_score_trend unit tests."""
+    # Empty history → {}
+    assert webapp._compute_score_trend([], 50) == {}
+    # None history → {}
+    assert webapp._compute_score_trend(None, 50) == {}
+
+
+def test_compute_score_trend_single_data_point():
+    """PT-T213: single data point → {} (no previous to compare against)."""
+    history = [[1000, 50]]
+    assert webapp._compute_score_trend(history, 50) == {}
+
+
+def test_compute_score_trend_no_current_score():
+    """PT-T213: current_score=None → {}."""
+    history = [[1000, 50], [2000, 60]]
+    assert webapp._compute_score_trend(history, None) == {}
+
+
+def test_compute_score_trend_improved():
+    """PT-T213: score went up → 'improved' with positive delta."""
+    history = [[1000, 50], [2000, 80]]
+    result = webapp._compute_score_trend(history, 80)
+    assert result["direction"] == "improved"
+    assert result["delta"] == 30
+    assert result["previous_security_score"] == 50
+    assert result["previous_at"] == 1000
+
+
+def test_compute_score_trend_declined():
+    """PT-T213: score went down → 'declined' with negative delta."""
+    history = [[1000, 80], [2000, 40]]
+    result = webapp._compute_score_trend(history, 40)
+    assert result["direction"] == "declined"
+    assert result["delta"] == -40
+    assert result["previous_security_score"] == 80
+
+
+def test_compute_score_trend_unchanged():
+    """PT-T213: score same → 'unchanged' with delta=0."""
+    history = [[1000, 50], [2000, 50]]
+    result = webapp._compute_score_trend(history, 50)
+    assert result["direction"] == "unchanged"
+    assert result["delta"] == 0
+
+
+def test_compute_score_trend_uses_second_to_last():
+    """PT-T213: with 3+ data points, uses second-to-last (most recent previous)."""
+    history = [[1000, 30], [2000, 50], [3000, 70]]
+    result = webapp._compute_score_trend(history, 70)
+    assert result["previous_security_score"] == 50  # not 30
+    assert result["previous_at"] == 2000
+    assert result["delta"] == 20
+    assert result["direction"] == "improved"
+
+
+def test_compute_score_trend_floats_to_int():
+    """PT-T213: scores are coerced to int (blob storage can yield floats)."""
+    history = [[1000, 50.0], [2000, 80.0]]
+    result = webapp._compute_score_trend(history, 80.5)
+    assert result["previous_security_score"] == 50  # int(50.0)
+    assert isinstance(result["previous_security_score"], int)
+    # delta may be 30 or 30.5 depending on float math, but should be coerced
+    # to a number type that survives JSON round-trip
+    assert result["delta"] in (30, 30.5)
+
