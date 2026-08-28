@@ -2342,6 +2342,62 @@ def test_compute_score_trend_uses_second_to_last():
     assert result["direction"] == "improved"
 
 
+
+def test_analysis_requires_valid_16_hex_id(monkeypatch):
+    """PT-T214: GET /api/analysis rejects malformed ids with 400 (not 500/crash)."""
+    # Mock the rate limiter so we can test id validation in isolation
+    # (the store is down in production so _soft_rate_limit would 503 otherwise)
+    monkeypatch.setattr(webapp, '_soft_rate_limit', lambda ident, cap, bucket: (True, ""))
+    for bad_id in ("", "abc", "xyz", "G12345678901234", "a" * 17, "a" * 15, "a-f", "  " + "a" * 14, "aNLb"):
+        status2, _ = _wsgi("GET", f"/api/analysis?id={bad_id}")
+        assert status2 == 400, f"bad id '{bad_id}' → expected 400, got {status2}"
+
+
+def test_analysis_valid_id_unknown_returns_404(monkeypatch):
+    """PT-T214: valid 16-hex id not in store → 404."""
+    monkeypatch.setattr(webapp, '_soft_rate_limit', lambda *a: (True, ""))
+    import io as _io
+    captured = {}
+    def sr(s, h): captured['status'] = int(s.split()[0])
+    environ = {"REQUEST_METHOD": "GET", "PATH_INFO": "/api/analysis",
+               "CONTENT_LENGTH": "0", "QUERY_STRING": "id=0000000000000000",
+               "wsgi.input": _io.BytesIO(b""), "HTTP_X_REAL_IP": "1.2.3.4"}
+    b"".join(webapp.handle_analysis(environ, sr))
+    assert captured.get('status') == 404, "unknown valid id → 404"
+
+
+def test_analysis_rate_limit_returns_429(monkeypatch):
+    """PT-T214: rate limit exceeded → 429, before id check."""
+    monkeypatch.setattr(webapp, '_soft_rate_limit', lambda *a: (False, "rate limit"))
+    import io as _io
+    captured = {}
+    def sr(s, h): captured['status'] = int(s.split()[0])
+    environ = {"REQUEST_METHOD": "GET", "PATH_INFO": "/api/analysis",
+               "CONTENT_LENGTH": "0", "QUERY_STRING": "id=0000000000000000",
+               "wsgi.input": _io.BytesIO(b""), "HTTP_X_REAL_IP": "1.2.3.4"}
+    b"".join(webapp.handle_analysis(environ, sr))
+    assert captured.get('status') == 429, "rate limited → 429"
+    # Note: rate limit checked BEFORE id format → bad ids still cost rate limit slots (PT-T26, by design)
+
+
+def test_analysis_cors_headers_present(monkeypatch):
+    """PT-T214: responses include CORS headers so JS fetch works cross-origin."""
+    import io
+    monkeypatch.setattr(webapp, '_soft_rate_limit', lambda *a, **kw: (True, ""))
+    import account as account_mod
+    monkeypatch.setattr(account_mod, '_blob_get', lambda p: None)
+    captured = {}
+    def sr(s, h):
+        captured['status'] = int(s.split()[0])
+        for name, val in h:
+            if name.lower() in ('content-type', 'access-control-allow-origin', 'cache-control'):
+                captured[name] = val
+    environ = {"REQUEST_METHOD": "GET", "PATH_INFO": "/api/analysis",
+               "CONTENT_LENGTH": "0", "QUERY_STRING": "id=0000000000000000",
+               "wsgi.input": io.BytesIO(b""), "HTTP_X_REAL_IP": "1.2.3.4"}
+    b"".join(webapp.handle_analysis(environ, sr))
+    assert 'Content-Type' in captured, "content-type header present"
+    assert 'Access-Control-Allow-Origin' in captured, "CORS header present"
 def test_compute_score_trend_floats_to_int():
     """PT-T213: scores are coerced to int (blob storage can yield floats)."""
     history = [[1000, 50.0], [2000, 80.0]]
