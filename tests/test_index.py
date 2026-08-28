@@ -2432,6 +2432,104 @@ def test_get_skill_store_down_yields_400(monkeypatch):
     assert captured.get('status') == 400, "store-down → 400"
 
 
+
+def test_buy_credit_kind_validation(monkeypatch):
+    """PT-T218: kind must be exactly 'scan' or 'lookup' (strict whitelist)."""
+    import io
+    captured = {}
+    def sr(s, h): captured['status'] = int(s.split()[0])
+    environ = {"REQUEST_METHOD": "POST", "PATH_INFO": "/api/buy_credit",
+               "CONTENT_LENGTH": "0", "wsgi.input": io.BytesIO(b""), "HTTP_X_REAL_IP": "1.2.3.4"}
+    for bad_kind in (None, 1, ["scan"], {"k": "v"}, "", "SCAN", "Lookup", "scan ", "scan;lookup"):
+        body = json.dumps({"api_key": "k" * 24, "payment_signature": "sig", "kind": bad_kind}).encode()
+        environ["CONTENT_LENGTH"] = str(len(body))
+        environ["wsgi.input"] = io.BytesIO(body)
+        captured.clear()
+        b"".join(webapp.handle_buy_credit(environ, sr))
+        assert captured.get('status') == 400, f"kind={bad_kind!r} → expected 400, got {captured.get('status')}"
+
+
+def test_buy_credit_requires_api_key_first(monkeypatch):
+    """PT-T218: api_key validation precedes signature check."""
+    import io
+    captured = {}
+    def sr(s, h): captured['status'] = int(s.split()[0])
+    environ = {"REQUEST_METHOD": "POST", "PATH_INFO": "/api/buy_credit",
+               "CONTENT_LENGTH": "0", "wsgi.input": io.BytesIO(b""), "HTTP_X_REAL_IP": "1.2.3.4"}
+    # No api_key but valid signature
+    body = json.dumps({"payment_signature": "validSig12345"}).encode()
+    environ["CONTENT_LENGTH"] = str(len(body))
+    environ["wsgi.input"] = io.BytesIO(body)
+    captured.clear()
+    b"".join(webapp.handle_buy_credit(environ, sr))
+    assert captured.get('status') == 400, "no api_key → 400 (before sig check)"
+
+
+def test_buy_credit_missing_signature_returns_price(monkeypatch):
+    """PT-T218: missing payment_signature returns 402 with price + pay_to info."""
+    import io
+    captured = {}
+    def sr(s, h): captured['status'] = int(s.split()[0])
+    environ = {"REQUEST_METHOD": "POST", "PATH_INFO": "/api/buy_credit",
+               "CONTENT_LENGTH": "0", "wsgi.input": io.BytesIO(b""), "HTTP_X_REAL_IP": "1.2.3.4"}
+    body = json.dumps({"api_key": "k" * 24, "kind": "scan"}).encode()
+    environ["CONTENT_LENGTH"] = str(len(body))
+    environ["wsgi.input"] = io.BytesIO(body)
+    captured.clear()
+    body_resp = b"".join(webapp.handle_buy_credit(environ, sr))
+    data = json.loads(body_resp)
+    assert captured.get('status') == 402, "no signature → 402"
+    assert data.get('error') == 'payment_required'
+    assert 'price_usdc' in data
+    assert 'pay_to' in data
+
+
+def test_buy_credit_null_body_uses_defaults(monkeypatch):
+    """PT-T218: null JSON body is normalized to {} (Fix #65) and returns 400."""
+    import io
+    captured = {}
+    def sr(s, h): captured['status'] = int(s.split()[0])
+    body = b"null"
+    environ = {"REQUEST_METHOD": "POST", "PATH_INFO": "/api/buy_credit",
+               "CONTENT_LENGTH": str(len(body)), "wsgi.input": io.BytesIO(body),
+               "HTTP_X_REAL_IP": "1.2.3.4"}
+    captured.clear()
+    b"".join(webapp.handle_buy_credit(environ, sr))
+    assert captured.get('status') == 400, "null body → 400 (api_key required)"
+
+
+def test_claim_payment_signature_rejects_replay(monkeypatch):
+    """PT-T218: same signature cannot be claimed twice."""
+    monkeypatch.setattr(webapp, "get_account", lambda k: None)
+    import io as _io
+    store = {}
+    import account as acc_mod
+    monkeypatch.setattr(acc_mod, '_blob_get', lambda p: store.get(p))
+    monkeypatch.setattr(acc_mod, '_blob_put', lambda p, v: store.__setitem__(p, v) or True)
+    # First claim succeeds
+    ok1, detail1 = webapp._claim_payment_signature("replay_sig_test", "key" * 12, "scan")
+    assert ok1 is True, f"first claim ok: {detail1}"
+    # Second claim (same sig, same kind) fails
+    ok2, detail2 = webapp._claim_payment_signature("replay_sig_test", "key" * 12, "scan")
+    assert ok2 is False, "second claim must fail"
+    assert "already used" in detail2
+
+
+def test_claim_payment_signature_cross_kind_replay(monkeypatch):
+    """PT-T218: same sig can't be used for scan AND lookup (cross-purpose replay)."""
+    monkeypatch.setattr(webapp, "get_account", lambda k: None)
+    import account as acc_mod
+    store = {}
+    monkeypatch.setattr(acc_mod, '_blob_get', lambda p: store.get(p))
+    monkeypatch.setattr(acc_mod, '_blob_put', lambda p, v: store.__setitem__(p, v) or True)
+    ok1, _ = webapp._claim_payment_signature("cross_kind_sig", "key" * 12, "scan")
+    assert ok1 is True
+    # Try with kind=lookup
+    ok2, detail2 = webapp._claim_payment_signature("cross_kind_sig", "key" * 12, "lookup")
+    assert ok2 is False, "cross-kind replay must fail"
+    assert "already used" in detail2
+
+
 def test_compute_score_trend_floats_to_int():
     """PT-T213: scores are coerced to int (blob storage can yield floats)."""
     history = [[1000, 50.0], [2000, 80.0]]
