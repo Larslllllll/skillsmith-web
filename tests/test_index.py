@@ -2398,6 +2398,40 @@ def test_analysis_cors_headers_present(monkeypatch):
     b"".join(webapp.handle_analysis(environ, sr))
     assert 'Content-Type' in captured, "content-type header present"
     assert 'Access-Control-Allow-Origin' in captured, "CORS header present"
+
+def test_lookup_store_down_yields_400(monkeypatch):
+    """PT-T216: when blob store is down, /api/lookup returns 400 internal_error
+    (not 503). This is a known limitation when the store fails after the
+    sha256-validation fix (#63) check. Fix #63 ensured sha256 validation
+    happens before store access, so unknown sha256 always gets a clear 400."""
+    import io
+    def failing_quota(*a, **kw):
+        raise RuntimeError("blob store down")
+    monkeypatch.setattr(webapp, "check_and_consume_lookup_quota", failing_quota)
+    captured = {}
+    def sr(s, h): captured['status'] = int(s.split()[0])
+    environ = {"REQUEST_METHOD": "GET", "PATH_INFO": "/api/lookup",
+               "QUERY_STRING": "sha256=" + "a" * 64 + "&api_key=" + "k" * 24,
+               "CONTENT_LENGTH": "0", "wsgi.input": io.BytesIO(b""), "HTTP_X_REAL_IP": "1.2.3.4"}
+    b"".join(webapp.handle_lookup(environ, sr))
+    assert captured.get('status') == 400, "store-down → 400 (generic catch-all, not 503)"
+
+
+def test_get_skill_store_down_yields_400(monkeypatch):
+    """PT-T216: same as above for /api/skill (get_skill)."""
+    import io
+    def failing_quota(*a, **kw):
+        raise RuntimeError("blob store down")
+    monkeypatch.setattr(webapp, "check_and_consume_lookup_quota", failing_quota)
+    captured = {}
+    def sr(s, h): captured['status'] = int(s.split()[0])
+    environ = {"REQUEST_METHOD": "GET", "PATH_INFO": "/api/skill",
+               "QUERY_STRING": "sha256=" + "a" * 64 + "&api_key=" + "k" * 24,
+               "CONTENT_LENGTH": "0", "wsgi.input": io.BytesIO(b""), "HTTP_X_REAL_IP": "1.2.3.4"}
+    b"".join(webapp.handle_get_skill(environ, sr))
+    assert captured.get('status') == 400, "store-down → 400"
+
+
 def test_compute_score_trend_floats_to_int():
     """PT-T213: scores are coerced to int (blob storage can yield floats)."""
     history = [[1000, 50.0], [2000, 80.0]]
