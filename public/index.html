@@ -212,6 +212,7 @@
 </script>
 </head>
 <body>
+  <a href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;background:#161b27;color:#e6edf3;padding:8px 12px;border-radius:6px;font-weight:600;" onfocus="this.style.cssText='position:fixed;top:8px;left:8px;width:auto;height:auto;padding:8px 12px;background:#161b27;border:2px solid #2ea043;border-radius:6px;color:#e6edf3;z-index:9999;font-weight:600;'" onblur="this.style.cssText='position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;'">Skip to main content</a>
 <div class="bg-grid"></div>
 <div class="glow"></div>
 
@@ -271,14 +272,14 @@
   </div>
 </div>
 
-<main>
+<main id="main-content" tabindex="-1">
   <section>
     <div class="panel" style="margin-bottom:1.2rem;">
       <div style="padding:1rem;">
         <p class="sub" style="margin:0;">Paste a Claude Agent Skill's <code>SKILL.md</code> below, or scan a GitHub link. We lint it and run a static security scan (prompt-injection phrasing, dangerous code patterns) — nothing is stored.</p>
       </div>
       <div class="url-row">
-        <input id="urlInput" type="text" placeholder="https://github.com/.../blob/.../SKILL.md">
+        <input id="urlInput" type="text" placeholder="https://github.com/.../blob/.../SKILL.md" aria-label="Skill file URL to scan" autocomplete="off" spellcheck="false">
         <button id="scanUrlBtn" class="btn-primary" onclick="doScanUrl()">Scan URL</button>
       </div>
     </div>
@@ -304,7 +305,7 @@ description: One-line description of what this skill does and when to use it.
 Body markdown describing usage."></textarea>
       <div class="footer-toolbar">
         <label style="display:flex;align-items:center;gap:.4rem;color:var(--text-muted);font-size:.72rem;cursor:pointer;">
-          <input type="checkbox" id="publishCheck" style="accent-color:var(--accent);">
+          <input type="checkbox" id="publishCheck" style="accent-color:var(--accent);" aria-label="Publish to Safe Skills Database if scan is clean">
           Publish to Safe Skills DB if clean (others can use it -- see <a href="/privacy-policy.html" style="color:var(--accent);" onclick="event.stopPropagation()">privacy policy</a>)
         </label>
         <button id="scanBtn" class="btn-primary" onclick="doScan()">▶ Run Analysis</button>
