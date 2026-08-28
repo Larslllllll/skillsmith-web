@@ -1815,6 +1815,69 @@ def test_mcp_type_confused_arguments_no_crash():
     assert "'dict' object has no attribute" not in str(r_b)
 
 
+
+def test_watch_list_requires_auth(monkeypatch):
+    """GET /api/watch?list=1 requires api_key — no auth returns 401."""
+    import io
+    captured = {}
+    def sr(s, h): captured['status'] = int(s.split()[0])
+    environ = {"REQUEST_METHOD": "GET", "PATH_INFO": "/api/watch",
+               "CONTENT_LENGTH": "0", "QUERY_STRING": "list=1",
+               "wsgi.input": io.BytesIO(b""),
+               "HTTP_X_REAL_IP": "1.2.3.4"}
+    b"".join(webapp.handle_watch(environ, sr))
+    assert captured.get('status') == 401, "list without key → 401"
+
+
+def test_watch_list_rate_limited(monkeypatch):
+    """GET /api/watch?list=1 with exceeded rate limit returns 429."""
+    import io
+    def fake_rl(key, limit, prefix):
+        return False, "daily limit exceeded"
+    monkeypatch.setattr(webapp, '_soft_rate_limit', fake_rl)
+    monkeypatch.setattr(webapp, 'get_account', lambda k: {"api_key": k})
+    captured = {}
+    def sr(s, h): captured['status'] = int(s.split()[0])
+    environ = {"REQUEST_METHOD": "GET", "PATH_INFO": "/api/watch",
+               "CONTENT_LENGTH": "0", "QUERY_STRING": "api_key=testkey1234567&list=1",
+               "wsgi.input": io.BytesIO(b""),
+               "HTTP_X_REAL_IP": "1.2.3.4"}
+    b"".join(webapp.handle_watch(environ, sr))
+    assert captured.get('status') == 429, "rate limited list → 429"
+
+
+def test_watch_url_non_github_rejected(monkeypatch):
+    """POST /api/watch with non-GitHub URL returns clear 400."""
+    import io
+    def fake_watch_create(api_key, url, webhook_url=""):
+        raise ValueError("url fetch failed")
+    monkeypatch.setattr(webapp, 'get_account', lambda k: {"api_key": k})
+    monkeypatch.setattr(webapp, 'watch_create', fake_watch_create)
+    body = json.dumps({"api_key": "testkey1234567", "url": "https://evildomain.com/skill"}).encode()
+    captured = {}
+    def sr(s, h): captured['status'] = int(s.split()[0])
+    environ = {"REQUEST_METHOD": "POST", "PATH_INFO": "/api/watch",
+               "CONTENT_LENGTH": str(len(body)), "QUERY_STRING": "",
+               "wsgi.input": io.BytesIO(body),
+               "HTTP_X_REAL_IP": "1.2.3.4"}
+    b"".join(webapp.handle_watch(environ, sr))
+    # watch_create raises ValueError which gets wrapped → 400
+    assert captured.get('status') == 400, "non-github URL → 400"
+
+
+def test_mcp_watch_check_mode(monkeypatch):
+    """MCP watch_skill with watch_id param calls watch_check and returns result."""
+    import index as _idx_mod
+    def fake_watch_check(api_key, watch_id):
+        return {"watch_id": watch_id, "status": "unchanged",
+                "current_sha256": "abc123", "baseline_sha256": "abc123"}
+    monkeypatch.setattr(_idx_mod, "watch_check", fake_watch_check)
+    result = _mcp_watch_call(monkeypatch, {"api_key": "k" * 20, "watch_id": "abcd12345678"})
+    assert result.get("watch_id") == "abcd12345678"
+    assert result.get("status") == "unchanged"
+
+
+
 def test_watch_webhook_validator_and_no_redirect():
     """PT-T172: webhook allowlist blocks userinfo/port/http/query/fragment
     variants; outbound delivery refuses redirects (no open relay)."""
