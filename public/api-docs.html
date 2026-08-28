@@ -153,6 +153,9 @@ and remember the key."</p>
 <h3><span class="method get">GET</span><code>/api/stats</code></h3>
 <p>Aggregate global counters: <code>{"total_scans": n, "by_risk": {...}}</code>. Public, cached 60s.</p>
 
+<h3><span class="method get">GET</span><code>/api/analysis?id=&lt;analysis_id&gt;</code></h3>
+<p>Fetch a completed behavioral analysis report by its <code>analysis_id</code> (the shareable permalink for <code>POST /api/sandbox-run</code> results). Returns the full report: <code>analysis_id</code>, <code>static_iocs</code>, <code>ai_analysis</code>, <code>simulated_actions</code>, <code>capabilities_summary</code>, <code>severity</code> (0-10), <code>recommendation</code>. Rate limit: 500/day/IP.</p>
+
 <h3><span class="method post">POST</span><code>/api/signup</code></h3>
 <p>Create an anonymous account. No email/password.</p>
 <pre>curl -X POST https://skillsmith.ch/api/signup</pre>
