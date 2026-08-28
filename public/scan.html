@@ -96,6 +96,19 @@ function sparkline(hist) {
       '<dl>' +
       '<dt>SHA-256</dt><dd><code>' + esc(sha) + '</code></dd>' +
       '<dt>Security score</dt><dd>' + (d.security_score != null ? esc(d.security_score) + ' / 100' + trendArrow(d.trend) : '—') + sparkline(d.score_history) + '</dd>' +
+      '<dt>Security score</dt><dd>' + (d.security_score != null ? esc(d.security_score) + ' / 100' + trendArrow(d.trend) : '—') + sparkline(d.score_history) +
+      ' <a href="#" onclick="event.preventDefault();var el=document.getElementById(\'scoreinfo\');el.style.display=el.style.display?\'\':\'none\';" style="color:#58a6ff;font-size:0.85em">(what does this mean?)</a>' +
+      '</dd>' +
+      '<dd id=\"scoreinfo\" style=\"display:none;margin-top:4px;padding:8px 12px;background:#161b27;border:1px solid #30363d;border-radius:6px;font-size:0.82em;color:#8b949e;\">' +
+      '<strong style=\"color:#e6edf3\">Score bands</strong><br>' +
+      '<span style=\"color:#2ea043\">&#9679; 90–100</span> no suspicious patterns found<br>' +
+      '<span style=\"color:#d29922\">&#9679; 70–89</span> minor issues, usually safe<br>' +
+      '<span style=\"color:#f0883e\">&#9679; 50–69</span> notable patterns, review before use<br>' +
+      '<span style=\"color:#db6d28\">&#9679; 30–49</span> multiple red flags, use with caution<br>' +
+      '<span style=\"color:#da3633\">&#9679; 0–29</span> high-risk patterns detected<br>' +
+      '<strong style=\"color:#e6edf3\;margin-top:6px;display:inline-block\">Trend arrow</strong><br>' +
+      '&#9650; improved since last scan &nbsp; &#9660; declined &nbsp; &#8594; unchanged &nbsp; &#8212; no history' +
+      '</dd>' +
       '<dt>Lint</dt><dd>' + (d.lint_ok ? 'ok' : 'issues found') + '</dd>' +
       '<dt>Parsed</dt><dd>' + (d.parse_ok ? 'yes' : 'no') + '</dd>' +
       '<dt>Times seen</dt><dd>' + esc(d.seen_count) + '</dd>' +
