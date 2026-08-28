@@ -2725,3 +2725,90 @@ def test_scan_url_type_confusion_no_internal_error(monkeypatch):
         resp = b"".join(webapp.handle_scan(environ, lambda s, h: statuses.append(s)))
         # Must NOT be 400 internal_error
         assert "internal_error" not in json.loads(resp).get("error", "").lower(),             f"url={bad_url}: got internal_error: {resp[:200]}"
+
+
+def test_report_get_invalid_sha256_returns_400():
+    """PT-T230: /api/report GET with invalid sha256 returns 400."""
+    for bad_sha in ["abc", "0" * 63, "0" * 65, "G" * 64, ""]:
+        status, body = _wsgi("GET", f"/api/report?sha256={bad_sha}")
+        assert status == 400, f"sha={bad_sha!r}: got {status}"
+        assert "sha256 must be a 64-char hex digest" in json.loads(body).get("error", "")
+
+
+def test_report_post_missing_api_key_returns_401():
+    """PT-T230: /api/report POST without api_key returns 401."""
+    payload = json.dumps({"sha256": "0" * 64, "verdict": "malicious"}).encode()
+    environ = {
+        "REQUEST_METHOD": "POST", "PATH_INFO": "/api/report",
+        "CONTENT_LENGTH": str(len(payload)), "wsgi.input": io.BytesIO(payload)
+    }
+    statuses = []
+    resp = b"".join(webapp.handle_report(environ, lambda s, h: statuses.append(s)))
+    assert statuses[0].startswith("401"), f"got {statuses[0]}"
+    assert "sign_in_required" in json.loads(resp).get("error", "")
+
+
+def test_report_post_invalid_verdict_returns_400(monkeypatch):
+    """PT-T230: /api/report POST with invalid verdict returns 400."""
+    monkeypatch.setattr(webapp, "get_account", lambda k: {"created_at": 0})
+    for bad_verdict in [None, 123, True, False, [], {}, "invalid", "MALICIOUS", "false-positive ", " false_positive"]:
+        payload = json.dumps({"api_key": "sk_ok", "sha256": "0" * 64, "verdict": bad_verdict}).encode()
+        environ = {
+            "REQUEST_METHOD": "POST", "PATH_INFO": "/api/report",
+            "CONTENT_LENGTH": str(len(payload)), "wsgi.input": io.BytesIO(payload)
+        }
+        statuses = []
+        resp = b"".join(webapp.handle_report(environ, lambda s, h: statuses.append(s)))
+        assert statuses[0].startswith("400"), f"verdict={bad_verdict!r}: got {statuses[0]}"
+        assert "verdict must be" in json.loads(resp).get("error", ""), f"verdict={bad_verdict!r}: got {resp[:200]}"
+
+
+def test_report_post_invalid_sha256_returns_400(monkeypatch):
+    """PT-T230: /api/report POST with invalid sha256 returns 400."""
+    monkeypatch.setattr(webapp, "get_account", lambda k: {"created_at": 0})
+    for bad_sha in [None, 12345, [], {}, True, "abc", "0" * 63, "G" * 64]:
+        payload = json.dumps({"api_key": "sk_ok", "sha256": bad_sha, "verdict": "malicious"}).encode()
+        environ = {
+            "REQUEST_METHOD": "POST", "PATH_INFO": "/api/report",
+            "CONTENT_LENGTH": str(len(payload)), "wsgi.input": io.BytesIO(payload)
+        }
+        statuses = []
+        resp = b"".join(webapp.handle_report(environ, lambda s, h: statuses.append(s)))
+        assert statuses[0].startswith("400"), f"sha={bad_sha!r}: got {statuses[0]}"
+
+
+def test_report_post_comment_type_confusion(monkeypatch):
+    """PT-T230: /api/report POST with non-string comment falls back to empty string."""
+    monkeypatch.setattr(webapp, "get_account", lambda k: {"created_at": 0})
+    monkeypatch.setattr(webapp, "add_report", lambda d, e: {"sha256": d, "total": 1, "tally": {"note": 1}})
+    # Patch blob calls inside handle_report
+    import account as _acct
+    monkeypatch.setattr(_acct, "_blob_put", lambda p, v: None)
+    monkeypatch.setattr(_acct, "_blob_get", lambda p: {"count": 0})
+    for bad_comment in [12345, True, False, [], {}]:
+        payload = json.dumps({"api_key": "sk_ok", "sha256": "0" * 64, "verdict": "note", "comment": bad_comment}).encode()
+        environ = {
+            "REQUEST_METHOD": "POST", "PATH_INFO": "/api/report",
+            "CONTENT_LENGTH": str(len(payload)), "wsgi.input": io.BytesIO(payload)
+        }
+        statuses = []
+        resp = b"".join(webapp.handle_report(environ, lambda s, h: statuses.append(s)))
+        assert statuses[0].startswith("200"), f"comment={bad_comment!r}: got {statuses[0]}: {resp[:200]}"
+
+
+def test_report_post_flood_guard_429(monkeypatch):
+    """PT-T230: /api/report POST rate limit (20/day) returns 429."""
+    monkeypatch.setattr(webapp, "get_account", lambda k: {"created_at": 0})
+    monkeypatch.setattr(webapp, "add_report", lambda d, e: {"sha256": d, "total": 1, "tally": {"note": 1}})
+    import account as _acct
+    monkeypatch.setattr(_acct, "_blob_get", lambda p: {"count": 20})
+    monkeypatch.setattr(_acct, "_blob_put", lambda p, v: None)
+    payload = json.dumps({"api_key": "sk_ok", "sha256": "0" * 64, "verdict": "note"}).encode()
+    environ = {
+        "REQUEST_METHOD": "POST", "PATH_INFO": "/api/report",
+        "CONTENT_LENGTH": str(len(payload)), "wsgi.input": io.BytesIO(payload)
+    }
+    statuses = []
+    resp = b"".join(webapp.handle_report(environ, lambda s, h: statuses.append(s)))
+    assert statuses[0].startswith("429"), f"got {statuses[0]}"
+    assert "too many reports" in json.loads(resp).get("error", "").lower()
