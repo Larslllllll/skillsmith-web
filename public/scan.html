@@ -57,6 +57,7 @@ a{color:var(--accent);}
     <a href="#snippet">get snippet ↓</a>
   </div>
 </div>
+<div class="panel" id="jsonPanel" style="display:none;"><h2 style="font-size:.95rem;margin-top:0;">Raw scan result (JSON)</h2><p class="disclaimer" style="margin-top:0;font-size:0.78em;">For CI/CD, audit logs, or security dashboards.</p><button onclick="copyJson()">Copy JSON</button> <span class="disclaimer" id="copyJsonMsg"></span></div>
 <div class="panel" id="snippetPanel" style="display:none;">
   <h2 style="font-size:.95rem;margin-top:0;">Markdown for your README</h2>
   <pre class="snippet" id="snippet"></pre>
@@ -96,7 +97,7 @@ function sparkline(hist) {
     const res = await fetch('/api/public_scan?sha256=' + sha);
     if (res.status === 404) { el.innerHTML = '<p class="disclaimer">This hash has never been scanned.</p>'; return; }
     if (!res.ok) throw new Error(res.status);
-    const d = await res.json();
+    const d = await res.json(); _cachedScan = d;
     const risk = d.risk_level || 'unknown';
     const when = d.last_seen_at ? new Date(d.last_seen_at * 1000).toISOString().slice(0, 10) : '?';
     el.innerHTML =
@@ -134,6 +135,12 @@ function sparkline(hist) {
     el.innerHTML = '<p class="disclaimer">Lookup failed: ' + esc(e.message) + '</p>';
   }
 })();
+let _cachedScan = null;
+function copyJson(){
+  if(!_cachedScan){document.getElementById('copyJsonMsg').textContent='not loaded';return;}
+  navigator.clipboard.writeText(JSON.stringify(_cachedScan, null, 2))
+    .then(() => { document.getElementById('copyJsonMsg').textContent = 'copied!'; });
+}
 function copySnippet(){
   navigator.clipboard.writeText(document.getElementById('snippet').textContent)
     .then(() => { document.getElementById('copyMsg').textContent = 'copied!'; });
