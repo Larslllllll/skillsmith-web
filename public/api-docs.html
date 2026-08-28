@@ -156,6 +156,21 @@ and remember the key."</p>
 <h3><span class="method get">GET</span><code>/api/analysis?id=&lt;analysis_id&gt;</code></h3>
 <p>Fetch a completed behavioral analysis report by its <code>analysis_id</code> (the shareable permalink for <code>POST /api/sandbox-run</code> results). Returns the full report: <code>analysis_id</code>, <code>static_iocs</code>, <code>ai_analysis</code>, <code>simulated_actions</code>, <code>capabilities_summary</code>, <code>severity</code> (0-10), <code>recommendation</code>. Rate limit: 500/day/IP.</p>
 
+<h2>Score trend &amp; history</h2>
+<p>The same <code>sha256</code> re-scanned produces a <code>trend</code> object alongside the verdict:</p>
+<pre>{"direction": "improved|declined|unchanged",
+ "delta": &lt;int&gt;,
+ "previous_security_score": &lt;int&gt;,
+ "previous_at": &lt;unix_ts&gt;,
+ "score_history": [[&lt;unix_ts&gt;, &lt;score&gt;], ...]   // last 10 scans</pre>
+<p>Endpoints that return <code>trend</code> + <code>score_history</code>:</p>
+<ul>
+  <li><code>POST /api/scan</code> — authenticated users get the trend in the response</li>
+  <li><code>GET /api/public_scan</code> — public, key-less: includes <code>security_score</code>, <code>score_history</code>, <code>trend</code></li>
+  <li><code>GET /api/lookup</code> — authenticated: full record including <code>score_history</code></li>
+</ul>
+<p>The shared scan page (<a href="/scan.html">scan.html</a>) renders the trend as an arrow indicator (↑ improved, ↓ declined, → unchanged) plus a mini SVG sparkline. <code>score_history</code> is capped at 10 entries to keep the blob record small.</p>
+
 <h3><span class="method post">POST</span><code>/api/signup</code></h3>
 <p>Create an anonymous account. No email/password.</p>
 <pre>curl -X POST https://skillsmith.ch/api/signup</pre>
