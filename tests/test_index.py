@@ -2234,6 +2234,46 @@ def test_read_json_null_and_array_become_empty_dict(monkeypatch):
     assert _post_with_body(b'{"api_key": "fake12345678"}') == 401, "fake key → 401 unknown"
 
 
+
+def test_mcp_analyze_behavior_requires_api_key(monkeypatch):
+    """MCP analyze_behavior requires api_key argument."""
+    import mcp as mcp_mod
+    status, body = mcp_mod.handle_jsonrpc({
+        "jsonrpc": "2.0", "id": 1, "method": "tools/call",
+        "params": {"name": "analyze_behavior", "arguments": {}}
+    })
+    assert status == 200
+    inner = json.loads(body["result"]["content"][0]["text"])
+    assert "api_key required" in inner.get("error", "")
+
+
+def test_mcp_analyze_behavior_requires_text(monkeypatch):
+    """analyze_behavior requires non-empty text argument."""
+    import mcp as mcp_mod
+    monkeypatch.setattr(mcp_mod, "get_account", lambda k: {"api_key": k})
+    status, body = mcp_mod.handle_jsonrpc({
+        "jsonrpc": "2.0", "id": 1, "method": "tools/call",
+        "params": {"name": "analyze_behavior", "arguments": {"api_key": "k" * 20}}
+    })
+    inner = json.loads(body["result"]["content"][0]["text"])
+    assert "text required" in inner.get("error", "")
+
+
+def test_mcp_analyze_behavior_text_too_large(monkeypatch):
+    """analyze_behavior rejects text > 100k chars."""
+    import mcp as mcp_mod
+    monkeypatch.setattr(mcp_mod, "get_account", lambda k: {"api_key": k})
+    huge = "x" * 100001
+    status, body = mcp_mod.handle_jsonrpc({
+        "jsonrpc": "2.0", "id": 1, "method": "tools/call",
+        "params": {"name": "analyze_behavior", "arguments": {"api_key": "k" * 20, "text": huge}}
+    })
+    inner = json.loads(body["result"]["content"][0]["text"])
+    assert "text too large" in inner.get("error", "")
+
+
+
+
 def test_mcp_empty_body_returns_400():
     """PT-T200: empty body should return 400 Parse Error, not 204."""
     environ = {"REQUEST_METHOD": "POST", "PATH_INFO": "/mcp",
