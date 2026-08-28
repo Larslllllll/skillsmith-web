@@ -2146,6 +2146,31 @@ def test_get_skill_invalid_sha256_returns_clear_400(monkeypatch):
     assert "internal_error" not in data.get("error", "")
 
 
+
+def test_read_json_null_and_array_become_empty_dict(monkeypatch):
+    """PT-T208/Fix #65: _read_json must never return None. json.loads("null")
+    used to return Python None, causing every handler's payload.get() to raise
+    AttributeError → 400 internal_error. Now returns {} for non-dict values."""
+    import io
+    def _post_with_body(body_bytes):
+        captured = {}
+        def sr(s, h): captured['status'] = int(s.split()[0])
+        environ = {"REQUEST_METHOD": "POST", "PATH_INFO": "/api/watch",
+                   "CONTENT_LENGTH": str(len(body_bytes)),
+                   "wsgi.input": io.BytesIO(body_bytes),
+                   "HTTP_X_REAL_IP": "1.2.3.4"}
+        b"".join(webapp.app(environ, sr))
+        return captured['status']
+    # null → {} → empty payload → 401 sign_in_required (not 400 internal_error)
+    assert _post_with_body(b"null") == 401, "null body → 401 (auth fails cleanly)"
+    # array → {} → empty payload → 401 sign_in_required
+    assert _post_with_body(b"[]") == 401, "[] body → 401 (auth fails cleanly)"
+    # empty object → valid payload → 401 (auth fails)
+    assert _post_with_body(b"{}") == 401, "{} body → 401 (auth fails)"
+    # valid {"api_key": "fake"} → 401 unknown api_key (not 400/500)
+    assert _post_with_body(b'{"api_key": "fake12345678"}') == 401, "fake key → 401 unknown"
+
+
 def test_mcp_empty_body_returns_400():
     """PT-T200: empty body should return 400 Parse Error, not 204."""
     environ = {"REQUEST_METHOD": "POST", "PATH_INFO": "/mcp",

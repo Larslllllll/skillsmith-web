@@ -572,9 +572,16 @@ def verify_payment(signature: str, required_usdc: float):
 
 
 def _read_json(environ):
+    """Parse JSON body. Always returns a dict -- null/array/empty bodies
+    become {} so the calling handler's .get() never crashes (PT-T208).
+    Raises json.JSONDecodeError on truly invalid JSON so handlers can
+    decide how to surface that."""
     length = int(environ.get("CONTENT_LENGTH") or 0)
     raw = environ["wsgi.input"].read(length) if length else b"{}"
-    return json.loads(raw or b"{}")
+    parsed = json.loads(raw or b"{}")
+    if not isinstance(parsed, dict):
+        return {}
+    return parsed
 
 
 def _client_ip(environ):
@@ -2051,7 +2058,6 @@ def _compute_score_trend(history: list, current_score: int | None) -> dict:
     Returns {} when no meaningful history (single data point)."""
     if not history or len(history) < 2 or current_score is None:
         return {}
-    # Second-to-last is the "previous" (last is the most-recent = current)
     prev_ts, prev_score = history[-2]
     delta = current_score - int(prev_score)
     if delta > 0:
