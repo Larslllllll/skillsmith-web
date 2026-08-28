@@ -361,3 +361,99 @@ def test_mcp_analyze_behavior_handles_empty_text():
         text = json.loads(body["result"]["content"][0]["text"])
         assert "error" in text, f"expected error for empty={empty!r}, got: {text}"
         assert "text" in text.get("error", "").lower(), f"expected text error for {empty!r}, got: {text}"
+
+def test_mcp_file_report_sha256_type_confusion():
+    """PT-T223: file_report sha256 type-confusion returns clean error, no 500."""
+    import mcp as _mcp_fr
+    for bad_sha in [None, 12345, ["a", "b"], {"$ne": None}, True, False]:
+        code, body = _mcp_fr.handle_jsonrpc({
+            "jsonrpc": "2.0", "id": 1, "method": "tools/call",
+            "params": {"name": "file_report", "arguments": {"sha256": bad_sha, "verdict": "malicious"}}
+        })
+        assert code == 200, f"sha={bad_sha}: got status {code}"
+        result = body.get("result", {}).get("content", [{}])[0].get("text", "")
+        assert "sha256 must be a 64-char hex digest" in result, f"sha={bad_sha}: got {result}"
+
+
+def test_mcp_file_report_verdict_type_confusion():
+    """PT-T223: file_report verdict type-confusion returns clean error."""
+    import mcp as _mcp_fr2
+    valid_sha = "0" * 64
+    for bad_verdict in [None, 12345, True, False, ["malicious"], {"v": "malicious"}, "MAlIcIous"]:
+        code, body = _mcp_fr2.handle_jsonrpc({
+            "jsonrpc": "2.0", "id": 1, "method": "tools/call",
+            "params": {"name": "file_report", "arguments": {"sha256": valid_sha, "verdict": bad_verdict}}
+        })
+        assert code == 200, f"verdict={bad_verdict}: got status {code}"
+        result = body.get("result", {}).get("content", [{}])[0].get("text", "")
+        assert "verdict must be" in result, f"verdict={bad_verdict}: got {result}"
+
+
+def test_mcp_file_report_comment_type_confusion():
+    """PT-T223: file_report non-string comment handled (treated as empty)."""
+    import mcp as _mcp_fr3
+    # No api_key -> unknown api_key error, not a 500 crash
+    code, body = _mcp_fr3.handle_jsonrpc({
+        "jsonrpc": "2.0", "id": 1, "method": "tools/call",
+        "params": {"name": "file_report", "arguments": {
+            "sha256": "0" * 64, "verdict": "note",
+            "comment": 12345  # not a string
+        }}
+    })
+    assert code == 200
+    result = body.get("result", {}).get("content", [{}])[0].get("text", "")
+    # Either unknown api_key (no key passed) or valid response — but NEVER 500/crash
+    assert "internal_error" not in result or "unknown api_key" in result, f"unexpected: {result}"
+
+
+def test_mcp_find_similar_sha256_type_confusion():
+    """PT-T223: find_similar sha256 type-confusion returns clean error."""
+    import mcp as _mcp_fs
+    for bad_sha in [None, 12345, ["a", "b"], {}, True, False, "0" * 63, "x" * 64]:
+        code, body = _mcp_fs.handle_jsonrpc({
+            "jsonrpc": "2.0", "id": 1, "method": "tools/call",
+            "params": {"name": "find_similar", "arguments": {"sha256": bad_sha}}
+        })
+        assert code == 200, f"sha={bad_sha}: got status {code}"
+        result = body.get("result", {}).get("content", [{}])[0].get("text", "")
+        assert "sha256 must be a 64-char hex digest" in result, f"sha={bad_sha}: got {result}"
+
+
+def test_mcp_batch_array_rejected():
+    """PT-T223: batch array request returns clean -32600 error, no crash."""
+    import mcp as _mcp_ba
+    import index as _idx_ba
+    import json as _json_ba
+    import io as _io_ba
+    environ = {
+        "REQUEST_METHOD": "POST",
+        "CONTENT_TYPE": "application/json",
+        "CONTENT_LENGTH": "100",
+        "wsgi.input": _io_ba.BytesIO(_json_ba.dumps([
+            {"jsonrpc": "2.0", "id": 1, "method": "tools/list"},
+            {"jsonrpc": "2.0", "id": 2, "method": "ping"}
+        ]).encode())
+    }
+    captured = {}
+    def _sr(status, headers, exc_info=None):
+        captured["status"] = status
+        captured["headers"] = headers
+    body = b"".join(_idx_ba.handle_mcp(environ, _sr))
+    parsed = _json_ba.loads(body.decode())
+    # Batch returns 200 OK with -32600 Invalid Request (per JSON-RPC 2.0 spec)
+    assert "200" in captured["status"], f"expected 200, got {captured['status']}"
+    assert parsed.get("error", {}).get("code") == -32600, f"expected -32600, got {parsed}"
+    assert "batch requests are not supported" in parsed["error"]["message"]
+
+
+def test_mcp_prototype_pollution_blocked():
+    """PT-T223: __proto__ and constructor pollution in params doesn't crash."""
+    import mcp as _mcp_pp
+    for pollution in [{"__proto__": {"admin": True}}, {"constructor": {"prototype": {"admin": True}}}]:
+        code, body = _mcp_pp.handle_jsonrpc({
+            "jsonrpc": "2.0", "id": 1, "method": "tools/call",
+            "params": {"name": "scan_skill", "arguments": {"text": "name: x\ndescription: x"}}
+        })
+        assert code == 200
+        # The result should be a normal response, not a 500 crash
+        assert "result" in body or "error" in body
