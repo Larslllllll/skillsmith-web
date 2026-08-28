@@ -131,6 +131,19 @@ Both modes produce identical risk verdicts.</p>
 URL-mode is not supported there (the sandbox reads the file inside an isolated
 container, not the scanner process).</p>
 
+<h2>What are the rate limits?</h2>
+<p>Each account has daily limits that reset at 00:00 UTC:</p>
+<ul>
+  <li><strong>Free:</strong> 5 scans/day, 5 database lookups/day</li>
+  <li><strong>Pro ($5/month):</strong> 100 scans/day, 150 database lookups/day</li>
+  <li><strong>Premium:</strong> unlimited scans and lookups</li>
+  <li><strong>Behavioral sandbox</strong> (AI analyst): 5 analyses/day/account</li>
+  <li><strong>Watch (rug-pull monitoring):</strong> 10 watches/day/key</li>
+  <li><strong>Public badge / <code>/api/public_scan</code>:</strong> 200 lookups/day/IP (soft cap)</li>
+  <li><strong>Community reports</strong> (<code>/api/report</code>): 20 reports/day/key</li>
+</ul>
+<p>Pay-per-use single scans ($0.02) add to your scan quota on top of the tier limits. Credits never expire.</p>
+
 <h2>Does skillsmith track changes over time?</h2>
 <p>Yes. When you re-scan the same SKILL.md content (same sha256 hash), the
 result includes a <code>trend</code> field with:
