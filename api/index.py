@@ -711,7 +711,10 @@ def handle_scan(environ, start_response):
         text = payload.get("text", "")
         url = payload.get("url", "")
 
-        if url and not text:
+        # PT-T228: only attempt URL fetch if url is a non-empty STRING
+        # (otherwise 123 / True / [] are truthy and crash _fetch_skill_url
+        # with an unhandled TypeError → 500 internal_error).
+        if url and not text and isinstance(url, str):
             try:
                 text = _fetch_skill_url(url)
             except (ValueError, urllib.error.URLError, TimeoutError) as e:
@@ -1617,7 +1620,10 @@ def handle_hook_scan(environ, start_response):
         if fmt not in ("discord", "slack"):
             start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
             return [json.dumps({"error": "format must be 'discord' or 'slack'"}).encode()]
-        if url and not text:
+        # PT-T228: only attempt URL fetch if url is a non-empty STRING
+        # (otherwise 123 / True / [] are truthy and crash _fetch_skill_url
+        # with an unhandled TypeError → 500 internal_error).
+        if url and not text and isinstance(url, str):
             try:
                 text = _fetch_skill_url(url)
             except (ValueError, urllib.error.URLError, TimeoutError) as e:

@@ -2696,3 +2696,32 @@ def test_hook_scan_discord_and_slack_formats(monkeypatch):
         statuses = []
         resp = b"".join(webapp.handle_hook_scan(environ, lambda s, h: statuses.append(s)))
         assert statuses[0].startswith("200"), f"format={fmt}: got {statuses[0]}, {resp[:200]}"
+
+
+def test_scan_url_type_confusion_no_internal_error(monkeypatch):
+    """PT-T228 / Fix #66: non-string url values (int, bool) no longer cause internal_error."""
+    monkeypatch.setattr(webapp, "get_account", lambda k: {"created_at": 0})
+    monkeypatch.setattr(webapp, "_client_api_key", lambda e, p: "sk_ok")
+    monkeypatch.setattr(webapp, "check_and_consume_quota", lambda k: (True, {}))
+    monkeypatch.setattr(webapp, "record_scan", lambda *a, **kw: None)
+    monkeypatch.setattr(webapp, "analyze", lambda t: {
+        "parse_ok": True, "lint_ok": True, "risk_level": "clean",
+        "risk_score": 0, "lint_issues": [], "findings": [], "security_score": 100,
+        "name": "x", "sha256": "a" * 64
+    })
+    import features as _feat
+    monkeypatch.setattr(_feat, "explain_findings", lambda *a, **k: [])
+    monkeypatch.setattr(_feat, "simhash", lambda *a, **k: "0" * 16)
+    import scans as _scans_mod
+    monkeypatch.setattr(_scans_mod, "_blob_put", lambda *a, **k: None)
+    monkeypatch.setattr(_scans_mod, "get_scan_record", lambda *a, **k: None)
+    for bad_url in [123, True, False]:
+        payload = json.dumps({"api_key": "sk_ok", "url": bad_url}).encode()
+        environ = {
+            "REQUEST_METHOD": "POST", "PATH_INFO": "/api/scan",
+            "CONTENT_LENGTH": str(len(payload)), "wsgi.input": io.BytesIO(payload)
+        }
+        statuses = []
+        resp = b"".join(webapp.handle_scan(environ, lambda s, h: statuses.append(s)))
+        # Must NOT be 400 internal_error
+        assert "internal_error" not in json.loads(resp).get("error", "").lower(),             f"url={bad_url}: got internal_error: {resp[:200]}"
