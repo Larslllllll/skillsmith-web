@@ -2605,3 +2605,94 @@ def test_similar_multiple_sha256_params(monkeypatch):
     # parse_qs with keep_blank_values=True; our code uses qs.get() which returns last
     # But our code: (qs.get("sha256") or [""])[0] = FIRST one (qs.get returns first key)
     assert captured["digest"] == first, f"expected first sha, got {captured['digest']}"
+
+
+def test_hook_scan_invalid_format_string_rejected(monkeypatch):
+    """PT-T225: hook-scan format='teams' (invalid string) returns 400."""
+    monkeypatch.setattr(webapp, "get_account", lambda k: {"created_at": 0})
+    monkeypatch.setattr(webapp, "_client_api_key", lambda e, p: "sk_ok")
+    monkeypatch.setattr(webapp, "check_and_consume_quota",
+                        lambda k: (True, {"remaining": 5}))
+    monkeypatch.setattr(webapp, "record_scan", lambda *a, **kw: None)
+    monkeypatch.setattr(webapp, "analyze", lambda t: {
+        "parse_ok": True, "lint_ok": True, "risk_level": "clean",
+        "risk_score": 0, "lint_issues": [], "findings": [],
+        "security_score": 100, "name": "x", "sha256": "a" * 64
+    })
+    environ = {"REQUEST_METHOD": "POST", "PATH_INFO": "/api/hook-scan",
+               "CONTENT_LENGTH": "0", "wsgi.input": io.BytesIO(b"")}
+    for bad_format in ["teams", "webhook", "mattermost"]:
+        payload = json.dumps({"api_key": "sk_ok", "text": GOOD_SKILL, "format": bad_format}).encode()
+        environ["CONTENT_LENGTH"] = str(len(payload))
+        environ["wsgi.input"] = io.BytesIO(payload)
+        statuses = []
+        resp = b"".join(webapp.handle_hook_scan(environ, lambda s, h: statuses.append(s)))
+        assert statuses[0].startswith("400"), f"format={bad_format!r}: got {statuses[0]}, {resp[:200]}"
+        assert "format must be" in json.loads(resp).get("error", ""), f"format={bad_format!r}: got {resp[:200]}"
+
+
+def test_hook_scan_format_case_sensitivity(monkeypatch):
+    """PT-T225: hook-scan format is case-sensitive."""
+    monkeypatch.setattr(webapp, "get_account", lambda k: {"created_at": 0})
+    monkeypatch.setattr(webapp, "_client_api_key", lambda e, p: "sk_ok")
+    monkeypatch.setattr(webapp, "check_and_consume_quota",
+                        lambda k: (True, {"remaining": 5}))
+    monkeypatch.setattr(webapp, "record_scan", lambda *a, **kw: None)
+    monkeypatch.setattr(webapp, "analyze", lambda t: {
+        "parse_ok": True, "lint_ok": True, "risk_level": "clean",
+        "risk_score": 0, "lint_issues": [], "findings": [],
+        "security_score": 100, "name": "x", "sha256": "a" * 64
+    })
+    environ = {"REQUEST_METHOD": "POST", "PATH_INFO": "/api/hook-scan",
+               "CONTENT_LENGTH": "0", "wsgi.input": io.BytesIO(b"")}
+    for bad_fmt in ["Discord", "DISCORD", "SLACK", " slack", "discord ", "sl ack"]:
+        payload = json.dumps({"api_key": "sk_ok", "text": GOOD_SKILL, "format": bad_fmt}).encode()
+        environ["CONTENT_LENGTH"] = str(len(payload))
+        environ["wsgi.input"] = io.BytesIO(payload)
+        statuses = []
+        resp = b"".join(webapp.handle_hook_scan(environ, lambda s, h: statuses.append(s)))
+        assert statuses[0].startswith("400"), f"format={bad_fmt!r}: got {statuses[0]}"
+
+
+def test_hook_scan_empty_text_and_url_rejected(monkeypatch):
+    """PT-T225: hook-scan with truly empty body (no text, no url) is rejected."""
+    monkeypatch.setattr(webapp, "get_account", lambda k: {"created_at": 0})
+    monkeypatch.setattr(webapp, "_client_api_key", lambda e, p: "sk_ok")
+    monkeypatch.setattr(webapp, "check_and_consume_quota",
+                        lambda k: (True, {"remaining": 5}))
+    monkeypatch.setattr(webapp, "record_scan", lambda *a, **kw: None)
+    monkeypatch.setattr(webapp, "analyze", lambda t: {
+        "parse_ok": True, "lint_ok": True, "risk_level": "clean",
+        "risk_score": 0, "lint_issues": [], "findings": [],
+        "security_score": 100, "name": "x", "sha256": "a" * 64
+    })
+    # text=None, url=None -> falsy both -> should try to fetch url=None -> error
+    payload = json.dumps({"api_key": "sk_ok", "text": None, "url": None}).encode()
+    environ = {"REQUEST_METHOD": "POST", "PATH_INFO": "/api/hook-scan",
+               "CONTENT_LENGTH": str(len(payload)), "wsgi.input": io.BytesIO(payload)}
+    statuses = []
+    resp = b"".join(webapp.handle_hook_scan(environ, lambda s, h: statuses.append(s)))
+    assert statuses[0].startswith("400"), f"got {statuses[0]}, {resp[:200]}"
+
+
+def test_hook_scan_discord_and_slack_formats(monkeypatch):
+    """PT-T225: hook-scan accepts format=discord and format=slack."""
+    monkeypatch.setattr(webapp, "get_account", lambda k: {"created_at": 0})
+    monkeypatch.setattr(webapp, "_client_api_key", lambda e, p: "sk_ok")
+    monkeypatch.setattr(webapp, "check_and_consume_quota",
+                        lambda k: (True, {"remaining": 5}))
+    monkeypatch.setattr(webapp, "record_scan", lambda *a, **kw: None)
+    monkeypatch.setattr(webapp, "analyze", lambda t: {
+        "parse_ok": True, "lint_ok": True, "risk_level": "clean",
+        "risk_score": 0, "lint_issues": [], "findings": [],
+        "security_score": 100, "name": "x", "sha256": "a" * 64
+    })
+    environ = {"REQUEST_METHOD": "POST", "PATH_INFO": "/api/hook-scan",
+               "CONTENT_LENGTH": "0", "wsgi.input": io.BytesIO(b"")}
+    for fmt in ["discord", "slack"]:
+        payload = json.dumps({"api_key": "sk_ok", "text": GOOD_SKILL, "format": fmt}).encode()
+        environ["CONTENT_LENGTH"] = str(len(payload))
+        environ["wsgi.input"] = io.BytesIO(payload)
+        statuses = []
+        resp = b"".join(webapp.handle_hook_scan(environ, lambda s, h: statuses.append(s)))
+        assert statuses[0].startswith("200"), f"format={fmt}: got {statuses[0]}, {resp[:200]}"
