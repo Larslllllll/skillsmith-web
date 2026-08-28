@@ -264,6 +264,91 @@ def test_public_scan_and_badge_return_verdict(monkeypatch):
 
 # --- Pentest fixes (2026-08-11 report) ---
 
+
+def test_public_scan_returns_security_score_and_trend(monkeypatch):
+    """PT-T207: /api/public_scan now returns security_score, score_history, and trend."""
+    monkeypatch.setattr(webapp, "check_public_scan_rate", lambda ip: (True, ""))
+    monkeypatch.setattr(webapp, "get_scan_record", lambda d: {
+        "sha256": "c" * 64,
+        "name": "trend-test-skill",
+        "risk_level": "low",
+        "risk_score": 5,
+        "security_score": 80,
+        "score_history": [
+            [1755000000, 70],
+            [1755100000, 78],
+            [1755200000, 80],
+        ],
+        "lint_ok": True,
+        "parse_ok": True,
+        "seen_count": 3,
+        "first_seen_at": 1755000000.0,
+        "last_seen_at": 1755200000.0,
+        "has_content": False,
+    })
+    status, data = _wsgi("GET", "/api/public_scan?sha256=" + "c" * 64)
+    rec = json.loads(data)
+    assert status == 200
+    assert rec["security_score"] == 80
+    assert rec["score_history"] == [
+        [1755000000, 70],
+        [1755100000, 78],
+        [1755200000, 80],
+    ]
+    # trend: current 80, prev was 78 → improved by +2
+    assert rec["trend"]["direction"] == "improved"
+    assert rec["trend"]["delta"] == 2
+    assert rec["trend"]["previous_security_score"] == 78
+    assert rec["trend"]["previous_at"] == 1755100000
+
+
+def test_public_scan_trend_declined(monkeypatch):
+    """PT-T207: trend shows declined when score goes down."""
+    monkeypatch.setattr(webapp, "check_public_scan_rate", lambda ip: (True, ""))
+    monkeypatch.setattr(webapp, "get_scan_record", lambda d: {
+        "sha256": "c" * 64,
+        "name": "decline-skill",
+        "risk_level": "medium",
+        "risk_score": 15,
+        "security_score": 40,
+        "score_history": [[1755100000, 70], [1755200000, 40]],
+        "lint_ok": True,
+        "parse_ok": True,
+        "seen_count": 2,
+        "first_seen_at": 1755100000.0,
+        "last_seen_at": 1755200000.0,
+        "has_content": False,
+    })
+    status, data = _wsgi("GET", "/api/public_scan?sha256=" + "c" * 64)
+    rec = json.loads(data)
+    assert status == 200
+    assert rec["trend"]["direction"] == "declined"
+    assert rec["trend"]["delta"] == -30
+
+
+def test_public_scan_trend_single_point(monkeypatch):
+    """PT-T207: no trend when only one data point."""
+    monkeypatch.setattr(webapp, "check_public_scan_rate", lambda ip: (True, ""))
+    monkeypatch.setattr(webapp, "get_scan_record", lambda d: {
+        "sha256": "c" * 64,
+        "name": "single-skill",
+        "risk_level": "clean",
+        "security_score": 100,
+        "score_history": [[1755200000, 100]],
+        "lint_ok": True,
+        "parse_ok": True,
+        "seen_count": 1,
+        "first_seen_at": 1755200000.0,
+        "last_seen_at": 1755200000.0,
+        "has_content": False,
+    })
+    status, data = _wsgi("GET", "/api/public_scan?sha256=" + "c" * 64)
+    rec = json.loads(data)
+    assert status == 200
+    assert rec["trend"] == {}  # no meaningful trend with single data point
+    assert rec["score_history"] == [[1755200000, 100]]
+
+
 def test_mcp_batch_rejected_not_crash():
     status, body = _wsgi("POST", "/mcp")
     # _wsgi sends empty body; emulate a batch payload directly instead

@@ -128,7 +128,7 @@ and remember the key."</p>
 <h3><span class="method get">GET</span><code>/feed.xml</code></h3>
 <p>Atom feed of recently verified-clean agent skills (automated heuristic verdicts, clean-gated). No auth; CDN-cached 5 minutes + 60s server-side micro-cache. Subscribe to stay current on new registry entries.</p>
 <h3><span class="method get">GET</span><code>/api/public_scan?sha256=...</code></h3>
-<p>Key-less verdict lookup for one hash — enough for badge landing pages: <code>{sha256, name, risk_level, risk_score, lint_ok, parse_ok, seen_count, first_seen_at, last_seen_at, has_content}</code>. Rate limited (200/day/IP, soft). No findings, no content.</p>
+<p>Key-less verdict lookup for one hash — enough for badge landing pages: <code>{sha256, name, risk_level, risk_score, security_score, score_history, trend, lint_ok, parse_ok, seen_count, first_seen_at, last_seen_at, has_content}</code>. <code>trend</code> has <code>{direction, delta, previous_security_score, previous_at}</code>; <code>score_history</code> is a list of <code>[timestamp, security_score]</code> pairs (up to 10 entries). Rate limited (200/day/IP, soft). No findings, no content.</p>
 <h3><span class="method get">GET</span><code>/api/certificate?sha256=...&amp;api_key=...</code></h3>
 <p>Issue an HMAC-signed verdict certificate for a scanned hash (valid 90 days). Response: <code>{"certificate": {sha256, risk_level, security_score, issued_at, signature}}</code>. Requires sign-in.</p>
 <h3><span class="method post">POST</span><code>/api/certificate</code></h3>

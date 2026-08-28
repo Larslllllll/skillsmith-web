@@ -12,7 +12,7 @@
 <meta property="og:image" content="https://skillsmith.ch/og-card.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://skillsmith.ch/og-card.png">
-<meta name="description" content="Public security-scan verdict for a Claude Agent Skill (SKILL.md), by skillsmith.ch">
+<meta name="description" content="Public security-scan verdict with security score (0-100) and score-trend sparkline for any Claude Agent Skill (SKILL.md), by skillsmith.ch">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <style>
 :root{--bg:#0d1117;--panel:#161b27;--border:#2a3142;--text:#e6edf3;--text-muted:#8b949e;--accent:#58a6ff;--green:#2ea043;--yellow:#d29922;--red:#da3633;}
@@ -59,6 +59,26 @@ a{color:var(--accent);}
 const params = new URLSearchParams(location.search);
 const sha = (params.get('sha256') || '').toLowerCase().trim();
 function esc(s){return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function trendArrow(t) {
+  if (!t || !t.direction) return '';
+  if (t.direction === 'improved') return ' <span style="color:var(--green);" title="improved by ' + (t.delta||0) + '">↑</span>';
+  if (t.direction === 'declined') return ' <span style="color:var(--red);" title="declined by ' + (t.delta||0) + '">↓</span>';
+  return ' <span style="color:var(--text-muted);" title="unchanged">→</span>';
+}
+function sparkline(hist) {
+  if (!Array.isArray(hist) || hist.length < 2) return '';
+  // hist: [[ts, score], ...] -- normalize scores to 0..100, draw a 60x12 SVG
+  const w = 60, h = 12, pad = 1;
+  const scores = hist.map(p => Number(p[1])).filter(n => Number.isFinite(n));
+  if (scores.length < 2) return '';
+  const min = Math.min.apply(null, scores), max = Math.max.apply(null, scores);
+  const span = max - min || 1;
+  const step = (w - 2 * pad) / (scores.length - 1);
+  const pts = scores.map((s, i) => (pad + i * step).toFixed(1) + ',' + (h - pad - ((s - min) / span) * (h - 2 * pad)).toFixed(1)).join(' ');
+  const last = scores[scores.length - 1];
+  const color = last >= 70 ? 'var(--green)' : last >= 40 ? 'var(--yellow)' : 'var(--red)';
+  return ' <svg width="' + w + '" height="' + h + '" style="vertical-align:middle;margin-left:.4em;" aria-label="score trend"><polyline fill="none" stroke="' + color + '" stroke-width="1.2" points="' + pts + '"/></svg>';
+}
 (async () => {
   const el = document.getElementById('result');
   if (!/^[0-9a-f]{64}$/.test(sha)) { el.innerHTML = '<p class="disclaimer">Invalid or missing sha256 in URL.</p>'; return; }
@@ -75,6 +95,7 @@ function esc(s){return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<
       (d.risk_score != null ? ' &middot; risk score ' + esc(d.risk_score) : '') + '</div>' +
       '<dl>' +
       '<dt>SHA-256</dt><dd><code>' + esc(sha) + '</code></dd>' +
+      '<dt>Security score</dt><dd>' + (d.security_score != null ? esc(d.security_score) + ' / 100' + trendArrow(d.trend) : '—') + sparkline(d.score_history) + '</dd>' +
       '<dt>Lint</dt><dd>' + (d.lint_ok ? 'ok' : 'issues found') + '</dd>' +
       '<dt>Parsed</dt><dd>' + (d.parse_ok ? 'yes' : 'no') + '</dd>' +
       '<dt>Times seen</dt><dd>' + esc(d.seen_count) + '</dd>' +

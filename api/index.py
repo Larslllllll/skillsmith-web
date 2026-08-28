@@ -2046,6 +2046,28 @@ def handle_badge(environ, start_response):
     return [svg.encode()]
 
 
+def _compute_score_trend(history: list, current_score: int | None) -> dict:
+    """Derive trend direction/delta from score_history list of [ts, score].
+    Returns {} when no meaningful history (single data point)."""
+    if not history or len(history) < 2 or current_score is None:
+        return {}
+    # Second-to-last is the "previous" (last is the most-recent = current)
+    prev_ts, prev_score = history[-2]
+    delta = current_score - int(prev_score)
+    if delta > 0:
+        direction = "improved"
+    elif delta < 0:
+        direction = "declined"
+    else:
+        direction = "unchanged"
+    return {
+        "direction": direction,
+        "delta": delta,
+        "previous_security_score": int(prev_score),
+        "previous_at": int(prev_ts),
+    }
+
+
 def handle_public_scan(environ, start_response):
     """Public, key-less verdict lookup for one hash -- enough detail for the
     badge landing page, deliberately less than the authenticated lookup.
@@ -2076,6 +2098,9 @@ def handle_public_scan(environ, start_response):
         "name": rec.get("name", ""),
         "risk_level": rec.get("risk_level"),
         "risk_score": rec.get("risk_score"),
+        "security_score": rec.get("security_score"),
+        "score_history": rec.get("score_history") or [],
+        "trend": _compute_score_trend(rec.get("score_history") or [], rec.get("security_score")),
         "lint_ok": rec.get("lint_ok"),
         "parse_ok": rec.get("parse_ok"),
         "seen_count": rec.get("seen_count"),
