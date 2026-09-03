@@ -66,7 +66,21 @@ it is not a guarantee of safety. Likewise, flagged findings can be false
 positives. Always read short files yourself before running them; that is why
 every finding ships with a human-readable explanation.</p>
 
-<h2>What is the behavioral sandbox?</h2>
+<h2></p>
+
+<h2>How is the security score calculated?</h2>
+<p>The security score is a number from <strong>0 to 100</strong> where
+higher means safer. It is derived from the risk score (total weight of all
+detected findings) using the formula:</p>
+<p><code>security_score = max(0, 100 − risk_score × 4)</code></p>
+<p>Each finding has a weight (1–10). A skill with no findings scores 100
+(clean). A skill with 25 cumulative risk points scores 0 (high risk). The
+score is shown on scan results and in the trends graph to help you track
+whether a skill is getting safer or riskier over time.</p>
+<p>You can see your skill's score history by clicking the sparkline on the
+<a href="/scan.html">scan results</a> page.</p>
+
+What is the behavioral sandbox?</h2>
 <p>The <a href="/analysis.html">behavioral sandbox</a> goes beyond pattern
 matching: an AI analyst inside an isolated container simulates what an agent
 following the skill would actually do — step-by-step actions, capabilities,

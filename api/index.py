@@ -1147,7 +1147,10 @@ def handle_lookup(environ, start_response):
             return [json.dumps({"error": "quota_exceeded", "quota": quota_info}).encode()]
         record = get_scan_record(digest)
         start_response("200 OK", [("Content-Type", "application/json")] + _CORS_HEADERS)
-        return [json.dumps({"disclaimer": DISCLAIMER, "quota": quota_info, "found": record is not None, "record": record}).encode()]
+        return [json.dumps({"disclaimer": DISCLAIMER, "quota": quota_info, "found": record is not None, "record": record,
+            # PT-T234: include security_score as a derived field so clients
+            # don't need to know the formula (matches /api/public_scan shape).
+            "security_score": max(0, 100 - (record.get("risk_score") or 0) * 4) if record else None}).encode()]
     except Exception:  # noqa: BLE001  # noqa: BLE001
         start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({"error": "internal_error"}).encode()]
