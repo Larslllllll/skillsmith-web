@@ -1742,7 +1742,7 @@ def handle_certificate(environ, start_response):
                                 # certs -- an invalid cert must not become an
                                 # unauthenticated lookup oracle.
                                 "matches_current_verdict": matches_current if valid else None,
-                                "current_risk_level": current.get("risk_level") if valid else None,
+                                "current_risk_level": (current.get("risk_level") if current else None) if valid else None,
                                 "note": "valid means signed by skillsmith and within 90 days; "
                                         "matches_current_verdict means the hash still carries that verdict today."}).encode()]
 

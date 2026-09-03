@@ -2812,3 +2812,94 @@ def test_report_post_flood_guard_429(monkeypatch):
     resp = b"".join(webapp.handle_report(environ, lambda s, h: statuses.append(s)))
     assert statuses[0].startswith("429"), f"got {statuses[0]}"
     assert "too many reports" in json.loads(resp).get("error", "").lower()
+
+
+def test_certificate_verify_sha256_type_confusion(monkeypatch):
+    """PT-T232: certificate verify with non-string sha256 returns valid=False, no crash."""
+    import features as feat_mod
+    monkeypatch.setattr(feat_mod, "_cert_secret", lambda: b"test-cert-secret-ptt232")
+    monkeypatch.setattr(webapp, "get_scan_record", lambda d: None)
+    for bad_sha in [None, 12345, [], {}]:
+        payload = {"certificate": {"sha256": bad_sha, "risk_level": "clean",
+                                    "security_score": 100, "issued_at": 0, "signature": "x" * 32}}
+        env = {"REQUEST_METHOD": "POST", "PATH_INFO": "/api/certificate",
+               "CONTENT_LENGTH": str(len(json.dumps(payload).encode())),
+               "wsgi.input": io.BytesIO(json.dumps(payload).encode())}
+        statuses = []
+        resp = b"".join(webapp.handle_certificate(env, lambda s, h: statuses.append(s)))
+        assert statuses[0].startswith("200")
+        result = json.loads(resp)
+        assert result.get("valid") is False
+        assert result.get("matches_current_verdict") is None
+
+
+
+
+def test_certificate_verify_proto_pollution_blocked(monkeypatch):
+    """PT-T232: __proto__ pollution in cert does not crash and returns valid=False."""
+    import features as feat_mod
+    import scans as scans_mod
+    monkeypatch.setattr(feat_mod, "_cert_secret", lambda: b"test-cert-secret")
+    monkeypatch.setattr(webapp, "get_scan_record", lambda d: None)
+    payload = {"certificate": {"sha256": "0" * 64, "risk_level": "clean",
+                                 "security_score": 100, "issued_at": 0, "signature": "x" * 32,
+                                 "__proto__": {"admin": True}}}
+    env = {"REQUEST_METHOD": "POST", "PATH_INFO": "/api/certificate",
+           "CONTENT_LENGTH": str(len(json.dumps(payload).encode())),
+           "wsgi.input": io.BytesIO(json.dumps(payload).encode())}
+    statuses = []
+    resp = b"".join(webapp.handle_certificate(env, lambda s, h: statuses.append(s)))
+    assert statuses[0].startswith("200")
+    assert json.loads(resp).get("valid") is False
+    assert "internal_error" not in resp.decode()
+
+
+def test_certificate_verify_expired_returns_false(monkeypatch):
+    """PT-T232: 100-day-old certificate returns valid=False (past 90-day window)."""
+    import features as feat_mod
+    import scans as scans_mod
+    import time as t_mod
+    monkeypatch.setattr(feat_mod, "_cert_secret", lambda: b"test-cert-secret")
+    monkeypatch.setattr(webapp, "get_scan_record", lambda d: None)
+    old_ts = int(t_mod.time()) - 86400 * 100
+    payload = {"certificate": {"sha256": "0" * 64, "risk_level": "clean",
+                                 "security_score": 100, "issued_at": old_ts, "signature": "x" * 32}}
+    env = {"REQUEST_METHOD": "POST", "PATH_INFO": "/api/certificate",
+           "CONTENT_LENGTH": str(len(json.dumps(payload).encode())),
+           "wsgi.input": io.BytesIO(json.dumps(payload).encode())}
+    statuses = []
+    resp = b"".join(webapp.handle_certificate(env, lambda s, h: statuses.append(s)))
+    assert statuses[0].startswith("200")
+    assert json.loads(resp).get("valid") is False
+
+
+def test_certificate_verify_valid_sig_accepted_tampered_rejected(monkeypatch):
+    """PT-T232: valid HMAC accepted, tampered signature rejected."""
+    import features as feat_mod
+    import time as t_mod
+    import hmac as _hmac
+    import hashlib as _hl
+    secret = b"test-cert-secret-ptt232-v"
+    monkeypatch.setattr(feat_mod, "_cert_secret", lambda: secret)
+    monkeypatch.setattr(webapp, "get_scan_record", lambda d: None)  # no current record
+    now = int(t_mod.time())
+    sig = _hmac.new(secret, f"{'0'*64}|clean|100|{now}".encode(), _hl.sha256).hexdigest()[:32]
+    payload = {"certificate": {"sha256": "0" * 64, "risk_level": "clean",
+                                 "security_score": 100, "issued_at": now, "signature": sig}}
+    env = {"REQUEST_METHOD": "POST", "PATH_INFO": "/api/certificate",
+           "CONTENT_LENGTH": str(len(json.dumps(payload).encode())),
+           "wsgi.input": io.BytesIO(json.dumps(payload).encode())}
+    statuses = []
+    resp = b"".join(webapp.handle_certificate(env, lambda s, h: statuses.append(s)))
+    assert statuses[0].startswith("200"), f"got {statuses[0]}: {resp[:200]}"
+    result = json.loads(resp)
+    assert result.get("valid") is True, f"expected valid=True: {resp[:300]}"
+    # Tampered: extra char on signature
+    bad = {"certificate": {"sha256": "0" * 64, "risk_level": "clean",
+                             "security_score": 100, "issued_at": now, "signature": sig + "x"}}
+    env2 = {"REQUEST_METHOD": "POST", "PATH_INFO": "/api/certificate",
+            "CONTENT_LENGTH": str(len(json.dumps(bad).encode())),
+            "wsgi.input": io.BytesIO(json.dumps(bad).encode())}
+    statuses2 = []
+    resp2 = b"".join(webapp.handle_certificate(env2, lambda s, h: statuses2.append(s)))
+    assert json.loads(resp2).get("valid") is False, "tampered sig should be rejected"
