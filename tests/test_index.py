@@ -17,6 +17,7 @@ import pytest
 
 import index as webapp
 import index as idx6
+import account as account_mod
 
 
 GOOD_SKILL = """---
@@ -2415,6 +2416,61 @@ def test_lookup_store_down_yields_400(monkeypatch):
                "CONTENT_LENGTH": "0", "wsgi.input": io.BytesIO(b""), "HTTP_X_REAL_IP": "1.2.3.4"}
     b"".join(webapp.handle_lookup(environ, sr))
     assert captured.get('status') == 400, "store-down → 400 (generic catch-all, not 503)"
+
+
+def test_lookup_returns_security_score(monkeypatch):
+    """PT-T234: /api/lookup includes derived security_score (0-100) in response
+    when record exists, matching /api/public_scan field shape."""
+    webapp.get_scan_record = lambda d: {"sha256": "0"*64, "risk_score": 25, "risk_level": "high",
+                                          "name": "test", "seen_count": 1}
+    monkeypatch.setattr(webapp, "check_and_consume_lookup_quota",
+                       lambda k: (True, {"used": 1, "limit": 5, "reset": 9999999999}))
+    monkeypatch.setattr(webapp, "_get_qs_api_key", lambda e: "sk_test_valid_key_00000000000000000")
+    monkeypatch.setattr(webapp, "_soft_rate_limit", lambda *a, **kw: (True, None))
+    environ = {"REQUEST_METHOD": "GET", "PATH_INFO": "/api/lookup",
+               "QUERY_STRING": f"sha256={'0'*64}&api_key=sk_test_valid_key_00000000000000000",
+               "wsgi.input": io.BytesIO(b"")}
+    statuses = []
+    resp = b"".join(webapp.handle_lookup(environ, lambda s, h: statuses.append(s)))
+    data = json.loads(resp)
+    assert data.get("found") is True
+    assert "security_score" in data, f"security_score missing: {data}"
+    assert data["security_score"] == 0, f"risk=25 → score should be 0: {data['security_score']}"
+
+
+def test_lookup_security_score_various_risks(monkeypatch):
+    """PT-T234: security_score = max(0, 100 - risk*4) for various risk levels."""
+    cases = [(0, 100), (5, 80), (10, 60), (25, 0), (30, 0)]
+    monkeypatch.setattr(webapp, "check_and_consume_lookup_quota",
+                       lambda k: (True, {"used": 1, "limit": 5}))
+    monkeypatch.setattr(webapp, "_get_qs_api_key", lambda e: "sk_test_valid_key_00000000000000000")
+    monkeypatch.setattr(webapp, "_soft_rate_limit", lambda *a, **kw: (True, None))
+    monkeypatch.setattr(webapp, "_soft_rate_limit", lambda *a, **kw: (True, None))
+    for risk, expected_score in cases:
+        webapp.get_scan_record = lambda d: {"sha256": "0"*64, "risk_score": risk, "risk_level": "test"}
+        environ = {"REQUEST_METHOD": "GET", "PATH_INFO": "/api/lookup",
+                   "QUERY_STRING": f"sha256={'0'*64}&api_key=sk_test_valid_key_00000000000000000",
+                   "wsgi.input": io.BytesIO(b"")}
+        resp = b"".join(webapp.handle_lookup(environ, lambda s, h: None))
+        data = json.loads(resp)
+        assert data.get("security_score") == expected_score,             f"risk={risk}: expected {expected_score}, got {data.get('security_score')}"
+
+
+def test_lookup_security_score_none_when_not_found(monkeypatch):
+    """PT-T234: security_score is None when no record is found (no oracle)."""
+    webapp.get_scan_record = lambda d: None
+    monkeypatch.setattr(webapp, "check_and_consume_lookup_quota",
+                       lambda k: (True, {"used": 1, "limit": 5}))
+    monkeypatch.setattr(webapp, "_get_qs_api_key", lambda e: "sk_test_valid_key_00000000000000000")
+    monkeypatch.setattr(webapp, "_soft_rate_limit", lambda *a, **kw: (True, None))
+    environ = {"REQUEST_METHOD": "GET", "PATH_INFO": "/api/lookup",
+               "QUERY_STRING": f"sha256={'0'*64}&api_key=sk_test_valid_key_00000000000000000",
+               "wsgi.input": io.BytesIO(b"")}
+    statuses = []
+    resp = b"".join(webapp.handle_lookup(environ, lambda s, h: statuses.append(s)))
+    data = json.loads(resp)
+    assert data.get("found") is False
+    assert data.get("security_score") is None
 
 
 def test_get_skill_store_down_yields_400(monkeypatch):
