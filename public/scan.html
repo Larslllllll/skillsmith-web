@@ -15,7 +15,7 @@
 <meta name="description" content="Public security-scan verdict with security score (0-100) and score-trend sparkline for any Claude Agent Skill (SKILL.md), by skillsmith.ch">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <style>
-:root{--bg:#0d1117;--panel:#161b27;--border:#2a3142;--text:#e6edf3;--text-muted:#8b949e;--accent:#58a6ff;--green:#2ea043;--yellow:#d29922;--red:#da3633;}
+:root{--bg:#0d1117;--panel:#161b27;--border:#2a3142;--text:#e6edf3;--text-muted:#8b949e;--accent:#58a6ff;--green:#2ea043;--yellow:#d29922;--orange:#f0883e;--dark-orange:#db6d28;--red:#da3633;}
 *{box-sizing:border-box;}
 body{margin:0;background:var(--bg);color:var(--text);font-family:'SF Mono',ui-monospace,Menlo,Consolas,monospace;line-height:1.5;}
 main{max-width:720px;margin:0 auto;padding:1.5rem 1rem 4rem;}
@@ -87,7 +87,7 @@ function sparkline(hist) {
   const step = (w - 2 * pad) / (scores.length - 1);
   const pts = scores.map((s, i) => (pad + i * step).toFixed(1) + ',' + (h - pad - ((s - min) / span) * (h - 2 * pad)).toFixed(1)).join(' ');
   const last = scores[scores.length - 1];
-  const color = last >= 70 ? 'var(--green)' : last >= 40 ? 'var(--yellow)' : 'var(--red)';
+  const color = last >= 90 ? 'var(--green)' : last >= 70 ? 'var(--yellow)' : last >= 50 ? 'var(--orange)' : last >= 30 ? 'var(--dark-orange)' : 'var(--red)';
   return ' <svg width="' + w + '" height="' + h + '" style="vertical-align:middle;margin-left:.4em;" aria-label="score trend"><polyline fill="none" stroke="' + color + '" stroke-width="1.2" points="' + pts + '"/></svg>';
 }
 (async () => {

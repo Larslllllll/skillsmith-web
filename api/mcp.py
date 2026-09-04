@@ -450,8 +450,6 @@ def _call_tool(name, args, client_ip: str = ""):
             "disclaimer": "Behavioral SIMULATION by an LLM analyst in an isolated container. Heuristic, not a guarantee.",
         })
 
-        return {"content": [{"type": "text", "text": json.dumps({"error": f"unknown tool: {name}"})}], "isError": True}
-
 
 def handle_jsonrpc(req: dict, client_ip: str = "") -> tuple[int, dict]:
     """Pure JSON-RPC 2.0 dispatch, no WSGI/HTTP plumbing -- this file is
