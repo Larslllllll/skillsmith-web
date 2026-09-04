@@ -255,17 +255,30 @@ def _stats_path() -> str:
 
 
 def bump_stats(risk_level: str) -> dict:
+    """Increment global scan counters. Tracks total, by-risk, and daily trend (last 30 days)."""
     stats = _blob_get(_stats_path()) or {"total_scans": 0, "by_risk": {}, "started_at": time.time()}
     stats["total_scans"] = int(stats.get("total_scans", 0)) + 1
     by = stats.setdefault("by_risk", {})
     by[risk_level] = int(by.get(risk_level, 0)) + 1
+    # PT-T236: track daily scan counts for trend visualization (last 30 days)
+    today = time.strftime("%Y-%m-%d", time.gmtime())
+    daily = stats.setdefault("daily", {})
+    day_entry = daily.setdefault(today, {"total": 0, "by_risk": {}})
+    day_entry["total"] = day_entry.get("total", 0) + 1
+    dr = day_entry.setdefault("by_risk", {})
+    dr[risk_level] = dr.get(risk_level, 0) + 1
+    # Prune entries older than 30 days to keep the blob small
+    cutoff = time.strftime("%Y-%m-%d", time.gmtime(time.time() - 30 * 86400))
+    daily = {k: v for k, v in daily.items() if k >= cutoff}
+    stats["daily"] = daily
     stats["updated_at"] = time.time()
     _blob_put(_stats_path(), stats)
     return stats
 
 
 def get_stats() -> dict:
-    return _blob_get(_stats_path()) or {"total_scans": 0, "by_risk": {}}
+    """Return the public stats blob + derived summaries (no per-user data)."""
+    return _blob_get(_stats_path()) or {"total_scans": 0, "by_risk": {}, "daily": {}}
 
 
 # --- watch list / diff guard (feature: rug-pull detection) ---

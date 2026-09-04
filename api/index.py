@@ -11,6 +11,7 @@ all endpoints live in one WSGI app here and dispatch on PATH_INFO:
 vercel.json routes /api/scan, /api/scan_pro, and /api/signup here.
 """
 import hashlib
+from pathlib import Path
 import json
 import re
 import time
@@ -1223,25 +1224,53 @@ _stats_cache = {"t": 0.0, "published": None}
 
 
 def handle_stats(environ, start_response):
-    """GET /api/stats -- aggregate global scan counters (no per-user data)."""
+    """GET /api/stats -- aggregate global scan counters (no per-user data).
+    
+    PT-T236: expanded to include daily trend, verdict percentages, and
+    published-to-scanned ratio for a richer /stats.html experience."""
     try:
         stats = get_stats()
-        # published count needs a registry listing; cache it for 60s like the
-        # feed so the public stats bar never costs a listing per view.
         now_s = time.time()
+        # published count needs a registry listing; cache it for 60s
         if _stats_cache["published"] is None or now_s - _stats_cache["t"] >= 60:
             try:
                 _stats_cache["published"] = len(list_safe_registry(limit=200))
             except Exception:  # noqa: BLE001 - cosmetic counter, never fail
                 _stats_cache["published"] = _stats_cache["published"] or 0
             _stats_cache["t"] = now_s
+
+        total = int(stats.get("total_scans", 0))
+        by_risk = stats.get("by_risk", {})
+        
+        # Derived percentages
+        pct = {}
+        if total > 0:
+            for level, count in by_risk.items():
+                pct[f"{level}_pct"] = round(count / total * 100, 1)
+        
+        # Daily trend (last 30 days, sorted ascending)
+        daily = stats.get("daily", {})
+        trend = sorted(daily.items())[-30:]
+        trend_data = [{"date": k, "total": v.get("total", 0),
+                       "clean": v.get("by_risk", {}).get("clean", 0),
+                       "low": v.get("by_risk", {}).get("low", 0),
+                       "medium": v.get("by_risk", {}).get("medium", 0),
+                       "high": v.get("by_risk", {}).get("high", 0)}
+                      for k, v in trend]
+
         start_response("200 OK", [("Content-Type", "application/json"),
                                   ("Cache-Control", "public, max-age=60")] + _CORS_HEADERS)
-        return [json.dumps({"disclaimer": DISCLAIMER,
-                            "total_scans": int(stats.get("total_scans", 0)),
-                            "by_risk": stats.get("by_risk", {}),
-                            "published": _stats_cache["published"],
-                            "updated_at": stats.get("updated_at")}).encode()]
+        return [json.dumps({
+            "disclaimer": DISCLAIMER,
+            "total_scans": total,
+            "by_risk": by_risk,
+            "percentages": pct,
+            "published": _stats_cache["published"],
+            "published_pct": round(_stats_cache["published"] / max(total, 1) * 100, 1),
+            "daily_trend": trend_data,
+            "updated_at": stats.get("updated_at"),
+            "started_at": stats.get("started_at"),
+        }, indent=2).encode()]
     except Exception:  # noqa: BLE001  # noqa: BLE001
         start_response("400 Bad Request", [("Content-Type", "application/json")] + _CORS_HEADERS)
         return [json.dumps({"error": "internal_error"}).encode()]
@@ -2215,6 +2244,18 @@ def _app_inner(environ, start_response):
             start_response("405 Method Not Allowed", [("Content-Type", "application/json")] + _CORS_HEADERS)
             return [json.dumps({"error": "GET only"}).encode()]
         return handle_analysis(environ, start_response)
+
+    
+        if path.rstrip("/").endswith("/stats.html"):
+            try:
+                with open(str(Path(__file__).parent.parent / "public" / "stats.html"), encoding="utf-8") as f:
+                    body = f.read().encode()
+            except Exception:
+                start_response("404 Not Found", [("Content-Type", "text/plain")] + _CORS_HEADERS)
+                return [b"Not Found"]
+            start_response("200 OK", [("Content-Type", "text/html; charset=utf-8"),
+                                      ("Cache-Control", "public, max-age=300")] + _CORS_HEADERS)
+            return [body]
 
     if path.rstrip("/").endswith("/health"):
         return handle_health(environ, start_response)

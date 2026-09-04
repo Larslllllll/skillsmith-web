@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Statistics — skillsmith</title>
+  <meta name="description" content="Live statistics: how many skills have been scanned, verdict distribution, daily trends, and more.">
+  <meta property="og:title" content="Statistics — skillsmith">
+  <meta property="og:description" content="Live statistics: how many skills have been scanned, verdict distribution, daily trends, and more.">
+  <meta property="og:type" content="website">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="canonical" href="https://skillsmith.ch/stats.html">
+  <style>
+    :root{--bg:#0B0E14;--surface:#151921;--border:#2A3140;--text:#D8DEE9;--text-muted:#9AA5B1;--accent:#7EE3C3;--green:#2EA043;--yellow:#D29922;--orange:#F0883E;--dark-orange:#DB6D28;--red:#DA3633}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:2rem 1rem}
+    a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+    .container{max-width:800px;margin:0 auto}
+    h1{font-size:1.8rem;margin-bottom:.5rem}
+    .subtitle{color:var(--text-muted);margin-bottom:2rem}
+    .backlink{font-size:.85rem;margin-bottom:1.5rem}
+    .backlink a{color:var(--text-muted)}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:2rem}
+    .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.2rem;text-align:center}
+    .stat-card .number{font-size:2.2rem;font-weight:700;margin-bottom:.3rem}
+    .stat-card .label{color:var(--text-muted);font-size:.85rem}
+    .stat-card.green .number{color:var(--green)}
+    .stat-card.yellow .number{color:var(--yellow)}
+    .stat-card.orange .number{color:var(--orange)}
+    .stat-card.red .number{color:var(--red)}
+    .stat-card.blue .number{color:#58a6ff}
+    .section{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.5rem;margin-bottom:1.5rem}
+    .section h2{font-size:1.1rem;margin-bottom:1rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em}
+    .bar-chart{display:flex;flex-direction:column;gap:.6rem}
+    .bar-row{display:grid;grid-template-columns:80px 1fr 60px;align-items:center;gap:.8rem}
+    .bar-label{font-size:.85rem;color:var(--text-muted);text-align:right}
+    .bar-bg{flex:1;height:18px;background:var(--border);border-radius:4px;overflow:hidden}
+    .bar-fill{height:100%;border-radius:4px;transition:width .8s ease-out}
+    .bar-fill.clean{background:var(--green)}
+    .bar-fill.low{background:var(--yellow)}
+    .bar-fill.medium{background:var(--orange)}
+    .bar-fill.high{background:var(--red)}
+    .bar-pct{font-size:.85rem;font-weight:600;text-align:right}
+    .trend-chart{display:flex;align-items:flex-end;gap:3px;height:80px;padding:.5rem 0}
+    .trend-bar{flex:1;min-width:8px;background:var(--accent);border-radius:3px 3px 0 0;transition:height .5s ease-out;cursor:pointer;position:relative}
+    .trend-bar:hover{opacity:.8}
+    .trend-bar .tooltip{display:none;position:absolute;bottom:110%;left:50%;transform:translateX(-50%);background:#222;padding:.3rem .5rem;border-radius:4px;font-size:.7rem;white-space:nowrap;z-index:10}
+    .trend-bar:hover .tooltip{display:block}
+    .trend-axis{display:flex;justify-content:space-between;font-size:.7rem;color:var(--text-muted);margin-top:.5rem}
+    .verdict-tag{display:inline-block;padding:.2rem .6rem;border-radius:4px;font-size:.75rem;font-weight:600}
+    .verdict-tag.clean{background:rgba(46,160,67,.2);color:var(--green)}
+    .verdict-tag.low{background:rgba(210,153,34,.2);color:var(--yellow)}
+    .verdict-tag.medium{background:rgba(240,136,62,.2);color:var(--orange)}
+    .verdict-tag.high{background:rgba(218,54,51,.2);color:var(--red)}
+    .empty{color:var(--text-muted);font-style:italic;text-align:center;padding:2rem}
+    .footer{margin-top:2rem;padding-top:1rem;border-top:1px solid var(--border);color:var(--text-muted);font-size:.8rem}
+    .loading{text-align:center;padding:2rem;color:var(--text-muted)}
+    @media(max-width:500px){.stat-card .number{font-size:1.8rem}.grid{grid-template-columns:repeat(2,1fr)}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <p class="backlink"><a href="/">← skillsmith scanner</a> · <a href="/faq.html">FAQ</a></p>
+    <h1>📊 Live Statistics</h1>
+    <p class="subtitle">Aggregate scanner usage — updated every 60 seconds. No per-user data is tracked.</p>
+
+    <div id="stats" class="loading">Loading...</div>
+
+    <div class="section">
+      <h2>Verdict Distribution</h2>
+      <div id="barChart" class="bar-chart"></div>
+    </div>
+
+    <div class="section">
+      <h2>Scan Trend (Last 30 Days)</h2>
+      <div id="trendChart" class="trend-chart"></div>
+      <div id="trendAxis" class="trend-axis"></div>
+    </div>
+
+    <div class="footer">
+      <p>Scanner statistics — <a href="/">Back to scanner</a> · <a href="/faq.html">FAQ</a></p>
+    </div>
+  </div>
+
+  <script>
+    const CLEAN_COLOR = '#2EA043';
+    const LOW_COLOR = '#D29922';
+    const MED_COLOR = '#F0883E';
+    const HIGH_COLOR = '#DA3633';
+    const ACCENT = '#7EE3C3';
+
+    async function loadStats() {
+      try {
+        const res = await fetch('/api/stats');
+        if (!res.ok) throw new Error('fetch failed');
+        const s = await res.json();
+
+        const statsEl = document.getElementById('stats');
+        statsEl.innerHTML = `
+          <div class="grid">
+            <div class="stat-card blue">
+              <div class="number" id="totalScans">${s.total_scans.toLocaleString()}</div>
+              <div class="label">Total Scans</div>
+            </div>
+            <div class="stat-card green">
+              <div class="number">${s.published.toLocaleString()}</div>
+              <div class="label">Published Safe</div>
+            </div>
+            <div class="stat-card">
+              <div class="number">${s.published_pct}%</div>
+              <div class="label">Published Rate</div>
+            </div>
+            <div class="stat-card">
+              <div class="number">${s.started_at ? new Date(s.started_at * 1000).toLocaleDateString() : '—'}</div>
+              <div class="label">Scanning Since</div>
+            </div>
+          </div>`;
+
+        // Verdict breakdown bars
+        const byRisk = s.by_risk || {};
+        const total = s.total_scans || 1;
+        const levels = [
+          { key: 'clean', label: 'Clean', cls: 'clean', color: CLEAN_COLOR },
+          { key: 'low', label: 'Low Risk', cls: 'low', color: LOW_COLOR },
+          { key: 'medium', label: 'Medium Risk', cls: 'medium', color: MED_COLOR },
+          { key: 'high', label: 'High Risk', cls: 'high', color: HIGH_COLOR },
+        ];
+
+        const barEl = document.getElementById('barChart');
+        if (total === 0) {
+          barEl.innerHTML = '<p class="empty">No scans yet — be the first!</p>';
+        } else {
+          barEl.innerHTML = levels.map(l => {
+            const count = byRisk[l.key] || 0;
+            const pct = Math.round(count / total * 100);
+            return `
+              <div class="bar-row">
+                <span class="bar-label">${l.label}</span>
+                <div class="bar-bg"><div class="bar-fill ${l.cls}" style="width:${pct}%;background:${l.color}"></div></div>
+                <span class="bar-pct" style="color:${l.color}">${pct}% (${count.toLocaleString()})</span>
+              </div>`;
+          }).join('');
+        }
+
+        // Trend chart (last 30 days)
+        const trendEl = document.getElementById('trendChart');
+        const axisEl = document.getElementById('trendAxis');
+        const trend = s.daily_trend || [];
+
+        if (trend.length === 0) {
+          trendEl.innerHTML = '<p class="empty">No daily data yet.</p>';
+        } else {
+          const maxTotal = Math.max(...trend.map(d => d.total), 1);
+          const today = new Date().toLocaleDateString('en', { month: 'short', day: 'numeric' });
+          const weekAgo = new Date(Date.now() - 6 * 86400000).toLocaleDateString('en', { month: 'short', day: 'numeric' });
+
+          // Sample to max 30 bars (one per day)
+          const sampled = trend.slice(-30);
+          const maxH = 70;
+
+          trendEl.innerHTML = sampled.map(d => {
+            const h = Math.max(4, Math.round((d.total / maxTotal) * maxH));
+            const pct_clean = d.total > 0 ? Math.round(d.clean / d.total * 100) : 0;
+            const title = `${d.date}: ${d.total} scans (${pct_clean}% clean)`;
+            return `<div class="trend-bar" style="height:${h}px" title="${title}"><div class="tooltip">${title}</div></div>`;
+          }).join('');
+
+          axisEl.innerHTML = `<span>${sampled.length > 0 ? sampled[0].date : ''}</span><span>${today}</span>`;
+        }
+      } catch (e) {
+        document.getElementById('stats').innerHTML = `<p class="empty">Stats temporarily unavailable (${e.message}).</p>`;
+      }
+    }
+
+    loadStats();
+    setInterval(loadStats, 60000);  // refresh every 60s
+  </script>
+</body>
+</html>
