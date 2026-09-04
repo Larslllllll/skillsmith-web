@@ -1882,7 +1882,7 @@ def test_mcp_watch_check_mode(monkeypatch):
 def test_watch_webhook_validator_and_no_redirect():
     """PT-T172: webhook allowlist blocks userinfo/port/http/query/fragment
     variants; outbound delivery refuses redirects (no open relay)."""
-    assert idx6._valid_watch_webhook("https://discord.com/api/webhooks/1/a")
+    assert idx6._valid_watch_webhook("https://discord.com/api/webhooks/aaaaaaaaaa/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
     for bad in ["https://discord.com@evil.example/api/webhooks/",
                 "https://discord.com:8443/api/webhooks/x",
                 "http://discord.com/api/webhooks/x",
@@ -2020,13 +2020,13 @@ class TestWatchWebhookValidator:
 
     def test_discord_url_accepted(self):
         assert webapp._valid_watch_webhook(
-            "https://discord.com/api/webhooks/12345/abcdef"
+            "https://discord.com/api/webhooks/aaaaaaaaaa/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
         ) is True
 
     def test_discordapp_url_accepted(self):
         # legacy discord URL
         assert webapp._valid_watch_webhook(
-            "https://discordapp.com/api/webhooks/12345/abcdef"
+            "https://discordapp.com/api/webhooks/aaaaaaaaaa/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
         ) is True
 
     def test_slack_url_accepted(self):
@@ -2037,12 +2037,12 @@ class TestWatchWebhookValidator:
     def test_query_string_rejected(self):
         # PT-T39: query strings can carry hidden params
         assert webapp._valid_watch_webhook(
-            "https://discord.com/api/webhooks/12345/abcdef?exfil=true"
+            "https://discord.com/api/webhooks/aaaaaaaaaa/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA?exfil=true"
         ) is False
 
     def test_fragment_rejected(self):
         assert webapp._valid_watch_webhook(
-            "https://discord.com/api/webhooks/12345/abcdef#exfil"
+            "https://discord.com/api/webhooks/aaaaaaaaaa/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA#exfil"
         ) is False
 
     def test_http_rejected(self):
@@ -2165,9 +2165,9 @@ def test_valid_watch_webhook_rejects_at_trick():
 def test_valid_watch_webhook_accepts_valid():
     """PT-T187: legitimate Discord/Slack webhooks are still accepted."""
     import api.index as idx2
-    assert idx2._valid_watch_webhook("https://discord.com/api/webhooks/SANITIZED/SANITIZED")
-    assert idx2._valid_watch_webhook("https://discordapp.com/api/webhooks/REDACTED/REDACTED")
-    assert idx2._valid_watch_webhook("https://hooks.slack.com/services/REDACTED/REDACTED/REDACTED")
+    assert idx2._valid_watch_webhook("https://discord.com/api/webhooks/aaaaaaaaaa/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+    assert idx2._valid_watch_webhook("https://discordapp.com/api/webhooks/aaaaaaaaaa/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+    assert idx2._valid_watch_webhook("https://hooks.slack.com/services/XXXXXXXXX/YYYYYYYYY/zzzzzzzzzzzzzzzz")
 
 
 def test_valid_watch_webhook_rejects_subdomain():
