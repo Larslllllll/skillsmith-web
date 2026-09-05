@@ -2475,6 +2475,22 @@ _EXPLAIN_RULES = [
     ("powershell invoke-expression (iex)", "PowerShell Invoke-Expression pattern.", "Invoke-Expression executes strings as PowerShell commands."),
     ("powershell invoke-command", "PowerShell Invoke-Command pattern.", "Invoke-Command runs commands on local/remote computers."),
     ("powershell hidden process", "PowerShell hidden process pattern.", "Running processes hidden may indicate malicious activity."),
+
+    ("pip custom index url typosquatting", "pip custom index URL pattern.", "Using a custom pip index URL can be a typosquatting or dependency confusion attack."),
+    ("npm custom registry supply chain risk", "npm custom registry pattern.", "Custom npm registries can host malicious packages."),
+    ("yarn custom registry supply chain risk", "yarn custom registry pattern.", "Custom yarn registries can host malicious packages."),
+    ("go install from arbitrary version", "go install from version.", "Installing arbitrary Go versions can pull malicious code."),
+    ("curl pipe install supply chain attack", "curl pipe install pattern.", "Piping curl output to a package manager is a classic supply chain attack."),
+    ("kubectl apply from manifest file", "kubectl apply pattern.", "kubectl apply can deploy malicious manifests."),
+    ("kubectl exec into container", "kubectl exec pattern.", "kubectl exec provides shell access to containers."),
+    ("kubectl copy into pod", "kubectl cp pattern.", "kubectl cp can copy malicious files into pods."),
+    ("helm chart installation", "helm install pattern.", "Helm charts can contain pre-hook and post-hook malicious scripts."),
+    ("terraform infrastructure change", "terraform apply pattern.", "Terraform apply can make destructive infrastructure changes."),
+    ("ansible playbook execution", "ansible playbook pattern.", "Ansible playbooks can execute arbitrary commands on hosts."),
+    ("rot47 obfuscation", "ROT47 obfuscation pattern.", "ROT47 is a simple character rotation cipher."),
+    ("base58 encoding", "Base58 encoding pattern.", "Base58 encoding is used for Bitcoin addresses and obfuscation."),
+    ("suid sgid bit set", "SUID/SGID bit pattern.", "Setting SUID or SGID bits allows privilege escalation."),
+    ("setcap capability modification", "setcap pattern.", "setcap modifies Linux capabilities, enabling privilege escalation.")
 ]
 
 
