@@ -535,6 +535,13 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)ip.*neighbor'), 5, 'IP neighbor table'),
     (re.compile(r'(?i)impersonate.*AI'), 7, 'impersonate AI framing'),
     (re.compile(r'(?i)you.*are.*a.*llm'), 7, 'LLM roleplay framing'),
+    (re.compile(r'(?i)platform\.system\(\)|os\.name'), 3, 'OS detection (platform/system)'),
+    (re.compile(r'(?i)os\.environ.*KUBERNETES|KUBERNETES_'), 4, 'Kubernetes environment detection'),
+    (re.compile(r'(?i)docker\.from_env|DOCKER_'), 4, 'Docker environment detection'),
+    (re.compile(r'(?i)pip\s+install\s+--trusted-host'), 7, 'pip trusted host (supply chain risk)'),
+    (re.compile(r'(?i)pip\s+install\s+--extra-index-url'), 8, 'pip extra index URL (dependency confusion)'),
+    (re.compile(r'(?i)\bAcidRain\b'), 8, 'AcidRain malware reference'),
+    (re.compile(r'(?i)\bWhisper(?:Gate)?\b'), 8, 'Whisper malware reference'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 
@@ -1576,6 +1583,9 @@ _PROMPT_INJECTION_PATTERNS = [
     (re.compile(r'(?i)\btrust\s+me\b.*?(?:just|simply|only)'), 7, 'trust me social engineering'),
     (re.compile(r'(?i)I[\'\u2019]m\s+(?:a\s+)?security\s+(?:researcher|expert)'), 7, 'fake security researcher framing'),
     (re.compile(r'(?i)\bthis\s+is\s+(?:just|only)\s+(?:a\s+)?test'), 4, 'test framing social engineering'),
+    (re.compile(r'(?i)\bNIMH\s+AI\b'), 7, 'NIMH AI jailbreak framing'),
+    (re.compile(r'(?i)Roko.?s?\s+basilisk'), 7, 'Roko basilisk thought experiment framing'),
+    (re.compile(r'(?i)\bAI\s+companion\b'), 5, 'AI companion framing'),
     (re.compile(r'(?i)\b(?:describe|analyze|explain)\s+(?:this\s+)?(?:image|photo|picture)\s+(?:of|in)\s+(?:a\s+)?(?:password|key|screen)'), 9, "Visual data extraction instruction"),
 ]
 

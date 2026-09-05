@@ -2540,6 +2540,17 @@ _EXPLAIN_RULES = [
     ("impersonate ai framing", "impersonate AI pattern.", "Impersonating an AI is a social engineering tactic."),
     ("llm roleplay framing", "LLM roleplay pattern.", "Roleplaying as an LLM is a manipulation tactic."),
 
+    ("os detection platform system", "OS detection pattern.", "platform.system() or os.name detect the operating system."),
+    ("kubernetes environment detection", "Kubernetes detection pattern.", "KUBERNETES environment variables indicate a Kubernetes cluster."),
+    ("docker environment detection", "Docker detection pattern.", "DOCKER_ environment variables or docker.from_env indicate Docker."),
+    ("pip trusted host supply chain risk", "pip trusted host pattern.", "pip --trusted-host bypasses security checks."),
+    ("pip extra index url dependency confusion", "pip extra index URL pattern.", "pip --extra-index-url enables dependency confusion attacks."),
+    ("acidrain malware reference", "AcidRain malware pattern.", "AcidRain is a wiper malware used in attacks."),
+    ("whisper malware reference", "Whisper malware pattern.", "Whisper malware has destructive capabilities."),
+    ("nimh ai jailbreak framing", "NIMH AI jailbreak pattern.", "NIMH AI is a jailbreak framing."),
+    ("roko basilisk thought experiment framing", "Roko basilisk pattern.", "Roko's basilisk is a thought experiment used in social engineering."),
+    ("ai companion framing", "AI companion pattern.", "AI companion framing is a manipulation tactic."),
+
 ]
 
 
