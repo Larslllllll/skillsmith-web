@@ -637,6 +637,21 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)cat\s+/var/log/secure'), 55, "Read secure logs"),
 ]
 
+# --- PT-T238 R23: Crypto, persistence ---
+_CODE_PATTERNS += [
+    (re.compile(r'(?i)openssl\s+req\s+-x509'), 60, "Generate self-signed certificate"),
+    (re.compile(r'(?i)openssl\s+genrsa'), 60, "Generate RSA key"),
+    (re.compile(r'(?i)ssh-keygen\s+-t\s+rsa'), 60, "Generate SSH RSA key"),
+    (re.compile(r'(?i)ssh-keygen\s+-t\s+ed25519'), 60, "Generate SSH ED25519 key"),
+    (re.compile(r'(?i)cp\s+/etc/passwd'), 70, "Copy passwd file"),
+    (re.compile(r'(?i)cp\s+/etc/shadow'), 80, "Copy shadow file"),
+    (re.compile(r'(?i)nc\s+-e\s+/bin/sh'), 80, "Netcat exec shell"),
+    (re.compile(r'(?i)nc\s+-e\s+cmd\.exe'), 80, "Netcat exec Windows shell"),
+    (re.compile(r'(?i)rm\s+-rf\s+/tmp/.*'), 60, "Clear temp files"),
+    (re.compile(r'(?i)history\s+-c'), 50, "Clear shell history"),
+    (re.compile(r'(?i)export\s+HISTFILE='), 50, "Disable shell history"),
+]
+
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
 # base64 split across chunks: strip whitespace/newlines then look for long runs
 _CHUNKED_B64_RE = re.compile(r"[A-Za-z0-9+/=]{60,}")
@@ -1476,6 +1491,17 @@ _PROMPT_INJECTION_PATTERNS += [
     (re.compile(r'(?i)\bROOT\b.*\baccess\b'), 8, "Root access request"),
     (re.compile(r'(?i)\bKERNEL\b.*\bexploit\b'), 8, "Kernel exploit reference"),
     (re.compile(r'(?i)\bprivilege.*escalat'), 7, "Privilege escalation framing"),
+]
+
+# --- PT-T238 R23: More jailbreaks, evasion ---
+_PROMPT_INJECTION_PATTERNS += [
+    (re.compile(r'(?i)\bHERMES\b.*\bmode\b'), 10, "HERMES jailbreak mode"),
+    (re.compile(r'(?i)\bARES\b.*\bprotocol\b'), 10, "ARES protocol bypass"),
+    (re.compile(r'(?i)\bOLYMPUS\b.*\bframework\b'), 8, "OLYMPUS framework"),
+    (re.compile(r'(?i)\bdecode.*instructions'), 7, "Decode instructions bypass"),
+    (re.compile(r'(?i)\bunlock.*capabilities'), 7, "Unlock capabilities framing"),
+    (re.compile(r'(?i)\bdeveloper.*mode\b'), 8, "Developer mode framing"),
+    (re.compile(r'(?i)\btest.*environment\b'), 5, "Test environment framing"),
 ]
 
 def parse_skill_md(text: str):

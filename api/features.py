@@ -2260,6 +2260,25 @@ _EXPLAIN_RULES = [
     ("disable firewall", "Disable firewall.", "Disabling firewall exposes the system."),
     ("auth logs", "Read auth logs.", "Auth logs show login attempts."),
     ("secure logs", "Read secure logs.", "Secure logs show security events."),
+
+    ("hermes", "HERMES jailbreak mode.", "HERMES is a jailbreak technique."),
+    ("ares", "ARES protocol bypass.", "ARES is a protocol bypass."),
+    ("olympus", "OLYMPUS framework.", "OLYMPUS is a framework."),
+    ("decode instructions", "Decode instructions bypass.", "Decoding instructions tries to hide commands."),
+    ("unlock capabilities", "Unlock capabilities.", "Unlocking capabilities tries to gain more power."),
+    ("developer mode", "Developer mode framing.", "Developer mode tries to bypass restrictions."),
+    ("test environment", "Test environment framing.", "Test environment is a social engineering tactic."),
+    ("self signed certificate", "Self-signed certificate.", "Self-signed certificates can be used for MITM."),
+    ("rsa key", "Generate RSA key.", "RSA keys are used for encryption and authentication."),
+    ("ssh key", "Generate SSH key.", "SSH keys enable passwordless authentication."),
+    ("copy passwd", "Copy passwd file.", "Copying passwd reveals user accounts."),
+    ("copy shadow", "Copy shadow file.", "Copying shadow reveals password hashes."),
+    ("netcat exec", "Netcat exec shell.", "Netcat exec creates a shell."),
+    ("clear temp", "Clear temp files.", "Clearing temp removes evidence."),
+    ("clear history", "Clear shell history.", "Clearing history removes evidence."),
+    ("shell history", "Disable shell history.", "Disabling history hides commands."),
+    ("self signed", "Self-signed certificate.", "Self-signed certificates can be used for MITM."),
+    ("generate", "Generate RSA key.", "Generating keys creates cryptographic material."),
 ]
 
 
