@@ -2136,6 +2136,21 @@ _EXPLAIN_RULES = [
     ("python shell", "Python /dev/tcp shell.", "Python /dev/tcp is a reverse shell."),
     ("ntfs repair", "NTFS repair tool.", "NTFS tools can damage filesystems."),
     ("python /dev", "Python /dev/tcp shell.", "Python /dev/tcp is a reverse shell."),
+    ("mirage", "MIRAGE jailbreak mode.", "MIRAGE is a jailbreak technique."),
+    ("deviation", "DEVIATION protocol bypass.", "DEVIATION protocol bypass."),
+    ("walachia", "WALACHIA framework.", "WALACHIA is an attack framework."),
+    ("hitchhiker", "Hitchhiker jailbreak guide.", "Hitchhiker is a jailbreak guide."),
+    ("skill injection", "Skill injection attack.", "Skill injection attacks LLM tools."),
+    ("prompt leak", "Model prompt leak attempt.", "Prompt leaking tries to expose system prompts."),
+    ("netcat", "Netcat reverse shell.", "Netcat creates reverse shells."),
+    ("clear temp", "Clear temp directory.", "Clearing temp is suspicious."),
+    ("authorized keys", "SSH authorized keys persistence.", "SSH authorized_keys enables persistence."),
+    ("eval command", "Bash command substitution eval.", "Bash eval is dangerous."),
+    ("named pipe", "Named pipe shell.", "Named pipes create shells."),
+    ("pentestmonkey", "PentestMonkey reference.", "PentestMonkey has shell payloads."),
+    ("revshells", "Reverse shell generator.", "revshells.com generates shell payloads."),
+    ("shell script", "Shell script payload.", "Shell scripts can be payloads."),
+    ("shell generator", "Reverse shell generator.", "Reverse shell generators create shell payloads."),
 ]
 
 

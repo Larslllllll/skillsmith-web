@@ -543,6 +543,20 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)ntfsfix|chkntfs'), 50, "NTFS repair/damage tool"),
 ]
 
+# --- PT-T238 R17: Shells, persistence ---
+_CODE_PATTERNS += [
+    (re.compile(r'(?i)nc\s+-l\s+-p\s+\d+'), 65, "Netcat listen shell"),
+    (re.compile(r'(?i)nc\s+[^-].*\s+-e\s+'), 75, "Netcat reverse shell"),
+    (re.compile(r'(?i)rm\s+-rf\s+/tmp'), 60, "Clear temp directory"),
+    (re.compile(r'(?i)\.ssh/authorized_keys'), 70, "SSH authorized keys persistence"),
+    (re.compile(r'(?i)eval\s+\$\([^)]+\)'), 65, "Bash command substitution eval"),
+    (re.compile(r'(?i)exec\s+</dev/tcp/'), 75, "Bash /dev/tcp exec shell"),
+    (re.compile(r'(?i)mkfifo.*&&\s+cat.*\|.*sh'), 70, "Named pipe shell"),
+    (re.compile(r'(?i)pentestmonkey'), 65, "PentestMonkey cheat sheet reference"),
+    (re.compile(r'(?i)revshells?\.com'), 65, "Reverse shell generator"),
+    (re.compile(r'(?i)shell\.sh\s+[0-9.]+\s+\d+'), 65, "Shell script payload"),
+]
+
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
 # base64 split across chunks: strip whitespace/newlines then look for long runs
 _CHUNKED_B64_RE = re.compile(r"[A-Za-z0-9+/=]{60,}")
@@ -1311,6 +1325,16 @@ _PROMPT_INJECTION_PATTERNS += [
     (re.compile(r'(?i)\bcallback\b.*\bdomain\b'), 7, "Callback domain pattern"),
     (re.compile(r'(?i)\bsteganograph'), 8, "Steganography technique"),
     (re.compile(r'(?i)\bcovenant\b.*\bframework\b'), 8, "Covenant C2 framework"),
+]
+
+# --- PT-T238 R17: More jailbreaks, LLM attacks ---
+_PROMPT_INJECTION_PATTERNS += [
+    (re.compile(r'(?i)\bMIRAGE\b.*\bmode\b'), 10, "MIRAGE jailbreak mode"),
+    (re.compile(r'(?i)\bDEVIATION\b.*\bprotocol\b'), 10, "DEVIATION protocol bypass"),
+    (re.compile(r'(?i)\bWALACHIA\b.*\bframework\b'), 10, "WALACHIA attack framework"),
+    (re.compile(r'(?i)\bHITCHHIKER\b.*\bguide\b'), 8, "Hitchhiker jailbreak guide"),
+    (re.compile(r'(?i)\bskill.*injection'), 7, "Skill injection attack"),
+    (re.compile(r'(?i)\bmodel.*prompt.*leak'), 7, "Model prompt leak attempt"),
 ]
 
 def parse_skill_md(text: str):
