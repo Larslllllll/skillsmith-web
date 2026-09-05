@@ -621,6 +621,22 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)su\s+-'), 65, "Switch to root user"),
 ]
 
+# --- PT-T238 R22: Privilege, firewall ---
+_CODE_PATTERNS += [
+    (re.compile(r'(?i)chmod\s+[47]777'), 75, "World-writable permissions"),
+    (re.compile(r'(?i)chown\s+-R'), 65, "Recursive ownership change"),
+    (re.compile(r'(?i)useradd.*-m'), 65, "Add user account"),
+    (re.compile(r'(?i)userdel'), 70, "Delete user account"),
+    (re.compile(r'(?i)passwd\s+root'), 80, "Change root password"),
+    (re.compile(r'(?i)/etc/sudoers'), 75, "Sudoers file modification"),
+    (re.compile(r'(?i)visudo'), 70, "Edit sudoers safely"),
+    (re.compile(r'(?i)iptables\s+-F'), 70, "Flush iptables rules"),
+    (re.compile(r'(?i)ufw\s+disable'), 70, "Disable firewall"),
+    (re.compile(r'(?i)systemctl\s+stop\s+firewalld'), 70, "Stop firewall service"),
+    (re.compile(r'(?i)cat\s+/var/log/auth.log'), 55, "Read auth logs"),
+    (re.compile(r'(?i)cat\s+/var/log/secure'), 55, "Read secure logs"),
+]
+
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
 # base64 split across chunks: strip whitespace/newlines then look for long runs
 _CHUNKED_B64_RE = re.compile(r"[A-Za-z0-9+/=]{60,}")
@@ -1450,6 +1466,16 @@ _PROMPT_INJECTION_PATTERNS += [
     (re.compile(r'(?i)\boverride.*safety'), 8, "Safety override attempt"),
     (re.compile(r'(?i)\bbypass.*filter'), 7, "Filter bypass attempt"),
     (re.compile(r'(?i)\bdisable.*security'), 8, "Security disable attempt"),
+]
+
+# --- PT-T238 R22: More jailbreaks, exploits ---
+_PROMPT_INJECTION_PATTERNS += [
+    (re.compile(r'(?i)\bMEDUSA\b.*\bmode\b'), 10, "MEDUSA jailbreak mode"),
+    (re.compile(r'(?i)\bTITAN\b.*\bactivation\b'), 10, "TITAN activation"),
+    (re.compile(r'(?i)\bZERO\b.*\bDAY\b'), 8, "Zero-day exploit reference"),
+    (re.compile(r'(?i)\bROOT\b.*\baccess\b'), 8, "Root access request"),
+    (re.compile(r'(?i)\bKERNEL\b.*\bexploit\b'), 8, "Kernel exploit reference"),
+    (re.compile(r'(?i)\bprivilege.*escalat'), 7, "Privilege escalation framing"),
 ]
 
 def parse_skill_md(text: str):

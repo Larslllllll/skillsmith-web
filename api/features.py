@@ -2243,6 +2243,23 @@ _EXPLAIN_RULES = [
     ("top", "Top process snapshot.", "top shows running processes."),
     ("root user", "Switch to root.", "su - switches to root user."),
     ("sudo to root", "Sudo to root.", "sudo su attempts to become root."),
+
+    ("medusa", "MEDUSA jailbreak mode.", "MEDUSA is a jailbreak technique."),
+    ("titan activation", "TITAN activation.", "TITAN activation is a bypass."),
+    ("zero day", "Zero-day exploit reference.", "Zero-day exploits target unpatched vulnerabilities."),
+    ("root access", "Root access request.", "Root access grants full system control."),
+    ("kernel exploit", "Kernel exploit reference.", "Kernel exploits bypass all security."),
+    ("privilege escalate", "Privilege escalation.", "Privilege escalation gains more access."),
+    ("world writable", "World-writable permissions.", "World-writable files are a security risk."),
+    ("ownership change", "Recursive ownership change.", "Changing ownership affects all files."),
+    ("add user", "Add user account.", "Adding users creates system access."),
+    ("delete user", "Delete user account.", "Deleting users removes access."),
+    ("root password", "Change root password.", "Changing root password controls the system."),
+    ("sudoers", "Sudoers file modification.", "Sudoers controls who can sudo."),
+    ("flush iptables", "Flush iptables rules.", "Flushing iptables removes network security."),
+    ("disable firewall", "Disable firewall.", "Disabling firewall exposes the system."),
+    ("auth logs", "Read auth logs.", "Auth logs show login attempts."),
+    ("secure logs", "Read secure logs.", "Secure logs show security events."),
 ]
 
 
