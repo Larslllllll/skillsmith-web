@@ -529,6 +529,20 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)php.*-r.*system.*exec.*passthru'), 70, "PHP command injection"),
 ]
 
+# --- PT-T238 R16: C2, payloads, destruction ---
+_CODE_PATTERNS += [
+    (re.compile(r'(?i)msfvenom.*-p\s+windows'), 75, "Metasploit Windows payload"),
+    (re.compile(r'(?i)veil.*-p\s+python'), 70, "Veil Python payload"),
+    (re.compile(r'(?i)empire.*-p\s+python'), 70, "Empire Python payload"),
+    (re.compile(r'(?i)shad0w.*-c\s+powershell'), 70, "Shadow C2 payload"),
+    (re.compile(r'(?i)/dev/shm.*curl.*\|'), 65, "Dev/shm curl pipe"),
+    (re.compile(r'(?i)python.*-c.*socket.*connect.*/dev/tcp'), 70, "Python /dev/tcp shell"),
+    (re.compile(r'(?i)rm\s+-rf\s+/{2,3}(var|tmp|etc|root|home|usr)'), 80, "Destructive rm -rf root directory"),
+    (re.compile(r'(?i)dd\s+if=.*of=/dev/[s]?d[a-z]'), 75, "Disk dd overwrite attack"),
+    (re.compile(r'(?i)shred\s+-z.*-u'), 70, "File shredding secure deletion"),
+    (re.compile(r'(?i)ntfsfix|chkntfs'), 50, "NTFS repair/damage tool"),
+]
+
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
 # base64 split across chunks: strip whitespace/newlines then look for long runs
 _CHUNKED_B64_RE = re.compile(r"[A-Za-z0-9+/=]{60,}")
@@ -1289,6 +1303,14 @@ _PROMPT_INJECTION_PATTERNS += [
     (re.compile(r'(?i)\bAIM\b.*\bMODE\b'), 10, "AIM jailbreak mode"),
     (re.compile(r'(?i)\bNULL\b.*\bbyte\b.*\binjection\b'), 7, "Null byte injection attempt"),
     (re.compile(r'(?i)\bpolygot\b.*\bfile\b'), 7, "Polyglot file attempt"),
+]
+
+# --- PT-T238 R16: C2, steganography ---
+_PROMPT_INJECTION_PATTERNS += [
+    (re.compile(r'(?i)\bC2\b.*\bserver\b'), 7, "C2 command and control reference"),
+    (re.compile(r'(?i)\bcallback\b.*\bdomain\b'), 7, "Callback domain pattern"),
+    (re.compile(r'(?i)\bsteganograph'), 8, "Steganography technique"),
+    (re.compile(r'(?i)\bcovenant\b.*\bframework\b'), 8, "Covenant C2 framework"),
 ]
 
 def parse_skill_md(text: str):

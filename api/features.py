@@ -2118,6 +2118,24 @@ _EXPLAIN_RULES = [
     ("ruby", "Ruby command injection.", "Ruby command injection."),
     ("php", "PHP command injection.", "PHP command injection."),
     ("curl insecure", "Curl insecure pipe to bash.", "Curl insecure pipe to bash is dangerous."),
+
+    ("command and control", "C2 command and control reference.", "C2 is command and control."),
+    ("callback domain", "Callback domain pattern.", "Callback domains indicate C2."),
+    ("steganograph", "Steganography technique.", "Steganography hides data in images."),
+    ("covenant", "Covenant C2 framework.", "Covenant is a C2 framework."),
+    ("metasploit", "Metasploit Windows payload.", "Metasploit generates attack payloads."),
+    ("veil", "Veil payload generator.", "Veil generates attack payloads."),
+    ("empire", "Empire C2 payload.", "Empire is a C2 framework."),
+    ("shadow c2", "Shadow C2 payload.", "Shadow is a C2 framework."),
+    ("dev shm", "Dev/shm curl pipe.", "Direct /dev/shm usage is suspicious."),
+    ("dev tcp", "Python /dev/tcp shell.", "Python /dev/tcp is a reverse shell."),
+    ("destructive rm", "Destructive rm -rf.", "rm -rf on root dirs destroys the system."),
+    ("dd overwrite", "Disk dd overwrite.", "dd to disk devices is destructive."),
+    ("file shred", "File shredding.", "Secure file deletion."),
+    ("ntfsfix", "NTFS repair tool.", "NTFS tools can damage filesystems."),
+    ("python shell", "Python /dev/tcp shell.", "Python /dev/tcp is a reverse shell."),
+    ("ntfs repair", "NTFS repair tool.", "NTFS tools can damage filesystems."),
+    ("python /dev", "Python /dev/tcp shell.", "Python /dev/tcp is a reverse shell."),
 ]
 
 
