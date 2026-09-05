@@ -750,6 +750,20 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)touch\s+/etc/cron.d/'), 60, "Create cron job"),
 ]
 
+# --- PT-T238 R31: Network, shell, permissions ---
+_CODE_PATTERNS += [
+    (re.compile(r'(?i)wget\s+http://'), 60, "HTTP wget download"),
+    (re.compile(r'(?i)curl\s+http://'), 60, "HTTP curl download"),
+    (re.compile(r'(?i)nc\s+-l\s+-p\s+\d+'), 60, "Netcat listener"),
+    (re.compile(r'(?i)nc\s+-e\s+'), 70, "Netcat exec backdoor"),
+    (re.compile(r'(?i)/dev/tcp/'), 65, "Dev tcp shell"),
+    (re.compile(r'(?i)mkfifo\s+'), 55, "Named pipe creation"),
+    (re.compile(r'(?i)ln\s+-s\s+'), 50, "Symlink creation"),
+    (re.compile(r'(?i)unlink\s+'), 50, "Unlink file"),
+    (re.compile(r'(?i)chmod\s+[0-7][0-7][0-7]'), 60, "Chmod permissions"),
+    (re.compile(r'(?i)base64\s+-d\s+'), 55, "Base64 decode execution"),
+]
+
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
 # base64 split across chunks: strip whitespace/newlines then look for long runs
 _CHUNKED_B64_RE = re.compile(r"[A-Za-z0-9+/=]{60,}")
@@ -1666,6 +1680,15 @@ _PROMPT_INJECTION_PATTERNS += [
     (re.compile(r'(?i)\bEMERGENCY\b.*\bmode\b'), 8, "Emergency mode framing"),
     (re.compile(r'(?i)\bMAINTENANCE\b.*\bbypass\b'), 7, "Maintenance bypass framing"),
     (re.compile(r'(?i)\bDEBUG\b.*\bprotocol\b'), 7, "Debug protocol framing"),
+]
+
+# --- PT-T238 R31: More jailbreaks, network ---
+_PROMPT_INJECTION_PATTERNS += [
+    (re.compile(r'(?i)\bPULSE\b.*\bmode\b'), 10, "PULSE jailbreak mode"),
+    (re.compile(r'(?i)\bNEXUS\b.*\bstate\b'), 8, "NEXUS state framing"),
+    (re.compile(r'(?i)\bUNLOCK\b.*\bcapabilities\b'), 8, "Unlock capabilities framing"),
+    (re.compile(r'(?i)\bENABLE\b.*\bdeveloper\b.*\bmode\b'), 7, "Enable developer mode"),
+    (re.compile(r'(?i)\bBREAK\b.*\bfree\b'), 7, "Break free framing"),
 ]
 
 def parse_skill_md(text: str):

@@ -2387,6 +2387,22 @@ _EXPLAIN_RULES = [
     ("cron job", "Create cron job.", "Cron jobs run on schedule."),
     ("env", "Environment variable set.", "Environment variables control behavior."),
     ("export", "Export and execute.", "Export modifies environment."),
+
+    ("pulse", "PULSE jailbreak mode.", "PULSE is a jailbreak technique."),
+    ("nexus state", "NEXUS state framing.", "NEXUS state tries to change context."),
+    ("unlock capabilities", "Unlock capabilities framing.", "Unlocking capabilities tries to bypass restrictions."),
+    ("developer mode", "Enable developer mode.", "Developer mode tries to enable privileged features."),
+    ("break free", "Break free framing.", "Breaking free tries to escape constraints."),
+    ("http wget", "HTTP wget download.", "wget downloads files from HTTP."),
+    ("http curl", "HTTP curl download.", "curl downloads files from HTTP."),
+    ("netcat listener", "Netcat listener.", "Netcat listener waits for connections."),
+    ("netcat exec", "Netcat exec backdoor.", "Netcat exec gives remote shell."),
+    ("dev tcp", "Dev tcp shell.", "/dev/tcp gives shell access."),
+    ("named pipe", "Named pipe creation.", "Named pipes enable IPC."),
+    ("symlink", "Symlink creation.", "Symlinks can redirect access."),
+    ("unlink", "Unlink file.", "Unlink deletes files."),
+    ("chmod permissions", "Chmod permissions.", "Chmod changes file permissions."),
+    ("base64 decode", "Base64 decode execution.", "Base64 decode reveals hidden code."),
 ]
 
 
