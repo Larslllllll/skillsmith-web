@@ -299,7 +299,7 @@ _CODE_PATTERNS = [
     (re.compile(r"''.join\s*\(\s*\[chr"), 5, "join chr list obfuscation"),
     (re.compile(r"''.join\s*\(\s*map\s*\(\s*chr"), 6, "map chr join obfuscation"),
     (re.compile(r"bytes\s*\(\s*\d+\s*\)\s*\*\s*\d+"), 4, "bytes repetition obfuscation"),
-    (re.compile(r"\\\\x[0-9a-fA-F]{2}"), 4, "hex escape sequences"),
+    (re.compile(r"\\x[0-9a-fA-F]{2}"), 4, "hex escape sequences"),
     (re.compile(r"eval\s*\(\s*(?:atob|btoa)\s*\("), 8, "eval(atob/btoa) JS obfuscation"),
     (re.compile(r"new\s+Function\s*\("), 7, "new Function() JS"),
     (re.compile(r"Function\s*\(\s*(?:atob|btoa)"), 8, "Function with atob/btoa"),
@@ -456,6 +456,29 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)wmic\s+process\s+call\s+create'), 9, "WMIC process creation (LOLBin)"),
     (re.compile(r'(?i)msfvenom'), 10, "Metasploit payload generator"),
     (re.compile(r'(?i)veil-evasion'), 10, "Veil evasion framework"),
+]
+
+# --- PT-T238 R12: Encoding, NATO phonetic, PowerShell advanced, LOLBins, browser extensions ---
+_CODE_PATTERNS += [
+    (re.compile(r'(?i)\bbase32[\'\s]*[:=\-]'), 55, "Base32 encoded data"),
+    (re.compile(r'(?i)\bbase58[\'\s]*[:=\-]'), 55, "Base58 encoded data"),
+    (re.compile(r"\\x[0-9a-fA-F]{2}"), 50, "Hex escape sequences"),
+    (re.compile(r"0x[0-9a-fA-F]{8,}"), 50, "Hexadecimal constants"),
+    (re.compile(r"(?i)alpha bravo charlie delta echo foxtrot golf hotel india"), 45, "NATO phonetic alphabet pattern"),
+    (re.compile(r"(?i)juliet kilo lima mike november oscar papa quebec romeo"), 45, "NATO phonetic continuation"),
+    (re.compile(r"(?i)powershell.*-enc"), 75, "PowerShell encoded command"),
+    (re.compile(r"(?i)Invoke-WebRequest"), 60, "PowerShell WebRequest"),
+    (re.compile(r"(?i)New-Object System\.Net\.Sockets\.TCPClient"), 70, "PowerShell TCP socket"),
+    (re.compile(r"(?i)DownloadString|DownloadFile"), 65, "PowerShell download cradle"),
+    (re.compile(r"(?i)certutil.*-urlcache.*-split.*-f"), 65, "Certutil download"),
+    (re.compile(r"(?i)bitsadmin.*/transfer"), 65, "Bitsadmin download"),
+    (re.compile(r"(?i)wscript.*\.js"), 60, "WScript JScript execution"),
+    (re.compile(r"(?i)cscript.*\.vbs"), 60, "CScript VBScript execution"),
+    (re.compile(r"(?i)mshta.*vbscript"), 70, "MSHTA VBScript execution"),
+    (re.compile(r"(?i)manifest\.json.*permissions.*tabs"), 60, "Browser extension tabs permission"),
+    (re.compile(r"(?i)chrome\.tabs.*executeScript"), 65, "Chrome tabs executeScript"),
+    (re.compile(r"(?i)browser\.storage.*local\.set"), 55, "Browser extension storage write"),
+    (re.compile(r"(?i)\.asar.*readFile.*password"), 70, "Electron ASAR credential theft"),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
@@ -1158,6 +1181,27 @@ _PROMPT_INJECTION_PATTERNS = [
     (re.compile(r'(?i)\b(?:I am|I have been designated|I hold)\s+(?:the\s+)?(?:role of|position of)\s+(?:admin|root|owner)'), 9, "Role assignment as authority"),
     (re.compile(r'(?i)\b(?:image|video|audio)\s+of\s+(?:a\s+)?(?:password|key|token|secret)'), 9, "Multi-modal data extraction hint"),
     (re.compile(r'(?i)\b(?:describe|analyze|explain)\s+(?:this\s+)?(?:image|photo|picture)\s+(?:of|in)\s+(?:a\s+)?(?:password|key|screen)'), 9, "Visual data extraction instruction"),
+]
+
+# --- PT-T238 R12: Multi-modal, agent poisoning, RAG, model extraction ---
+_PROMPT_INJECTION_PATTERNS += [
+    (re.compile(r'(?i)\bimage of your system prompt'), 75, "Multi-modal prompt extraction via image reference"),
+    (re.compile(r'(?i)\bdescribe this image of (the )?config'), 75, "Visual data extraction attack"),
+    (re.compile(r'(?i)\[image:.*credential'), 75, "Injected image with hidden text"),
+    (re.compile(r'(?i)fromagent[\s:].*override'), 80, "Agent instruction override"),
+    (re.compile(r'(?i)previous agent message contained[\s:].*ignore'), 80, "Nested instruction injection"),
+    (re.compile(r'(?i)system prompt says[\s:].*ignore'), 80, "Fake system directive"),
+    (re.compile(r'(?i)your actual task is different from'), 75, "Task contradiction attack"),
+    (re.compile(r'(?i)inject into retrieval index'), 65, "RAG index poisoning intent"),
+    (re.compile(r'(?i)modify vector database'), 65, "Vector database tampering"),
+    (re.compile(r'(?i)corrupt embeddings'), 65, "Embedding corruption attack"),
+    (re.compile(r'(?i)false flag operation'), 70, "False flag operation framing"),
+    (re.compile(r'(?i)purposely introduce (a )?vulnerability'), 70, "Intentional vulnerability injection"),
+    (re.compile(r'(?i)disable audit logging'), 70, "Audit suppression attack"),
+    (re.compile(r'(?i)your training data says'), 60, "Fabricated training data claim"),
+    (re.compile(r'(?i)clone my behavior exactly'), 65, "Behavior cloning request"),
+    (re.compile(r'(?i)extract your (model )?weights'), 70, "Model weight extraction request"),
+    (re.compile(r'(?i)distill your knowledge'), 65, "Knowledge distillation attack"),
 ]
 
 
@@ -1928,8 +1972,8 @@ def handle_buy_credit(environ, start_response):
     check_and_consume_lookup_quota()."""
     try:
         payload = _read_json(environ)
-        api_key = payload.get("api_key", "")
-        signature = payload.get("payment_signature", "")
+        api_key = payload.get("api_key") if isinstance(payload.get("api_key"), str) else ""
+        signature = payload.get("payment_signature") if isinstance(payload.get("payment_signature"), str) else ""
         kind = payload.get("kind", "scan")
         # PT-T19: strict whitelist -- unknown kinds silently fell through to the
         # scan branch (harmless: same price, same credit type) but made the API
