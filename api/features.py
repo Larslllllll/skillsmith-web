@@ -2490,7 +2490,14 @@ _EXPLAIN_RULES = [
     ("rot47 obfuscation", "ROT47 obfuscation pattern.", "ROT47 is a simple character rotation cipher."),
     ("base58 encoding", "Base58 encoding pattern.", "Base58 encoding is used for Bitcoin addresses and obfuscation."),
     ("suid sgid bit set", "SUID/SGID bit pattern.", "Setting SUID or SGID bits allows privilege escalation."),
-    ("setcap capability modification", "setcap pattern.", "setcap modifies Linux capabilities, enabling privilege escalation.")
+    ("setcap capability modification", "setcap pattern.", "setcap modifies Linux capabilities, enabling privilege escalation."),
+
+    ("doas privilege escalation bsd sudo alternative", "doas privilege escalation pattern.", "doas is a BSD sudo alternative that can be used for privilege escalation."),
+    ("su -c command execution", "su -c pattern.", "su -c executes a single command as another user."),
+    ("chroot privilege manipulation", "chroot pattern.", "chroot can be used to manipulate process isolation."),
+    ("docker socket access container escape", "Docker socket access pattern.", "Accessing the Docker socket can allow container escape."),
+    ("base32 encoding", "Base32 encoding pattern.", "Base32 encoding is used for data encoding and obfuscation."),
+    ("binary to hex conversion", "binary to hex conversion pattern.", "Converting binary to hex is used in obfuscation."),
 ]
 
 

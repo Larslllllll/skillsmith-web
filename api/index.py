@@ -500,6 +500,12 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)base58|base_58'), 5, 'Base58 encoding'),
     (re.compile(r'(?i)chmod\s+[0-9]*[sS]', re.I), 7, 'SUID/SGID bit set'),
     (re.compile(r'(?i)setcap\s+'), 7, 'setcap capability modification'),
+    (re.compile(r'(?i)\bdoas\b'), 8, 'doas privilege escalation (BSD sudo alternative)'),
+    (re.compile(r'(?i)\bsu\s+-c\s+'), 7, 'su -c command execution'),
+    (re.compile(r'(?i)\bchroot\b'), 7, 'chroot privilege manipulation'),
+    (re.compile(r'(?i)/var/run/docker.sock'), 7, 'Docker socket access (container escape)'),
+    (re.compile(r'(?i)base32|BASE32'), 5, 'Base32 encoding'),
+    (re.compile(r'(?i)bin2hex|\.toHex\b'), 6, 'binary to hex conversion'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 
