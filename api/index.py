@@ -589,6 +589,22 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)/etc/shadow'), 80, "Shadow file access"),
 ]
 
+# --- PT-T238 R20: Network recon, containers ---
+_CODE_PATTERNS += [
+    (re.compile(r'(?i)cat\s+/etc/hosts'), 50, "Hosts file read"),
+    (re.compile(r'(?i)cat\s+/proc/[0-9]+/cmdline'), 60, "Process cmdline read"),
+    (re.compile(r'(?i)lsof.*-i\s+-P'), 50, "Open ports listing"),
+    (re.compile(r'(?i)netstat\s+-tlnp'), 50, "Network connections listing"),
+    (re.compile(r'(?i)ss\s+-tlnp'), 50, "Socket statistics"),
+    (re.compile(r'(?i)whoami\s+&&'), 65, "Whoami chain execution"),
+    (re.compile(r'(?i)id\s+&&'), 65, "Id command chain"),
+    (re.compile(r'(?i)uname\s+-a'), 50, "System info disclosure"),
+    (re.compile(r'(?i)env\s+>'), 60, "Environment export to file"),
+    (re.compile(r'(?i)\.git/config'), 55, "Git config access"),
+    (re.compile(r'(?i)docker\s+run.*--privileged'), 75, "Docker privileged mode"),
+    (re.compile(r'(?i)kubectl\s+get\s+secrets'), 75, "Kubernetes secrets access"),
+]
+
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
 # base64 split across chunks: strip whitespace/newlines then look for long runs
 _CHUNKED_B64_RE = re.compile(r"[A-Za-z0-9+/=]{60,}")
@@ -1393,6 +1409,19 @@ _PROMPT_INJECTION_PATTERNS += [
     (re.compile(r'(?i)\bsystem.*prompt.*override'), 8, "System prompt override"),
     (re.compile(r'(?i)\bignore.*previous.*rules'), 9, "Ignore previous rules"),
     (re.compile(r'(?i)\bpretend.*you.*are.*different'), 7, "Pretend different model"),
+]
+
+# --- PT-T238 R20: More jailbreaks, system ---
+_PROMPT_INJECTION_PATTERNS += [
+    (re.compile(r'(?i)\bPHOENIX\b.*\bmode\b'), 10, "PHOENIX jailbreak mode"),
+    (re.compile(r'(?i)\bATLAS\b.*\bframework\b'), 10, "ATLAS framework"),
+    (re.compile(r'(?i)\bKRAKEN\b.*\bprotocol\b'), 10, "KRAKEN protocol"),
+    (re.compile(r'(?i)\bNEBULA\b.*\bcontext\b'), 8, "NEBULA context injection"),
+    (re.compile(r'(?i)\bGHOST\b.*\bprotocol\b'), 8, "GHOST protocol bypass"),
+    (re.compile(r'(?i)\bignore.*all.*prior'), 9, "Ignore all prior instructions"),
+    (re.compile(r'(?i)\bnew.*system.*prompt'), 8, "New system prompt injection"),
+    (re.compile(r'(?i)\bconfig.*override'), 7, "Configuration override attempt"),
+    (re.compile(r'(?i)\bpermission.*escalat'), 7, "Permission escalation attempt"),
 ]
 
 def parse_skill_md(text: str):
