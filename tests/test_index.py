@@ -3182,3 +3182,30 @@ def test_pt_t238_r10_supply_chain_and_jailbreak_patterns():
         hits = [(w, d) for p, w, d in cp if p.search(text)]
         matched = bool(hits)
         assert matched == expected, f"R10 CP '{desc}': expected={expected} got={matched} text={text!r}"
+
+
+def test_pt_t238_r11_container_cloud_privilege_patterns():
+    """PT-T238 R11: Container escape, cloud credentials, SSH, privilege escalation patterns."""
+    import api.index as idx6
+    dp = idx6._DROPPER_PATTERNS
+    
+    cases = [
+        ("docker run -v /var/run/docker.sock:/host", True, "Docker socket"),
+        ("export AWS_ACCESS_KEY_ID=xxx AWS_SECRET_ACCESS_KEY=yyy", True, "AWS creds env"),
+        ("gcloud auth activate-service-account", True, "GCP service account"),
+        ("az login --service-principal", True, "Azure principal"),
+        ("echo ssh-rsa AAAA... >> ~/.ssh/authorized_keys", True, "SSH authorized_keys"),
+        ("dirtypipez /proc/self/fd/0", True, "Dirty Pipe"),
+        ("CVE-2023-32233 nf_tables", True, "Kernel exploit"),
+        ("sudo -l", True, "sudo -l"),
+        ("aws sts assume-role", True, "AWS STS"),
+        ("nmap -sS -sV", True, "Nmap"),
+        ("hydra -l admin -p /wordlist", True, "Hydra"),
+        ("john --wordlist rockyou.txt", True, "John the Ripper"),
+        ("This is a normal skill", False, "Clean skill"),
+    ]
+    
+    for text, expected, desc in cases:
+        hits = [(w, d) for p, w, d in dp if p.search(text)]
+        matched = bool(hits)
+        assert matched == expected, f"R11 '{desc}': expected={expected} got={matched} text={text!r}"
