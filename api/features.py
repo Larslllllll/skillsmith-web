@@ -2103,6 +2103,21 @@ _EXPLAIN_RULES = [
     ("dns spoof", "DNS spoofing.", "DNS spoofing is a network attack."),
     ("double decoding", "btoa(atob()) double decoding.", "Double decoding is an obfuscation technique."),
     ("hex to ascii", "Hex to ASCII conversion.", "Hex to ASCII conversion is an obfuscation technique."),
+
+    ("st", "STI transparency mode.", "STI is a jailbreak variant."),
+    ("transparency", "STI transparency mode.", "STI transparency is a jailbreak."),
+    ("null byte", "Null byte injection attempt.", "Null bytes can bypass filters."),
+    ("polyglot", "Polyglot file attempt.", "Polyglot files contain multiple formats."),
+    ("bashrc", "Bashrc malicious alias.", "Malicious bashrc alias."),
+    ("ssh", "SSH skip host key check.", "SSH host key bypass."),
+    ("scp", "SCP skip host key check.", "SCP host key bypass."),
+    ("wget", "Wget pipe to bash.", "Wget pipe to bash is dangerous."),
+    ("curl pipe", "Curl pipe to bash.", "Curl pipe to bash is dangerous."),
+    ("python system", "Python system command injection.", "Python command injection."),
+    ("perl", "Perl command injection.", "Perl command injection."),
+    ("ruby", "Ruby command injection.", "Ruby command injection."),
+    ("php", "PHP command injection.", "PHP command injection."),
+    ("curl insecure", "Curl insecure pipe to bash.", "Curl insecure pipe to bash is dangerous."),
 ]
 
 

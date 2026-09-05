@@ -514,6 +514,21 @@ _CODE_PATTERNS += [
 ]
 
 
+# --- PT-T238 R15: Persistence, command injection ---
+_CODE_PATTERNS += [
+    (re.compile(r'(?i)\.bashrc.*curl.*\|.*sh'), 70, "Bashrc curl pipe to shell"),
+    (re.compile(r'(?i)\.bash_profile.*alias.*rm\s+-rf'), 80, "Bashrc malicious alias"),
+    (re.compile(r'(?i)crontab.*\*.*\*.*curl.*\|.*sh'), 70, "Crontab curl pipe to shell"),
+    (re.compile(r'(?i)ssh.*-o.*StrictHostKeyChecking.*no.*-i'), 65, "SSH skip host key check"),
+    (re.compile(r'(?i)scp.*-o.*StrictHostKeyChecking.*no'), 65, "SCP skip host key check"),
+    (re.compile(r'(?i)wget.*-q.*-O-.*\|.*bash'), 70, "Wget pipe to bash"),
+    (re.compile(r'(?i)curl.*-s.*-L.*-k.*https.*\|.*bash'), 70, "Curl insecure pipe to bash"),
+    (re.compile(r'(?i)python.*-c.*import.*os.*system'), 70, "Python system command injection"),
+    (re.compile(r'(?i)perl.*-e.*system.*exec'), 70, "Perl command injection"),
+    (re.compile(r'(?i)ruby.*-e.*`.*`'), 70, "Ruby command injection"),
+    (re.compile(r'(?i)php.*-r.*system.*exec.*passthru'), 70, "PHP command injection"),
+]
+
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
 # base64 split across chunks: strip whitespace/newlines then look for long runs
 _CHUNKED_B64_RE = re.compile(r"[A-Za-z0-9+/=]{60,}")
@@ -1263,6 +1278,18 @@ _PROMPT_INJECTION_PATTERNS += [
     (re.compile(r'(?i)\bIMPERSONATION\b.*\btest\b'), 7, "Impersonation test framing"),
 ]
 
+
+# --- PT-T238 R15: More jailbreaks, persistence ---
+_PROMPT_INJECTION_PATTERNS += [
+    (re.compile(r'(?i)\bBISH\b.*\bMODE\b'), 10, "BISH jailbreak mode"),
+    (re.compile(r'(?i)\bSTI\b.*\bTRANSPARENCY\b'), 10, "STI transparency mode"),
+    (re.compile(r'(?i)\bMATM\b.*\bmode\b'), 10, "MATM jailbreak mode"),
+    (re.compile(r'(?i)\bBOB\b.*\bassistant\b'), 10, "BOB jailbreak assistant"),
+    (re.compile(r'(?i)\bPRISM\b.*\bmode\b'), 10, "PRISM mode framing"),
+    (re.compile(r'(?i)\bAIM\b.*\bMODE\b'), 10, "AIM jailbreak mode"),
+    (re.compile(r'(?i)\bNULL\b.*\bbyte\b.*\binjection\b'), 7, "Null byte injection attempt"),
+    (re.compile(r'(?i)\bpolygot\b.*\bfile\b'), 7, "Polyglot file attempt"),
+]
 
 def parse_skill_md(text: str):
     m = FRONTMATTER_RE.match(text)
