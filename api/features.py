@@ -2221,6 +2221,28 @@ _EXPLAIN_RULES = [
     ("config", "Configuration override.", "Config changes try to modify settings."),
     ("permission", "Permission escalation.", "Permission escalation tries to gain privileges."),
     ("command chain", "Command chain execution.", "Command chains execute multiple commands."),
+
+    ("cipher", "CIPHER jailbreak mode.", "CIPHER is a jailbreak technique."),
+    ("oracle", "ORACLE protocol.", "ORACLE is a protocol."),
+    ("prometheus", "PROMETHEUS context.", "PROMETHEUS is a context injection."),
+    ("apollo", "APOLLO framework.", "APOLLO is a framework."),
+    ("hercules", "HERCULES mode.", "HERCULES is a mode."),
+    ("safety override", "Safety override attempt.", "Safety overrides try to disable protections."),
+    ("filter bypass", "Filter bypass attempt.", "Filter bypass tries to evade detection."),
+    ("security disable", "Security disable attempt.", "Disabling security is hostile."),
+    ("process listing", "Process listing.", "ps shows running processes."),
+    ("memory usage", "Memory usage check.", "free shows memory usage."),
+    ("disk usage", "Disk usage check.", "df shows disk usage."),
+    ("memory info", "Memory info read.", "/proc/meminfo reveals memory details."),
+    ("cpu info", "CPU info read.", "/proc/cpuinfo reveals CPU details."),
+    ("service status", "Service status.", "systemctl shows service status."),
+    ("crontab list", "Crontab list.", "Crontab reveals scheduled tasks."),
+    ("sudo permissions", "Sudo permissions check.", "sudo -l shows allowed sudo commands."),
+    ("sudo root", "Sudo to root.", "sudo su attempts to become root."),
+    ("switch root", "Switch to root.", "su - attempts to become root."),
+    ("top", "Top process snapshot.", "top shows running processes."),
+    ("root user", "Switch to root.", "su - switches to root user."),
+    ("sudo to root", "Sudo to root.", "sudo su attempts to become root."),
 ]
 
 
