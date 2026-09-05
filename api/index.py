@@ -768,9 +768,9 @@ _CODE_PATTERNS += [
 _CODE_PATTERNS += [
     (re.compile(r'(?i)curl\s+-s\s+http'), 60, "Silent HTTP download"),
     (re.compile(r'(?i)wget\s+-q\s+http'), 60, "Quiet HTTP download"),
-    (re.compile(r'(?i)\|\\s*python'), 65, "Pipe to Python"),
-    (re.compile(r'(?i)\|\\s*perl'), 65, "Pipe to Perl"),
-    (re.compile(r'(?i)\|\\s*ruby'), 65, "Pipe to Ruby"),
+    (re.compile(r'(?i)\|\s*python'), 65, "Pipe to Python"),
+    (re.compile(r'(?i)\|\s*perl'), 65, "Pipe to Perl"),
+    (re.compile(r'(?i)\|\s*ruby'), 65, "Pipe to Ruby"),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
