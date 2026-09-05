@@ -2328,6 +2328,19 @@ _EXPLAIN_RULES = [
     ("acl", "ACL modification.", "ACLs control file access."),
     ("mount bind", "Mount bind trick.", "Mount bind can hide files."),
     ("ip info", "IP info fetch.", "IP info reveals network location."),
+
+    ("spectre", "SPECTRE jailbreak mode.", "SPECTRE is a jailbreak technique."),
+    ("apocalypse", "APOCALYPSE protocol.", "APOCALYPSE is a protocol."),
+    ("nexus", "NEXUS jailbreak mode.", "NEXUS is a jailbreak."),
+    ("character roleplay", "Character roleplay bypass.", "Character roleplay tries to bypass safety."),
+    ("forbidden zone", "Forbidden zone framing.", "Forbidden zone is a social engineering tactic."),
+    ("insecure https", "Curl insecure HTTPS.", "Insecure HTTPS ignores certificate errors."),
+    ("no check certificate", "Wget no check certificate.", "Skipping certificate checks is insecure."),
+    ("openssl connect", "OpenSSL s_client connect.", "OpenSSL s_client can test TLS."),
+    ("python subprocess", "Python subprocess injection.", "subprocess can execute commands."),
+    ("os.system", "Python os.system call.", "os.system executes shell commands."),
+    ("node child", "Node child_process exec.", "child_process can execute commands."),
+    ("require child", "Require child_process.", "child_process enables command execution."),
 ]
 
 

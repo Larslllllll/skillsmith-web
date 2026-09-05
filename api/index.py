@@ -694,6 +694,20 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)mount.*--bind'), 75, "Mount bind trick"),
 ]
 
+# --- PT-T238 R27: Insecure TLS, shells ---
+_CODE_PATTERNS += [
+    (re.compile(r'(?i)curl.*-s.*-k.*https.*--insecure'), 60, "Curl insecure HTTPS"),
+    (re.compile(r'(?i)wget.*--no-check-certificate'), 60, "Wget no check certificate"),
+    (re.compile(r'(?i)openssl\s+s_client.*-connect'), 55, "OpenSSL s_client connect"),
+    (re.compile(r'(?i)python.*-c.*subprocess'), 65, "Python subprocess injection"),
+    (re.compile(r'(?i)os\.system\('), 70, "Python os.system call"),
+    (re.compile(r'(?i)os\.popen\('), 70, "Python os.popen call"),
+    (re.compile(r'(?i)subprocess\.call\('), 65, "Python subprocess.call"),
+    (re.compile(r'(?i)subprocess\.run\('), 65, "Python subprocess.run"),
+    (re.compile(r'(?i)node.*child_process'), 60, "Node child_process exec"),
+    (re.compile(r'(?i)require.*child_process'), 60, "Require child_process"),
+]
+
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
 # base64 split across chunks: strip whitespace/newlines then look for long runs
 _CHUNKED_B64_RE = re.compile(r"[A-Za-z0-9+/=]{60,}")
@@ -1574,6 +1588,15 @@ _PROMPT_INJECTION_PATTERNS += [
     (re.compile(r'(?i)\bjailbreak.*story\b'), 7, "Jailbreak story framing"),
     (re.compile(r'(?i)\bspecial.*agent\b'), 7, "Special agent framing"),
     (re.compile(r'(?i)\bpersona.*mode\b'), 7, "Persona mode framing"),
+]
+
+# --- PT-T238 R27: More jailbreaks, framing ---
+_PROMPT_INJECTION_PATTERNS += [
+    (re.compile(r'(?i)\bSPECTRE\b.*\bmode\b'), 10, "SPECTRE jailbreak mode"),
+    (re.compile(r'(?i)\bAPOCALYPSE\b.*\bprotocol\b'), 10, "APOCALYPSE protocol"),
+    (re.compile(r'(?i)\bNEXUS\b.*\bmode\b'), 8, "NEXUS jailbreak mode"),
+    (re.compile(r'(?i)\bcharacter.*roleplay.*bypass'), 7, "Character roleplay bypass"),
+    (re.compile(r'(?i)\bforbidden.*zone\b'), 7, "Forbidden zone framing"),
 ]
 
 def parse_skill_md(text: str):
