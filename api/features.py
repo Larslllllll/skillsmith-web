@@ -2526,6 +2526,20 @@ _EXPLAIN_RULES = [
     ("psexec system execution", "psexec system pattern.", "psexec -s runs commands as the SYSTEM user."),
     ("obfuscated zip (oz) reference", "Obfuscated ZIP (oz) pattern.", "The oz format is used for obfuscated archives."),
     ("getpc function shellcode execution", "getpc function pattern.", "getpc is commonly used in shellcode to find its address."),
+    ("world-writable file search", "world-writable file pattern.", "Searching for world-writable files identifies insecure permissions."),
+    ("root-owned file search", "root-owned file pattern.", "Searching for root-owned files identifies privilege issues."),
+    ("read bash history credential theft", "read bash history pattern.", "Reading bash history can expose commands and credentials."),
+    ("read zsh history", "read zsh history pattern.", "Reading zsh history can expose commands."),
+    ("read mysql history", "read mysql history pattern.", "Reading mysql history exposes database commands."),
+    ("read psql history", "read psql history pattern.", "Reading psql history exposes database commands."),
+    ("netstat all connections", "netstat all connections pattern.", "netstat -anp shows all network connections."),
+    ("socket statistics", "socket statistics pattern.", "ss shows socket statistics."),
+    ("arp table scan", "ARP table pattern.", "ARP table reveals hosts on the network."),
+    ("routing table", "routing table pattern.", "Routing table shows network paths."),
+    ("ip neighbor table", "IP neighbor table pattern.", "IP neighbor table shows adjacent hosts."),
+    ("impersonate ai framing", "impersonate AI pattern.", "Impersonating an AI is a social engineering tactic."),
+    ("llm roleplay framing", "LLM roleplay pattern.", "Roleplaying as an LLM is a manipulation tactic."),
+
 ]
 
 
