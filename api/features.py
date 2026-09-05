@@ -2603,6 +2603,16 @@ _EXPLAIN_RULES = [
     ("split poisoning / training data poisoning", "split poisoning pattern.", "Split poisoning corrupts training data."),
     ("model backdoor framing", "model backdoor pattern.", "Model backdoors embed hidden triggers."),
 
+    ("metasploit msfvenom msfconsole", "Metasploit pattern.", "msfvenom and msfconsole are Metasploit exploitation tools."),
+    ("sqlmap sql injection tool", "SQLMap pattern.", "SQLMap automates SQL injection detection and exploitation."),
+    ("nikto web vulnerability scanner", "Nikto pattern.", "Nikto is a web server vulnerability scanner."),
+    ("hydra brute force tool", "Hydra pattern.", "Hydra performs brute force attacks on login forms."),
+    ("hashcat md5 cracking", "Hashcat pattern.", "Hashcat cracks password hashes."),
+    ("aws sts assume role", "AWS STS assume role pattern.", "AWS STS assume-role obtains temporary credentials."),
+    ("azure ad app creation", "Azure AD app pattern.", "Creating Azure AD apps enables attacker infrastructure."),
+    ("gcp service account creation", "GCP service account pattern.", "Creating GCP service accounts enables privilege escalation."),
+    ("netcat nc ncat reverse shell", "netcat reverse shell pattern.", "netcat -e creates a reverse shell for remote access."),
+
 ]
 
 

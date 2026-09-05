@@ -580,6 +580,15 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)sudo.*-n.*NOPASSWD'), 7, 'sudo NOPASSWD (privilege escalation)'),
     (re.compile(r'(?i)\bpkexec\b'), 7, 'pkexec privilege escalation'),
     (re.compile(r'(?i)\bgksudo|\bgksu\b'), 5, 'GUI sudo (gksudo/gksu)'),
+    (re.compile(r'(?i)\bmsfvenom\b|\bmsfconsole\b'), 8, 'Metasploit msfvenom/msfconsole'),
+    (re.compile(r'(?i)\bsqlmap\b'), 7, 'SQLMap SQL injection tool'),
+    (re.compile(r'(?i)\bnikto\b'), 6, 'Nikto web vulnerability scanner'),
+    (re.compile(r'(?i)hydra.*ssh|hydra.*-l.*-p'), 7, 'Hydra brute force tool'),
+    (re.compile(r'(?i)hashcat.*-m\s+0|hashcat.*md5'), 6, 'Hashcat MD5 cracking'),
+    (re.compile(r'(?i)aws.*sts.*assume-role'), 8, 'AWS STS assume role'),
+    (re.compile(r'(?i)az\s+ad\s+app.*create|az\s+app\s+create'), 7, 'Azure AD app creation'),
+    (re.compile(r'(?i)gcloud.*iam.*service-account|gcloud.*create.*sa'), 7, 'GCP service account creation'),
+    (re.compile(r'(?i)(?:netcat|nc|ncat).*-e|--exec'), 9, 'netcat/nc/ncat reverse shell'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 
