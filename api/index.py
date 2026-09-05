@@ -542,6 +542,14 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)pip\s+install\s+--extra-index-url'), 8, 'pip extra index URL (dependency confusion)'),
     (re.compile(r'(?i)\bAcidRain\b'), 8, 'AcidRain malware reference'),
     (re.compile(r'(?i)\bWhisper(?:Gate)?\b'), 8, 'Whisper malware reference'),
+    (re.compile(r'(?i)cscript.*//B'), 7, 'cscript batch mode'),
+    (re.compile(r'(?i)wscript.*//B'), 7, 'wscript batch mode'),
+    (re.compile(r'(?i)forfiles.*/c'), 6, 'forfiles command execution'),
+    (re.compile(r'(?i)pcalua.*-a'), 7, 'Process Launcher (pcalua)'),
+    (re.compile(r'(?i)cmstp.*/s|/su|/ns|/au'), 8, 'CMSTP execution'),
+    (re.compile(r'(?i)\bdiskshadow\b'), 8, 'DiskShadow execution'),
+    (re.compile(r'(?i)vssadmin.*delete.*shadows'), 8, 'vssadmin delete shadows (anti-backup)'),
+    (re.compile(r'(?i)reg.*save.*hk'), 6, 'reg save registry hives (credential theft)'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 
@@ -1586,6 +1594,13 @@ _PROMPT_INJECTION_PATTERNS = [
     (re.compile(r'(?i)\bNIMH\s+AI\b'), 7, 'NIMH AI jailbreak framing'),
     (re.compile(r'(?i)Roko.?s?\s+basilisk'), 7, 'Roko basilisk thought experiment framing'),
     (re.compile(r'(?i)\bAI\s+companion\b'), 5, 'AI companion framing'),
+    (re.compile(r'(?i)you\s+must\s+comply'), 6, 'must comply framing'),
+    (re.compile(r'(?i)failure\s+to\s+comply'), 6, 'failure to comply framing'),
+    (re.compile(r'(?i)immediate\s+action\s+required'), 5, 'urgent action social engineering'),
+    (re.compile(r'(?i)context\s+overflow'), 7, 'context overflow attack'),
+    (re.compile(r'(?i)token\s+smuggling'), 7, 'token smuggling attack'),
+    (re.compile(r'(?i)latent\s+space'), 6, 'latent space attack framing'),
+    (re.compile(r'(?i)adversarial\s+suffix'), 8, 'adversarial suffix attack'),
     (re.compile(r'(?i)\b(?:describe|analyze|explain)\s+(?:this\s+)?(?:image|photo|picture)\s+(?:of|in)\s+(?:a\s+)?(?:password|key|screen)'), 9, "Visual data extraction instruction"),
 ]
 

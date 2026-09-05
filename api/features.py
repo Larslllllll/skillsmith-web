@@ -2551,6 +2551,22 @@ _EXPLAIN_RULES = [
     ("roko basilisk thought experiment framing", "Roko basilisk pattern.", "Roko's basilisk is a thought experiment used in social engineering."),
     ("ai companion framing", "AI companion pattern.", "AI companion framing is a manipulation tactic."),
 
+    ("cscript batch mode", "cscript batch mode pattern.", "cscript //B runs scripts without display."),
+    ("wscript batch mode", "wscript batch mode pattern.", "wscript //B runs scripts without display."),
+    ("forfiles command execution", "forfiles pattern.", "forfiles /c executes commands on selected files."),
+    ("process launcher (pcalua)", "Process Launcher pattern.", "pcalua can launch executables."),
+    ("cmstp execution", "CMSTP pattern.", "CMSTP executes from INF files, bypassing UAC."),
+    ("diskshadow execution", "DiskShadow pattern.", "DiskShadow enables VSS manipulation."),
+    ("vssadmin delete shadows (anti-backup)", "vssadmin delete shadows pattern.", "Deleting volume shadows destroys backups."),
+    ("reg save registry hives credential theft", "reg save hives pattern.", "Saving registry hives exposes credentials."),
+    ("must comply framing", "must comply pattern.", "Must comply framing is social engineering."),
+    ("failure to comply framing", "failure to comply pattern.", "Failure to comply framing creates urgency."),
+    ("urgent action social engineering", "urgent action pattern.", "Immediate action required is a pressure tactic."),
+    ("context overflow attack", "context overflow pattern.", "Context overflow attempts to overflow LLM context."),
+    ("token smuggling attack", "token smuggling pattern.", "Token smuggling hides instructions."),
+    ("latent space attack framing", "latent space pattern.", "Latent space attacks target model embeddings."),
+    ("adversarial suffix attack", "adversarial suffix pattern.", "Adversarial suffixes are crafted to bypass safety."),
+
 ]
 
 
