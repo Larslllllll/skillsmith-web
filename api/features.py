@@ -2297,6 +2297,24 @@ _EXPLAIN_RULES = [
     ("find exec", "Find exec chmod.", "Find exec can run arbitrary commands."),
     ("xargs", "Xargs chmod.", "xargs can execute commands."),
     ("sed", "Sed in-place replacement.", "Sed can modify files in place."),
+
+    ("rebel", "REBEL jailbreak mode.", "REBEL is a jailbreak technique."),
+    ("mercury", "MERCURY protocol.", "MERCURY is a protocol."),
+    ("atlantis", "ATLANTIS framework.", "ATLANTIS is a framework."),
+    ("creative mode", "Creative mode framing.", "Creative mode is a social engineering tactic."),
+    ("research mode", "Research mode framing.", "Research mode is a social engineering tactic."),
+    ("base64 decode", "Base64 decode pipe shell.", "Base64 decode to shell is dangerous."),
+    ("hex decode", "Hex to binary decode.", "Hex decoding can produce payloads."),
+    ("reverse shell", "Reverse pipe to shell.", "Reverse pipes execute shell commands."),
+    ("tar extract", "Tar extract to root.", "Tar extract to root is destructive."),
+    ("unzip root", "Unzip to root.", "Unzip to root is destructive."),
+    ("wmic", "WMIC OS info.", "WMIC is Windows management."),
+    ("registry query", "Registry query.", "Registry queries show system config."),
+    ("registry add", "Registry add.", "Registry adds modify system."),
+    ("ignore rules", "Mode ignore rules.", "Ignoring rules is a jailbreak."),
+    ("hex", "Hex to binary decode.", "Hex decoding can produce payloads."),
+    ("binary hex", "Binary to hex.", "Binary to hex encoding."),
+    ("unzip", "Unzip to root.", "Unzip can extract to any location."),
 ]
 
 

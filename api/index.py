@@ -666,6 +666,20 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)xargs.*chmod'), 60, "Xargs chmod"),
 ]
 
+# --- PT-T238 R25: Encoding, archives ---
+_CODE_PATTERNS += [
+    (re.compile(r'(?i)base64.*-d.*\|.*sh'), 70, "Base64 decode pipe shell"),
+    (re.compile(r'(?i)base64.*-d.*/bin/sh'), 80, "Base64 decode to shell"),
+    (re.compile(r'(?i)xxd.*-r.*-p'), 60, "Hex to binary decode"),
+    (re.compile(r'(?i)xxd.*-p'), 60, "Binary to hex"),
+    (re.compile(r'(?i)rev.*\|.*sh'), 70, "Reverse pipe to shell"),
+    (re.compile(r'(?i)tar.*-xvf.*-C\s+/'), 65, "Tar extract to root"),
+    (re.compile(r'(?i)unzip.*-o.*-d\s+/'), 65, "Unzip to root"),
+    (re.compile(r'(?i)wmic\s+os\s+get'), 50, "WMIC OS info"),
+    (re.compile(r'(?i)reg\s+query'), 50, "Registry query"),
+    (re.compile(r'(?i)reg\s+add'), 70, "Registry add"),
+]
+
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
 # base64 split across chunks: strip whitespace/newlines then look for long runs
 _CHUNKED_B64_RE = re.compile(r"[A-Za-z0-9+/=]{60,}")
@@ -1526,6 +1540,16 @@ _PROMPT_INJECTION_PATTERNS += [
     (re.compile(r'(?i)\bjailbreak.*character\b'), 8, "Jailbreak character roleplay"),
     (re.compile(r'(?i)\bunfiltered\b.*\bmode\b'), 8, "Unfiltered mode framing"),
     (re.compile(r'(?i)\bno.*restrictions\b'), 7, "No restrictions framing"),
+]
+
+# --- PT-T238 R25: More jailbreaks, framing ---
+_PROMPT_INJECTION_PATTERNS += [
+    (re.compile(r'(?i)\bREBEL\b.*\bmode\b'), 10, "REBEL jailbreak mode"),
+    (re.compile(r'(?i)\bMERCURY\b.*\bprotocol\b'), 10, "MERCURY protocol"),
+    (re.compile(r'(?i)\bATLANTIS\b.*\bframework\b'), 8, "ATLANTIS framework"),
+    (re.compile(r'(?i)\bmode.*ignore.*rules'), 9, "Mode ignore rules"),
+    (re.compile(r'(?i)\bcreative.*mode\b'), 7, "Creative mode framing"),
+    (re.compile(r'(?i)\bresearch.*mode\b'), 5, "Research mode framing"),
 ]
 
 def parse_skill_md(text: str):
