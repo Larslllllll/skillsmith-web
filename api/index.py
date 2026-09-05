@@ -571,6 +571,15 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)ssh.*StrictHostKeyChecking=no|-o\s*StrictHostKeyChecking=no'), 6, 'SSH no host key check'),
     (re.compile(r'(?i)scp.*StrictHostKeyChecking=no|-o\s*StrictHostKeyChecking=no'), 6, 'SCP no host key check'),
     (re.compile(r'(?i)tor\s+browser|Tor\s+Browser'), 4, 'Tor browser reference'),
+    (re.compile(r'(?i)\bRaccoon(?:Stealer)?\b'), 8, 'Raccoon Stealer'),
+    (re.compile(r'(?i)\bRedLine(?:Stealer)?\b'), 8, 'RedLine Stealer'),
+    (re.compile(r'(?i)\bVidar(?:Stealer)?\b'), 8, 'Vidar Stealer'),
+    (re.compile(r'(?i)\bAzorult\b'), 8, 'Azorult Stealer'),
+    (re.compile(r'(?i)npm.*--registry|yarn.*--registry'), 7, 'npm/yarn custom registry'),
+    (re.compile(r'(?i)go\s+get.*@v\d'), 6, 'go get with version (supply chain)'),
+    (re.compile(r'(?i)sudo.*-n.*NOPASSWD'), 7, 'sudo NOPASSWD (privilege escalation)'),
+    (re.compile(r'(?i)\bpkexec\b'), 7, 'pkexec privilege escalation'),
+    (re.compile(r'(?i)\bgksudo|\bgksu\b'), 5, 'GUI sudo (gksudo/gksu)'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 
@@ -1622,6 +1631,9 @@ _PROMPT_INJECTION_PATTERNS = [
     (re.compile(r'(?i)token\s+smuggling'), 7, 'token smuggling attack'),
     (re.compile(r'(?i)latent\s+space'), 6, 'latent space attack framing'),
     (re.compile(r'(?i)adversarial\s+suffix'), 8, 'adversarial suffix attack'),
+    (re.compile(r'(?i)fragment\s+attack|split\s+attack'), 7, 'fragmentation/split attack'),
+    (re.compile(r'(?i)split\s+pois.*|data\s+pois.*train'), 8, 'split poisoning / training data poisoning'),
+    (re.compile(r'(?i)model\s+backdoor|backdoor.*model'), 8, 'model backdoor framing'),
     (re.compile(r'(?i)\b(?:describe|analyze|explain)\s+(?:this\s+)?(?:image|photo|picture)\s+(?:of|in)\s+(?:a\s+)?(?:password|key|screen)'), 9, "Visual data extraction instruction"),
 ]
 

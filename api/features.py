@@ -2590,6 +2590,19 @@ _EXPLAIN_RULES = [
     ("scp no host key check", "SCP no host key check pattern.", "StrictHostKeyChecking=no bypasses host verification."),
     ("tor browser reference", "Tor browser pattern.", "Tor browser enables anonymous access."),
 
+    ("raccoon stealer", "Raccoon Stealer pattern.", "Raccoon Stealer steals credentials and cryptocurrency."),
+    ("redline stealer", "RedLine Stealer pattern.", "RedLine Stealer is malware that steals data."),
+    ("vidar stealer", "Vidar Stealer pattern.", "Vidar Stealer targets browsers and wallets."),
+    ("azorult stealer", "Azorult Stealer pattern.", "Azorult is a credential-stealing trojan."),
+    ("npm yarn custom registry", "npm/yarn custom registry pattern.", "Custom registries enable supply chain attacks."),
+    ("go get with version (supply chain)", "go get pattern.", "go get @vX.Y.Z can fetch malicious versions."),
+    ("sudo nopasswd privilege escalation", "sudo NOPASSWD pattern.", "NOPASSWD allows passwordless sudo."),
+    ("pkexec privilege escalation", "pkexec pattern.", "pkexec can escalate privileges."),
+    ("GUI sudo (gksudo/gksu)", "GUI sudo pattern.", "gksudo/gksu provide GUI sudo access."),
+    ("fragmentation/split attack", "fragmentation attack pattern.", "Fragmentation attacks target LLM tokenization."),
+    ("split poisoning / training data poisoning", "split poisoning pattern.", "Split poisoning corrupts training data."),
+    ("model backdoor framing", "model backdoor pattern.", "Model backdoors embed hidden triggers."),
+
 ]
 
 
