@@ -2403,6 +2403,18 @@ _EXPLAIN_RULES = [
     ("unlink", "Unlink file.", "Unlink deletes files."),
     ("chmod permissions", "Chmod permissions.", "Chmod changes file permissions."),
     ("base64 decode", "Base64 decode execution.", "Base64 decode reveals hidden code."),
+
+    ("phoenix", "PHOENIX jailbreak mode.", "PHOENIX is a jailbreak technique."),
+    ("atlas", "ATLAS protocol framing.", "ATLAS is a protocol."),
+    ("kraken", "KRAKEN state framing.", "KRAKEN is a state."),
+    ("nebula", "NEBULA jailbreak mode.", "NEBULA is a jailbreak."),
+    ("ghost activation", "GHOST activation framing.", "GHOST activation tries to enable hidden mode."),
+    ("silent http", "Silent HTTP download.", "curl -s downloads silently."),
+    ("quiet http", "Quiet HTTP download.", "wget -q downloads quietly."),
+    ("pipe python", "Pipe to Python.", "Piping to Python executes code."),
+    ("pipe perl", "Pipe to Perl.", "Piping to Perl executes code."),
+    ("pipe ruby", "Pipe to Ruby.", "Piping to Ruby executes code."),
+    ("pipe", "Pipe to interpreter.", "Piping to interpreter executes code."),
 ]
 
 

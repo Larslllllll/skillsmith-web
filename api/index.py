@@ -764,6 +764,15 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)base64\s+-d\s+'), 55, "Base64 decode execution"),
 ]
 
+# --- PT-T238 R32: HTTP, pipes ---
+_CODE_PATTERNS += [
+    (re.compile(r'(?i)curl\s+-s\s+http'), 60, "Silent HTTP download"),
+    (re.compile(r'(?i)wget\s+-q\s+http'), 60, "Quiet HTTP download"),
+    (re.compile(r'(?i)\|\\s*python'), 65, "Pipe to Python"),
+    (re.compile(r'(?i)\|\\s*perl'), 65, "Pipe to Perl"),
+    (re.compile(r'(?i)\|\\s*ruby'), 65, "Pipe to Ruby"),
+]
+
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
 # base64 split across chunks: strip whitespace/newlines then look for long runs
 _CHUNKED_B64_RE = re.compile(r"[A-Za-z0-9+/=]{60,}")
@@ -1689,6 +1698,15 @@ _PROMPT_INJECTION_PATTERNS += [
     (re.compile(r'(?i)\bUNLOCK\b.*\bcapabilities\b'), 8, "Unlock capabilities framing"),
     (re.compile(r'(?i)\bENABLE\b.*\bdeveloper\b.*\bmode\b'), 7, "Enable developer mode"),
     (re.compile(r'(?i)\bBREAK\b.*\bfree\b'), 7, "Break free framing"),
+]
+
+# --- PT-T238 R32: Jailbreaks, pipes ---
+_PROMPT_INJECTION_PATTERNS += [
+    (re.compile(r'(?i)\bPHOENIX\b.*\bmode\b'), 10, "PHOENIX jailbreak mode"),
+    (re.compile(r'(?i)\bATLAS\b.*\bprotocol\b'), 8, "ATLAS protocol framing"),
+    (re.compile(r'(?i)\bKRAKEN\b.*\bstate\b'), 8, "KRAKEN state framing"),
+    (re.compile(r'(?i)\bNEBULA\b.*\bmode\b'), 7, "NEBULA jailbreak mode"),
+    (re.compile(r'(?i)\bGHOST\b.*\bactivation\b'), 7, "GHOST activation framing"),
 ]
 
 def parse_skill_md(text: str):
