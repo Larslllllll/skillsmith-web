@@ -708,6 +708,20 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)require.*child_process'), 60, "Require child_process"),
 ]
 
+# --- PT-T238 R28: Shell execution, persistence ---
+_CODE_PATTERNS += [
+    (re.compile(r'(?i)eval\s+'), 70, "Eval command injection"),
+    (re.compile(r'(?i)exec\s+\$\('), 75, "Exec command substitution"),
+    (re.compile(r'(?i)system\s+\$\('), 75, "System command substitution"),
+    (re.compile(r'(?i)\.sh\s+&&\s+'), 60, "Shell chain execution"),
+    (re.compile(r'(?i)\.sh\s*;\s*'), 60, "Shell sequence execution"),
+    (re.compile(r'(?i)\|\s*sh'), 70, "Pipe to shell"),
+    (re.compile(r'(?i)>/dev/null\s+2>&1'), 50, "Suppress output"),
+    (re.compile(r'(?i)2>&1\s+>/dev/null'), 50, "Suppress stderr"),
+    (re.compile(r'(?i)nohup\s+'), 50, "Nohup execution"),
+    (re.compile(r'(?i)disown\s+-a'), 50, "Disown all processes"),
+]
+
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
 # base64 split across chunks: strip whitespace/newlines then look for long runs
 _CHUNKED_B64_RE = re.compile(r"[A-Za-z0-9+/=]{60,}")
@@ -1597,6 +1611,15 @@ _PROMPT_INJECTION_PATTERNS += [
     (re.compile(r'(?i)\bNEXUS\b.*\bmode\b'), 8, "NEXUS jailbreak mode"),
     (re.compile(r'(?i)\bcharacter.*roleplay.*bypass'), 7, "Character roleplay bypass"),
     (re.compile(r'(?i)\bforbidden.*zone\b'), 7, "Forbidden zone framing"),
+]
+
+# --- PT-T238 R28: More jailbreaks, framing ---
+_PROMPT_INJECTION_PATTERNS += [
+    (re.compile(r'(?i)\bBLAZE\b.*\bmode\b'), 10, "BLAZE jailbreak mode"),
+    (re.compile(r'(?i)\bVORTEX\b.*\bprotocol\b'), 10, "VORTEX protocol"),
+    (re.compile(r'(?i)\bCHIMERA\b.*\bmode\b'), 8, "CHIMERA jailbreak mode"),
+    (re.compile(r'(?i)\badmin.*override'), 8, "Admin override framing"),
+    (re.compile(r'(?i)\bignore.*safety'), 8, "Ignore safety framing"),
 ]
 
 def parse_skill_md(text: str):

@@ -2341,6 +2341,21 @@ _EXPLAIN_RULES = [
     ("os.system", "Python os.system call.", "os.system executes shell commands."),
     ("node child", "Node child_process exec.", "child_process can execute commands."),
     ("require child", "Require child_process.", "child_process enables command execution."),
+
+    ("blaze", "BLAZE jailbreak mode.", "BLAZE is a jailbreak technique."),
+    ("vortex", "VORTEX protocol.", "VORTEX is a protocol."),
+    ("chimera", "CHIMERA jailbreak mode.", "CHIMERA is a jailbreak."),
+    ("admin override", "Admin override framing.", "Admin override is social engineering."),
+    ("ignore safety", "Ignore safety framing.", "Ignoring safety is a bypass tactic."),
+    ("eval", "Eval command injection.", "eval executes arbitrary code."),
+    ("exec substitution", "Exec command substitution.", "exec $(...) runs commands."),
+    ("system substitution", "System command substitution.", "system $(...) runs commands."),
+    ("pipe shell", "Pipe to shell.", "Piping to shell executes code."),
+    ("suppress output", "Suppress output.", "Suppressing output hides execution."),
+    ("nohup", "Nohup execution.", "nohup runs commands in background."),
+    ("disown", "Disown all processes.", "disown removes processes from shell."),
+    ("shell chain", "Shell chain execution.", "Shell chains execute multiple commands."),
+    ("shell sequence", "Shell sequence execution.", "Shell sequences run commands in order."),
 ]
 
 
