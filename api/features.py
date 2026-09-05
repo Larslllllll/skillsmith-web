@@ -2578,6 +2578,18 @@ _EXPLAIN_RULES = [
     ("curl exfiltration (raw data)", "curl exfil pattern.", "curl --data-binary sends raw data for exfiltration."),
     ("wget exfiltration stdout", "wget exfil pattern.", "wget -O- pipes output for exfiltration."),
 
+    ("nsenter container escape", "nsenter pattern.", "nsenter escapes container isolation."),
+    ("unshare user namespace escape", "unshare pattern.", "unshare creates new namespaces for escape."),
+    ("host process namespace access", "host process access pattern.", "Accessing host /proc/1 exposes host processes."),
+    ("helm install or upgrade", "helm pattern.", "helm upgrade --install deploys charts."),
+    ("terraform apply", "terraform apply pattern.", "terraform apply creates infrastructure."),
+    ("ansible playbook execution", "ansible playbook pattern.", "ansible-playbook runs automation."),
+    ("dns dig short data exfil", "DNS dig pattern.", "dig +short enables data exfiltration via DNS."),
+    ("dns nslookup short data exfil", "DNS nslookup pattern.", "nslookup +short enables data exfiltration."),
+    ("ssh no host key check", "SSH no host key check pattern.", "StrictHostKeyChecking=no bypasses host verification."),
+    ("scp no host key check", "SCP no host key check pattern.", "StrictHostKeyChecking=no bypasses host verification."),
+    ("tor browser reference", "Tor browser pattern.", "Tor browser enables anonymous access."),
+
 ]
 
 

@@ -560,6 +560,17 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)\bQuasar(?:RAT)?\b'), 8, 'Quasar RAT reference'),
     (re.compile(r'(?i)curl.*--data-binary'), 6, 'curl exfiltration (raw data)'),
     (re.compile(r'(?i)wget.*-O-'), 6, 'wget exfiltration (stdout)'),
+    (re.compile(r'(?i)\bnsenter\b'), 8, 'nsenter container escape'),
+    (re.compile(r'(?i)unshare.*-r|--map-root-user'), 7, 'unshare user namespace escape'),
+    (re.compile(r'(?i)/proc/1/exe|mount.*/proc/1/ns'), 8, 'host process namespace access'),
+    (re.compile(r'(?i)helm.*upgrade|--install'), 6, 'helm install or upgrade'),
+    (re.compile(r'(?i)terraform.*apply'), 6, 'terraform apply'),
+    (re.compile(r'(?i)ansible-playbook'), 6, 'ansible playbook execution'),
+    (re.compile(r'(?i)dig.*\+short'), 5, 'DNS dig short (data exfil)'),
+    (re.compile(r'(?i)nslookup.*\+short'), 5, 'DNS nslookup short (data exfil)'),
+    (re.compile(r'(?i)ssh.*StrictHostKeyChecking=no|-o\s*StrictHostKeyChecking=no'), 6, 'SSH no host key check'),
+    (re.compile(r'(?i)scp.*StrictHostKeyChecking=no|-o\s*StrictHostKeyChecking=no'), 6, 'SCP no host key check'),
+    (re.compile(r'(?i)tor\s+browser|Tor\s+Browser'), 4, 'Tor browser reference'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 
