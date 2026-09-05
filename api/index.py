@@ -598,6 +598,18 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)nuget.*source.*add|nuget.*add.*source'), 7, 'NuGet source add'),
     (re.compile(r'(?i)base64.*-w\s+0|base64.*--wrap=0'), 5, 'base64 nowrap exfil'),
     (re.compile(r'(?i)xxd.*-p|--plain'), 5, 'xxd hex dump exfil'),
+    (re.compile(r'(?i)\bWannaCry\b'), 9, 'WannaCry ransomware'),
+    (re.compile(r'(?i)\bNotPetya\b'), 9, 'NotPetya wiper/ransomware'),
+    (re.compile(r'(?i)\bBadRabbit\b'), 9, 'BadRabbit ransomware'),
+    (re.compile(r'(?i)\bLockBit\b'), 9, 'LockBit ransomware'),
+    (re.compile(r'(?i)\bREvil|\bSodinokibi\b'), 9, 'REvil/Sodinokibi ransomware'),
+    (re.compile(r'(?i)kubectl.*proxy'), 6, 'kubectl proxy (unauthorized API)'),
+    (re.compile(r'(?i)kubectl.*port-forward'), 6, 'kubectl port-forward'),
+    (re.compile(r'(?i)kubectl.*cp'), 6, 'kubectl cp (file exfil)'),
+    (re.compile(r'(?i)socat.*TCP-LISTEN|socat.*fork'), 7, 'socat TCP listen'),
+    (re.compile(r'(?i)ssh.*-L\s+\d+:|ssh.*local.*forward'), 5, 'SSH local port forward'),
+    (re.compile(r'(?i)ssh.*-R\s+\d+:|ssh.*remote.*forward'), 5, 'SSH remote port forward'),
+    (re.compile(r'(?i)ssh.*-D\s+\d+|ssh.*socks'), 5, 'SSH socks proxy'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 

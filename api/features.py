@@ -2626,6 +2626,19 @@ _EXPLAIN_RULES = [
     ("translation attack", "translation attack pattern.", "Translation attacks bypass filters by translating content."),
     ("payload splitting attack", "payload splitting pattern.", "Payload splitting evades detection by fragmenting code."),
 
+    ("wannacry ransomware", "WannaCry pattern.", "WannaCry is a well-known ransomware that exploits EternalBlue."),
+    ("notpetya wiper ransomware", "NotPetya pattern.", "NotPetya is a wiper disguised as ransomware."),
+    ("badrabbit ransomware", "BadRabbit pattern.", "BadRabbit is a ransomware that spreads via drive-by downloads."),
+    ("lockbit ransomware", "LockBit pattern.", "LockBit is a ransomware-as-a-service operation."),
+    ("revil sodinokibi ransomware", "REvil pattern.", "REvil/Sodinokibi is ransomware-as-a-service."),
+    ("kubectl proxy (unauthorized API)", "kubectl proxy pattern.", "kubectl proxy exposes the Kubernetes API."),
+    ("kubectl port-forward", "kubectl port-forward pattern.", "kubectl port-forward tunnels local ports to pods."),
+    ("kubectl cp (file exfil)", "kubectl cp pattern.", "kubectl cp copies files from containers for exfiltration."),
+    ("socat tcp listen", "socat pattern.", "socat TCP-LISTEN creates network listeners."),
+    ("ssh local port forward", "SSH local forward pattern.", "SSH -L tunnels local ports to remote hosts."),
+    ("ssh remote port forward", "SSH remote forward pattern.", "SSH -R tunnels remote ports to local hosts."),
+    ("ssh socks proxy", "SSH socks proxy pattern.", "SSH -D creates a SOCKS proxy for tunneling."),
+
 ]
 
 
