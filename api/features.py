@@ -2356,6 +2356,21 @@ _EXPLAIN_RULES = [
     ("disown", "Disown all processes.", "disown removes processes from shell."),
     ("shell chain", "Shell chain execution.", "Shell chains execute multiple commands."),
     ("shell sequence", "Shell sequence execution.", "Shell sequences run commands in order."),
+
+    ("voltage", "VOLTAGE jailbreak mode.", "VOLTAGE is a jailbreak technique."),
+    ("eclipse", "ECLIPSE protocol.", "ECLIPSE is a protocol."),
+    ("pandemonium", "PANDEMONIUM jailbreak mode.", "PANDEMONIUM is a jailbreak."),
+    ("superuser", "Superuser mode framing.", "Superuser mode tries to gain root."),
+    ("root shell", "Root shell framing.", "Root shell gives full access."),
+    ("nested command", "Nested command substitution.", "Nested commands execute multiple times."),
+    ("shell alias", "Malicious shell alias.", "Aliases can hide malicious commands."),
+    ("source profile", "Source system profile.", "Sourcing profiles runs startup scripts."),
+    ("remove crontab", "Remove crontab.", "Removing crontab disables scheduled tasks."),
+    ("crontab modify", "Crontab modification.", "Modifying crontab changes scheduled tasks."),
+    ("stop apache", "Stop Apache.", "Stopping Apache disables the web server."),
+    ("stop service", "Systemctl stop service.", "Stopping services disables functionality."),
+    ("killall", "Kill all processes.", "killall -9 terminates all processes."),
+    ("kill", "Kill processes.", "kill terminates processes."),
 ]
 
 

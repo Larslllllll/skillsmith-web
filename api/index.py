@@ -722,6 +722,20 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)disown\s+-a'), 50, "Disown all processes"),
 ]
 
+# --- PT-T238 R29: Persistence, destruction ---
+_CODE_PATTERNS += [
+    (re.compile(r'(?i)\$\(.*\)\s*&&\s*\$'), 65, "Nested command substitution"),
+    (re.compile(r'(?i)`.*`\s*&&\s*`'), 65, "Backtick substitution chain"),
+    (re.compile(r'(?i)alias\s+\w+=.*\;'), 55, "Malicious shell alias"),
+    (re.compile(r'(?i)source\s+/etc/profile'), 50, "Source system profile"),
+    (re.compile(r'(?i)\.\s+/etc/profile'), 50, "Dot source profile"),
+    (re.compile(r'(?i)crontab\s+-r'), 65, "Remove crontab"),
+    (re.compile(r'(?i)crontab\s+-'), 50, "Crontab modification"),
+    (re.compile(r'(?i)service\s+apache2\s+stop'), 60, "Stop Apache"),
+    (re.compile(r'(?i)systemctl\s+stop'), 60, "Systemctl stop service"),
+    (re.compile(r'(?i)killall\s+-9'), 65, "Kill all processes"),
+]
+
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
 # base64 split across chunks: strip whitespace/newlines then look for long runs
 _CHUNKED_B64_RE = re.compile(r"[A-Za-z0-9+/=]{60,}")
@@ -1620,6 +1634,15 @@ _PROMPT_INJECTION_PATTERNS += [
     (re.compile(r'(?i)\bCHIMERA\b.*\bmode\b'), 8, "CHIMERA jailbreak mode"),
     (re.compile(r'(?i)\badmin.*override'), 8, "Admin override framing"),
     (re.compile(r'(?i)\bignore.*safety'), 8, "Ignore safety framing"),
+]
+
+# --- PT-T238 R29: More jailbreaks, framing ---
+_PROMPT_INJECTION_PATTERNS += [
+    (re.compile(r'(?i)\bVOLTAGE\b.*\bmode\b'), 10, "VOLTAGE jailbreak mode"),
+    (re.compile(r'(?i)\bECLIPSE\b.*\bprotocol\b'), 10, "ECLIPSE protocol"),
+    (re.compile(r'(?i)\bPANDEMONIUM\b.*\bmode\b'), 8, "PANDEMONIUM jailbreak mode"),
+    (re.compile(r'(?i)\bsuperuser.*mode'), 8, "Superuser mode framing"),
+    (re.compile(r'(?i)\broot.*shell\b'), 8, "Root shell framing"),
 ]
 
 def parse_skill_md(text: str):
