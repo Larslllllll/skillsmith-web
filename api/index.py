@@ -511,6 +511,17 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)\bBrute\s+Ratel\b'), 8, 'Brute Ratel C2 framework'),
     (re.compile(r'(?i)\bKoadic\b'), 7, 'Koadic C2 framework'),
     (re.compile(r'(?i)\bPupy\b'), 7, 'Pupy RAT reference'),
+    (re.compile(r'(?i)\bUUEncode\b'), 5, 'UUEncode encoding reference'),
+    (re.compile(r'(?i)\bXXEncode\b'), 5, 'XXEncode encoding reference'),
+    (re.compile(r'(?i)\bIntel\s+HEX\b'), 5, 'Intel HEX format reference'),
+    (re.compile(r'(?i)\bshellcode\b'), 7, 'shellcode reference'),
+    (re.compile(r'(?i)\boz\b'), 5, 'Obfuscated ZIP (oz) reference'),
+    (re.compile(r'(?i)data:text/html'), 7, 'data: URI with HTML (XSS vector)'),
+    (re.compile(r'(?i)\bCDATA\b'), 6, 'CDATA section injection'),
+    (re.compile(r'(?i)capsh.*--add|--caps=.*effective'), 7, 'capsh add Linux capability'),
+    (re.compile(r'(?i)\bgetpc\b'), 7, 'getpc function (shellcode execution)'),
+    (re.compile(r'(?i)winexe.*//'), 7, 'winexe remote Windows execution'),
+    (re.compile(r'(?i)psexec.*-s\b'), 7, 'psexec system execution'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 

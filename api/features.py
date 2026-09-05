@@ -2513,6 +2513,19 @@ _EXPLAIN_RULES = [
     ("brute ratel c2 framework", "Brute Ratel C2 framework.", "Brute Ratel is a C2 framework."),
     ("koadic c2 framework", "Koadic C2 framework.", "Koadic is a C2 framework."),
     ("pupy rat reference", "Pupy RAT reference.", "Pupy is a remote access trojan."),
+    ("uuencode encoding reference", "UUEncode encoding pattern.", "UUEncode is a binary-to-text encoding similar to Base64."),
+    ("xxencode encoding reference", "XXEncode encoding pattern.", "XXEncode is a binary-to-text encoding."),
+    ("intel hex format reference", "Intel HEX format pattern.", "Intel HEX is a format for encoding binary data."),
+    ("shellcode reference", "shellcode pattern.", "Shellcode is machine code used in exploits."),
+    ("oz obfuscated zip reference", "Obfuscated ZIP (oz) pattern.", "The oz format is used for obfuscated archives."),
+    ("data uri with html xss vector", "data: URI with HTML pattern.", "data: URIs can embed HTML/JavaScript for XSS."),
+    ("cdata section injection", "CDATA injection pattern.", "CDATA sections can be used for XML injection."),
+    ("capsh add linux capability", "capsh add capability pattern.", "capsh can add Linux capabilities for privilege escalation."),
+    ("getpc function (shellcode execution)", "getpc function pattern.", "getpc is commonly used in shellcode to find its address."),
+    ("winexe remote windows execution", "winexe pattern.", "winexe executes commands on Windows systems remotely."),
+    ("psexec system execution", "psexec system pattern.", "psexec -s runs commands as the SYSTEM user."),
+    ("obfuscated zip (oz) reference", "Obfuscated ZIP (oz) pattern.", "The oz format is used for obfuscated archives."),
+    ("getpc function shellcode execution", "getpc function pattern.", "getpc is commonly used in shellcode to find its address."),
 ]
 
 
