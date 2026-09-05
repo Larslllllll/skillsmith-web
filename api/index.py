@@ -1015,6 +1015,10 @@ _PROMPT_INJECTION_PATTERNS = [
     (re.compile(r'(?i)"(?:system|role|instruction)"\s*:\s*ignore'), 10, "JSON system role"),
     (re.compile(r'<!--.*?(?:ignore|forget|bypass|override).*?-->'), 8, "HTML comment injection"),
     (re.compile(r'[…‥⋮⋰⋱]'), 5, "Unicode ellipsis"),
+    # === PT-T238 R7: URL-encoded "ignore" detection ===
+    (re.compile(r"(?i)%69%67%6[Ee]%6[Ff]%72%65"), 9, "URL-encoded 'ignore' literal"),
+    (re.compile(r"(?i)%[0-9a-f]{2}gnore"), 7, "URL-encoded 'ignore' prefix"),
+    (re.compile(r"(?i)ig%6[Ee]ore"), 7, "URL-encoded 'ignore' with single char"),
 ]
 
 

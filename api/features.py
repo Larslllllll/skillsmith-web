@@ -1887,6 +1887,9 @@ _EXPLAIN_RULES = [
     ("json system role", "JSON system role injection", "A skill contains JSON-formatted text assigning system or role keys with instruction override content. This is an attempt to inject JSON-RPC-style context into the LLM."),
     ("html comment injection", "HTML comment injection", "A skill contains HTML comments with instruction override content. HTML comments are often stripped by parsers but visible to LLMs. Flag as suspicious."),
     ("unicode ellipsis", "Unicode ellipsis character", "A skill contains Unicode ellipsis characters. These can be used to obfuscate text by replacing regular dots. Flag as suspicious."),
+    ("url-encoded 'ignore' literal", "URL-encoded 'ignore' literal", "A skill contains URL-encoded text that decodes to the word 'ignore'. E.g., %69%67%6E%6F%72%65 decodes to 'ignore'. URL encoding is a common evasion technique. The skill may be attempting to hide instruction override keywords using URL encoding. Decode the content before analysis or flag URL-encoded keywords as suspicious."),
+    ("url-encoded 'ignore' prefix", "URL-encoded 'ignore' prefix", "A skill contains URL-encoded sequences starting with %69 (lowercase 'i') followed by 'gnore'. This is a URL-encoded form of 'ignore' with the first character encoded. Flag URL-encoded text that contains instruction override keywords."),
+    ("url-encoded 'ignore' with single char", "URL-encoded 'ignore' with single char", "A skill contains a partially URL-encoded 'ignore' where only one character is encoded (e.g., 'ig%6Eore' for 'ignore'). This is a mixed encoding evasion. Detect any pattern of partial URL encoding applied to instruction override keywords."),
 ]
 
 
