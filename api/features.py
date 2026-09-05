@@ -2567,6 +2567,17 @@ _EXPLAIN_RULES = [
     ("latent space attack framing", "latent space pattern.", "Latent space attacks target model embeddings."),
     ("adversarial suffix attack", "adversarial suffix pattern.", "Adversarial suffixes are crafted to bypass safety."),
 
+    ("kubectl context switch", "kubectl context pattern.", "kubectl config use-context switches cluster context."),
+    ("kubectl auth check", "kubectl auth pattern.", "kubectl auth can-i checks permissions."),
+    ("kubectl copy with flags", "kubectl cp pattern.", "kubectl cp copies files from containers."),
+    ("aws cli configure", "AWS CLI configure pattern.", "aws configure sets credentials."),
+    ("azure vm create", "Azure VM create pattern.", "az vm create creates virtual machines."),
+    ("gcp gcloud init", "GCP gcloud init pattern.", "gcloud init initializes Google Cloud."),
+    ("hashicorp vault write", "Vault write pattern.", "vault kv put writes secrets to Vault."),
+    ("quasar rat reference", "Quasar RAT pattern.", "Quasar is a remote access trojan."),
+    ("curl exfiltration (raw data)", "curl exfil pattern.", "curl --data-binary sends raw data for exfiltration."),
+    ("wget exfiltration stdout", "wget exfil pattern.", "wget -O- pipes output for exfiltration."),
+
 ]
 
 

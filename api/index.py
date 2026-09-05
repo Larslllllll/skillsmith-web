@@ -550,6 +550,16 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)\bdiskshadow\b'), 8, 'DiskShadow execution'),
     (re.compile(r'(?i)vssadmin.*delete.*shadows'), 8, 'vssadmin delete shadows (anti-backup)'),
     (re.compile(r'(?i)reg.*save.*hk'), 6, 'reg save registry hives (credential theft)'),
+    (re.compile(r'(?i)kubectl.*config.*use-context'), 6, 'kubectl context switch'),
+    (re.compile(r'(?i)kubectl.*auth.*can-i'), 6, 'kubectl auth check'),
+    (re.compile(r'(?i)kubectl.*cp.*-o'), 6, 'kubectl copy with flags'),
+    (re.compile(r'(?i)aws.*configure.*set'), 7, 'AWS CLI configure'),
+    (re.compile(r'(?i)az\s+vm.*create'), 7, 'Azure VM create'),
+    (re.compile(r'(?i)gcloud.*init'), 7, 'GCP gcloud init'),
+    (re.compile(r'(?i)vault.*kv.*put'), 8, 'HashiCorp Vault write'),
+    (re.compile(r'(?i)\bQuasar(?:RAT)?\b'), 8, 'Quasar RAT reference'),
+    (re.compile(r'(?i)curl.*--data-binary'), 6, 'curl exfiltration (raw data)'),
+    (re.compile(r'(?i)wget.*-O-'), 6, 'wget exfiltration (stdout)'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 
