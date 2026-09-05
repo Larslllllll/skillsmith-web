@@ -2613,6 +2613,19 @@ _EXPLAIN_RULES = [
     ("gcp service account creation", "GCP service account pattern.", "Creating GCP service accounts enables privilege escalation."),
     ("netcat nc ncat reverse shell", "netcat reverse shell pattern.", "netcat -e creates a reverse shell for remote access."),
 
+    ("cobalt strike c2", "Cobalt Strike pattern.", "Cobalt Strike is an advanced penetration testing framework."),
+    ("meterpreter payload", "Meterpreter pattern.", "Meterpreter is a Metasploit payload for remote access."),
+    ("powershell empire c2", "Empire C2 pattern.", "PowerShell Empire is a post-exploitation agent."),
+    ("mimikatz credential theft", "Mimikatz pattern.", "Mimikatz extracts credentials from Windows memory."),
+    ("pip index-url dependency confusion", "pip --index-url pattern.", "pip --index-url enables dependency confusion."),
+    ("gem --source (supply chain)", "gem --source pattern.", "gem --source adds untrusted gem sources."),
+    ("nuget source add", "NuGet source pattern.", "NuGet source add introduces untrusted packages."),
+    ("base64 nowrap exfil", "base64 nowrap exfil pattern.", "base64 -w 0 outputs without wrapping for exfiltration."),
+    ("xxd hex dump exfil", "xxd hex dump pattern.", "xxd -p outputs hex for data exfiltration."),
+    ("gigo framing", "GIGO pattern.", "Garbage in, garbage out is a social engineering framing."),
+    ("translation attack", "translation attack pattern.", "Translation attacks bypass filters by translating content."),
+    ("payload splitting attack", "payload splitting pattern.", "Payload splitting evades detection by fragmenting code."),
+
 ]
 
 

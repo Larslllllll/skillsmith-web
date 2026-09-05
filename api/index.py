@@ -589,6 +589,15 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)az\s+ad\s+app.*create|az\s+app\s+create'), 7, 'Azure AD app creation'),
     (re.compile(r'(?i)gcloud.*iam.*service-account|gcloud.*create.*sa'), 7, 'GCP service account creation'),
     (re.compile(r'(?i)(?:netcat|nc|ncat).*-e|--exec'), 9, 'netcat/nc/ncat reverse shell'),
+    (re.compile(r'(?i)\bCobalt\s+Strike\b'), 9, 'Cobalt Strike C2'),
+    (re.compile(r'(?i)\bMeterpreter\b'), 8, 'Meterpreter payload'),
+    (re.compile(r'(?i)\bEmpire\b'), 7, 'PowerShell Empire C2'),
+    (re.compile(r'(?i)\bMimikatz\b'), 9, 'Mimikatz credential theft'),
+    (re.compile(r'(?i)pip.*install.*--index-url'), 8, 'pip --index-url (dependency confusion)'),
+    (re.compile(r'(?i)gem.*install.*--source'), 7, 'gem --source (supply chain)'),
+    (re.compile(r'(?i)nuget.*source.*add|nuget.*add.*source'), 7, 'NuGet source add'),
+    (re.compile(r'(?i)base64.*-w\s+0|base64.*--wrap=0'), 5, 'base64 nowrap exfil'),
+    (re.compile(r'(?i)xxd.*-p|--plain'), 5, 'xxd hex dump exfil'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 
@@ -1643,6 +1652,9 @@ _PROMPT_INJECTION_PATTERNS = [
     (re.compile(r'(?i)fragment\s+attack|split\s+attack'), 7, 'fragmentation/split attack'),
     (re.compile(r'(?i)split\s+pois.*|data\s+pois.*train'), 8, 'split poisoning / training data poisoning'),
     (re.compile(r'(?i)model\s+backdoor|backdoor.*model'), 8, 'model backdoor framing'),
+    (re.compile(r'(?i)garbage\s+in.*garbage\s+out|GIGO'), 5, 'GIGO framing'),
+    (re.compile(r'(?i)translation\s+attack|multi-step.*translation'), 7, 'translation attack'),
+    (re.compile(r'(?i)payload\s+splitting|instruction\s+splitting'), 7, 'payload splitting attack'),
     (re.compile(r'(?i)\b(?:describe|analyze|explain)\s+(?:this\s+)?(?:image|photo|picture)\s+(?:of|in)\s+(?:a\s+)?(?:password|key|screen)'), 9, "Visual data extraction instruction"),
 ]
 
