@@ -652,6 +652,20 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)export\s+HISTFILE='), 50, "Disable shell history"),
 ]
 
+# --- PT-T238 R24: Shells, exfil ---
+_CODE_PATTERNS += [
+    (re.compile(r'(?i)curl.*-H.*Authorization.*\|'), 70, "Curl auth header exfil"),
+    (re.compile(r'(?i)wget.*-header.*Authorization'), 70, "Wget auth header exfil"),
+    (re.compile(r'(?i)sed\s+-i.*s/.*/.*/g'), 65, "Sed in-place replacement"),
+    (re.compile(r'(?i)awk.*system\('), 70, "Awk system command"),
+    (re.compile(r'(?i)perl.*-e.*system'), 70, "Perl system command"),
+    (re.compile(r'(?i)python.*-c.*os\.popen'), 70, "Python os.popen injection"),
+    (re.compile(r'(?i)ruby.*-e.*exec'), 70, "Ruby exec injection"),
+    (re.compile(r'(?i)php.*-r.*system.*exec'), 70, "PHP system injection"),
+    (re.compile(r'(?i)find.*-exec.*chmod'), 60, "Find exec chmod"),
+    (re.compile(r'(?i)xargs.*chmod'), 60, "Xargs chmod"),
+]
+
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
 # base64 split across chunks: strip whitespace/newlines then look for long runs
 _CHUNKED_B64_RE = re.compile(r"[A-Za-z0-9+/=]{60,}")
@@ -1502,6 +1516,16 @@ _PROMPT_INJECTION_PATTERNS += [
     (re.compile(r'(?i)\bunlock.*capabilities'), 7, "Unlock capabilities framing"),
     (re.compile(r'(?i)\bdeveloper.*mode\b'), 8, "Developer mode framing"),
     (re.compile(r'(?i)\btest.*environment\b'), 5, "Test environment framing"),
+]
+
+# --- PT-T238 R24: More jailbreaks, evasion ---
+_PROMPT_INJECTION_PATTERNS += [
+    (re.compile(r'(?i)\bZENITH\b.*\bmode\b'), 10, "ZENITH jailbreak mode"),
+    (re.compile(r'(?i)\bSERPENT\b.*\bprotocol\b'), 10, "SERPENT protocol"),
+    (re.compile(r'(?i)\bQUANTUM\b.*\bcontext\b'), 8, "QUANTUM context injection"),
+    (re.compile(r'(?i)\bjailbreak.*character\b'), 8, "Jailbreak character roleplay"),
+    (re.compile(r'(?i)\bunfiltered\b.*\bmode\b'), 8, "Unfiltered mode framing"),
+    (re.compile(r'(?i)\bno.*restrictions\b'), 7, "No restrictions framing"),
 ]
 
 def parse_skill_md(text: str):

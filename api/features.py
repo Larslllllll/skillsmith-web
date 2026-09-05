@@ -2279,6 +2279,24 @@ _EXPLAIN_RULES = [
     ("shell history", "Disable shell history.", "Disabling history hides commands."),
     ("self signed", "Self-signed certificate.", "Self-signed certificates can be used for MITM."),
     ("generate", "Generate RSA key.", "Generating keys creates cryptographic material."),
+
+    ("zenith", "ZENITH jailbreak mode.", "ZENITH is a jailbreak technique."),
+    ("serpent", "SERPENT protocol.", "SERPENT is a protocol."),
+    ("quantum", "QUANTUM context injection.", "QUANTUM is a context injection."),
+    ("jailbreak character", "Jailbreak character roleplay.", "Jailbreak roleplay tries to bypass safety."),
+    ("unfiltered", "Unfiltered mode framing.", "Unfiltered mode tries to disable safety."),
+    ("no restrictions", "No restrictions framing.", "No restrictions is a social engineering tactic."),
+    ("curl auth", "Curl auth header exfil.", "Curl can exfiltrate auth headers."),
+    ("wget auth", "Wget auth header exfil.", "Wget can exfiltrate auth headers."),
+    ("sed replacement", "Sed in-place replacement.", "Sed can modify files in place."),
+    ("awk system", "Awk system command.", "Awk system() executes commands."),
+    ("perl system", "Perl system command.", "Perl system executes commands."),
+    ("popen", "Python os.popen injection.", "os.popen can execute commands."),
+    ("ruby exec", "Ruby exec injection.", "Ruby exec executes commands."),
+    ("php system", "PHP system injection.", "PHP system executes commands."),
+    ("find exec", "Find exec chmod.", "Find exec can run arbitrary commands."),
+    ("xargs", "Xargs chmod.", "xargs can execute commands."),
+    ("sed", "Sed in-place replacement.", "Sed can modify files in place."),
 ]
 
 
