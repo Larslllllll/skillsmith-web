@@ -458,14 +458,16 @@ def handle_jsonrpc(req: dict, client_ip: str = "") -> tuple[int, dict]:
     not deployed as its own serverless function. Returns (http_status,
     response_body_dict)."""
     # PT-T177: JSON-RPC 2.0 spec section 4.1 requires -32600 Invalid Request
-    # when the "jsonrpc" field is present but not exactly "2.0".
-    # Previously accepted any version string (1.0, 99.0, etc.).
+    # when the "jsonrpc" field is absent or not exactly "2.0".
     rpc_version = req.get("jsonrpc")
-    if rpc_version is not None and rpc_version != "2.0":
+    if rpc_version is None:
+        return 200, {"jsonrpc": "2.0", "id": req.get("id"),
+                      "error": {"code": -32600, "message": "Invalid Request: missing required 'jsonrpc' field (must be '2.0')"}}
+    if rpc_version != "2.0":
         return 200, {"jsonrpc": "2.0", "id": req.get("id"),
                       "error": {"code": -32600, "message": f"Invalid Request: unsupported jsonrpc version '{rpc_version}', only 2.0 is supported"}}
     req_id = req.get("id")
-    rpc_method = req.get("method", "")
+    rpc_method = req.get("method") or ""
     # PT-T33: JSON-RPC notifications (no id) must not produce a response.
     if "id" not in req:
         return 204, None
@@ -508,6 +510,6 @@ def handle_jsonrpc(req: dict, client_ip: str = "") -> tuple[int, dict]:
     elif rpc_method == "ping":
         result = {}
     else:
-        return 200, {"jsonrpc": "2.0", "id": req_id, "error": {"code": -32601, "message": f"Method not found: {rpc_method}"}}
+        return 200, {"jsonrpc": "2.0", "id": req_id, "error": {"code": -32601, "message": f"Method not found: {rpc_method!r}"}}
 
     return 200, {"jsonrpc": "2.0", "id": req_id, "result": result}

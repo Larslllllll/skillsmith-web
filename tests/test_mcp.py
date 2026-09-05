@@ -53,14 +53,15 @@ def test_jsonrpc_version_2_string_rejected():
     assert body["error"]["code"] == -32600
 
 
-def test_jsonrpc_missing_defaults_to_2_0():
-    """PT-T177: missing jsonrpc field still works (spec allows optional)."""
+def test_jsonrpc_missing_returns_32600():
+    """PT-T237: missing jsonrpc field returns -32600 per spec §4.1."""
     status, body = mcp_mod.handle_jsonrpc(
         {"id": 1, "method": "tools/list"}
     )
     assert status == 200
-    assert "result" in body
-    assert "tools" in body["result"]
+    assert "error" in body
+    assert body["error"]["code"] == -32600
+    assert "missing required" in body["error"]["message"]
 
 
 def test_jsonrpc_notification_no_response():

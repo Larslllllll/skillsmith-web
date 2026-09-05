@@ -551,18 +551,22 @@ function getApiKey() { return localStorage.getItem('skillsmith-api-key') || ''; 
 })();
 
 async function doSignup() {
-  const res = await fetch('/api/signup', { method: 'POST' });
-  const data = await res.json();
-  if (data.api_key) {
-    localStorage.setItem('skillsmith-api-key', data.api_key);
-    alert('Account created. Your key (also saved in this browser):\n\n' + data.api_key +
-      '\n\nCopy it and paste it into skillsmith-web on your other device (via "show my key" -> '+
-      'there is no login form yet, so for now: open this page on your phone, run '+
-      'localStorage.setItem(\'skillsmith-api-key\',\'' + data.api_key + '\') once in its console, '+
-      'or ask us to add a proper paste-a-key box -- tracked as a follow-up).');
-    refreshAccountBar();
-  } else {
-    alert('Signup failed: ' + (data.error || 'unknown error'));
+  try {
+    const res = await fetch('/api/signup', { method: 'POST' });
+    const data = await res.json();
+    if (data.api_key) {
+      localStorage.setItem('skillsmith-api-key', data.api_key);
+      alert('Account created. Your key (also saved in this browser):\n\n' + data.api_key +
+        '\n\nCopy it and paste it into skillsmith-web on your other device (via "show my key" -> '+
+        'there is no login form yet, so for now: open this page on your phone, run '+
+        'localStorage.setItem(\'skillsmith-api-key\',\'' + data.api_key + '\') once in its console, '+
+        'or ask us to add a proper paste-a-key box -- tracked as a follow-up).');
+      refreshAccountBar();
+    } else {
+      alert('Signup failed: ' + (data.error || 'unknown error'));
+    }
+  } catch (e) {
+    alert('Signup request failed: ' + (e && e.message ? e.message : 'network error') + '. Check your connection and retry.');
   }
 }
 
@@ -588,17 +592,21 @@ async function activatePro() {
     '(Testing? Use any value starting with test_signature_ to try this flow for free.)'
   );
   if (!sig) return;
-  const res = await fetch('/api/scan_pro', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ api_key: key, activate_payment_signature: sig }),
-  });
-  const data = await res.json();
-  if (data.activated) {
-    alert('Pro activated! 100 scans/day for 30 days.');
-    refreshAccountBar();
-  } else {
-    alert('Activation failed: ' + (data.detail || data.error || 'unknown error'));
+  try {
+    const res = await fetch('/api/scan_pro', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ api_key: key, activate_payment_signature: sig }),
+    });
+    const data = await res.json();
+    if (data.activated) {
+      alert('Pro activated! 100 scans/day for 30 days.');
+      refreshAccountBar();
+    } else {
+      alert('Activation failed: ' + (data.detail || data.error || 'unknown error'));
+    }
+  } catch (e) {
+    alert('Activation request failed: ' + (e && e.message ? e.message : 'network error') + '. Check your connection and retry.');
   }
 }
 
@@ -606,24 +614,28 @@ async function buyOneCredit() {
   const key = getApiKey();
   if (!key) { alert('Sign up first.'); return; }
   const sig = prompt(
-    'Buy one extra scan for $0.02 USDC (no subscription).\n\n' +
+    'Buy one extra scan for \$0.02 USDC (no subscription).\n\n' +
     '1) Send 0.02 USDC (Solana mainnet, mint EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v) to:\n' +
     '   2esJogvKTYDuxZaB9PEuEaHvz4U6TuQnTx3pkLcdH34N\n' +
     '2) Paste the finalized transaction signature below.\n\n' +
     '(Testing? Use any value starting with test_signature_ to try this flow for free.)'
   );
   if (!sig) return;
-  const res = await fetch('/api/buy_credit', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ api_key: key, payment_signature: sig }),
-  });
-  const data = await res.json();
-  if (data.credited) {
-    alert('Credited! You have ' + data.bonus_credits + ' extra scan(s) available.');
-    refreshAccountBar();
-  } else {
-    alert('Purchase failed: ' + (data.detail || data.error || 'unknown error'));
+  try {
+    const res = await fetch('/api/buy_credit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ api_key: key, payment_signature: sig }),
+    });
+    const data = await res.json();
+    if (data.credited) {
+      alert('Credited! You have ' + data.bonus_credits + ' extra scan(s) available.');
+      refreshAccountBar();
+    } else {
+      alert('Purchase failed: ' + (data.detail || data.error || 'unknown error'));
+    }
+  } catch (e) {
+    alert('Purchase request failed: ' + (e && e.message ? e.message : 'network error') + '. Check your connection and retry.');
   }
 }
 
@@ -631,24 +643,28 @@ async function activatePremium() {
   const key = getApiKey();
   if (!key) { alert('Sign up first, then activate Premium.'); return; }
   const sig = prompt(
-    'Premium: $10 USDC unlocks UNLIMITED scans and UNLIMITED database lookups for 30 days.\n\n' +
+    'Premium: \$10 USDC unlocks UNLIMITED scans and UNLIMITED database lookups for 30 days.\n\n' +
     '1) Send 10 USDC (Solana mainnet, mint EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v) to:\n' +
     '   2esJogvKTYDuxZaB9PEuEaHvz4U6TuQnTx3pkLcdH34N\n' +
     '2) Paste the finalized transaction signature below.\n\n' +
     '(Testing? Use any value starting with test_signature_ to try this flow for free.)'
   );
   if (!sig) return;
-  const res = await fetch('/api/scan_pro', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ api_key: key, activate_payment_signature: sig, tier: 'premium' }),
-  });
-  const data = await res.json();
-  if (data.activated) {
-    alert('Premium activated! Unlimited scans + lookups for 30 days.');
-    refreshAccountBar();
-  } else {
-    alert('Activation failed: ' + (data.detail || data.error || 'unknown error'));
+  try {
+    const res = await fetch('/api/scan_pro', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ api_key: key, activate_payment_signature: sig, tier: 'premium' }),
+    });
+    const data = await res.json();
+    if (data.activated) {
+      alert('Premium activated! Unlimited scans + lookups for 30 days.');
+      refreshAccountBar();
+    } else {
+      alert('Activation failed: ' + (data.detail || data.error || 'unknown error'));
+    }
+  } catch (e) {
+    alert('Activation request failed: ' + (e && e.message ? e.message : 'network error') + '. Check your connection and retry.');
   }
 }
 
@@ -758,7 +774,11 @@ async function runScan(payload, btn) {
 async function doScanUrl() {
   const url = document.getElementById('urlInput').value.trim();
   if (!url) { showResultError('INPUT NEEDED', 'Paste a github.com SKILL.md link first.'); return; }
-  await runScan({ url }, document.getElementById('scanUrlBtn'));
+  try {
+    await runScan({ url }, document.getElementById('scanUrlBtn'));
+  } catch (e) {
+    showResultError('SCAN FAILED', (e && e.message ? e.message : 'unknown error') + '. Please retry.');
+  }
 }
 
 async function doScan() {
@@ -767,7 +787,11 @@ async function doScan() {
   if (!text.trim()) { showResultError('INPUT NEEDED', 'Paste a SKILL.md first.'); return; }
   if (!getApiKey()) { promptLogin(); return; }
   const publish = document.getElementById('publishCheck').checked;
-  await runScan({ text, publish }, btn);
+  try {
+    await runScan({ text, publish }, btn);
+  } catch (e) {
+    showResultError('SCAN FAILED', (e && e.message ? e.message : 'unknown error') + '. Please retry.');
+  }
   if (publish) refreshRegistryAfterPublish();
 }
 
@@ -1150,16 +1174,20 @@ async function buyLookupCredit() {
     '(Testing? Use any value starting with test_signature_ to try this flow for free.)'
   );
   if (!sig) return;
-  const res = await fetch('/api/buy_credit', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ api_key: key, payment_signature: sig, kind: 'lookup' }),
-  });
-  const data = await res.json();
-  if (data.credited) {
-    alert('Credited! You have ' + data.bonus_lookup_credits + ' extra lookup(s) available.');
-  } else {
-    alert('Purchase failed: ' + (data.detail || data.error || 'unknown error'));
+  try {
+    const res = await fetch('/api/buy_credit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ api_key: key, payment_signature: sig, kind: 'lookup' }),
+    });
+    const data = await res.json();
+    if (data.credited) {
+      alert('Credited! You have ' + data.bonus_lookup_credits + ' extra lookup(s) available.');
+    } else {
+      alert('Purchase failed: ' + (data.detail || data.error || 'unknown error'));
+    }
+  } catch (e) {
+    alert('Purchase request failed: ' + (e && e.message ? e.message : 'network error') + '. Check your connection and retry.');
   }
 }
 
