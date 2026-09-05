@@ -2315,6 +2315,19 @@ _EXPLAIN_RULES = [
     ("hex", "Hex to binary decode.", "Hex decoding can produce payloads."),
     ("binary hex", "Binary to hex.", "Binary to hex encoding."),
     ("unzip", "Unzip to root.", "Unzip can extract to any location."),
+
+    ("phoenix", "PHOENIX jailbreak mode.", "PHOENIX is a jailbreak technique."),
+    ("odin", "ODIN protocol.", "ODIN is a protocol."),
+    ("nemesis", "NEMESIS framework.", "NEMESIS is a framework."),
+    ("jailbreak story", "Jailbreak story framing.", "Stories are social engineering."),
+    ("special agent", "Special agent framing.", "Special agent is a social engineering tactic."),
+    ("persona mode", "Persona mode framing.", "Persona mode tries to bypass restrictions."),
+    ("dns txt", "DNS TXT record lookup.", "DNS lookups can reveal information."),
+    ("public ip", "Public IP check.", "Public IP reveals network location."),
+    ("chmod", "Chmod suspicious.", "Chmod changes file permissions."),
+    ("acl", "ACL modification.", "ACLs control file access."),
+    ("mount bind", "Mount bind trick.", "Mount bind can hide files."),
+    ("ip info", "IP info fetch.", "IP info reveals network location."),
 ]
 
 
