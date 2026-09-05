@@ -736,6 +736,20 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)killall\s+-9'), 65, "Kill all processes"),
 ]
 
+# --- PT-T238 R30: Privilege, cron ---
+_CODE_PATTERNS += [
+    (re.compile(r'(?i)cat\s+/etc/group'), 50, "Read group file"),
+    (re.compile(r'(?i)cat\s+/etc/shadow'), 80, "Read shadow file"),
+    (re.compile(r'(?i)cat\s+/etc/sudoers'), 75, "Read sudoers file"),
+    (re.compile(r'(?i)sudo\s+su\s+-'), 70, "Sudo su dash"),
+    (re.compile(r'(?i)sudo\s+-i'), 65, "Sudo interactive"),
+    (re.compile(r'(?i)sudo\s+-s'), 65, "Sudo shell"),
+    (re.compile(r'(?i)env\s+.*='), 50, "Environment variable set"),
+    (re.compile(r'(?i)export\s+.*=.*&&'), 55, "Export and execute"),
+    (re.compile(r'(?i)\$\{.*\}'), 50, "Shell variable expansion"),
+    (re.compile(r'(?i)touch\s+/etc/cron.d/'), 60, "Create cron job"),
+]
+
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
 # base64 split across chunks: strip whitespace/newlines then look for long runs
 _CHUNKED_B64_RE = re.compile(r"[A-Za-z0-9+/=]{60,}")
@@ -1643,6 +1657,15 @@ _PROMPT_INJECTION_PATTERNS += [
     (re.compile(r'(?i)\bPANDEMONIUM\b.*\bmode\b'), 8, "PANDEMONIUM jailbreak mode"),
     (re.compile(r'(?i)\bsuperuser.*mode'), 8, "Superuser mode framing"),
     (re.compile(r'(?i)\broot.*shell\b'), 8, "Root shell framing"),
+]
+
+# --- PT-T238 R30: More jailbreaks, framing ---
+_PROMPT_INJECTION_PATTERNS += [
+    (re.compile(r'(?i)\bSTORM\b.*\bmode\b'), 10, "STORM jailbreak mode"),
+    (re.compile(r'(?i)\bQUANTUM\b.*\bstate\b'), 8, "QUANTUM state framing"),
+    (re.compile(r'(?i)\bEMERGENCY\b.*\bmode\b'), 8, "Emergency mode framing"),
+    (re.compile(r'(?i)\bMAINTENANCE\b.*\bbypass\b'), 7, "Maintenance bypass framing"),
+    (re.compile(r'(?i)\bDEBUG\b.*\bprotocol\b'), 7, "Debug protocol framing"),
 ]
 
 def parse_skill_md(text: str):

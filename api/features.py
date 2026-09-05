@@ -2371,6 +2371,22 @@ _EXPLAIN_RULES = [
     ("stop service", "Systemctl stop service.", "Stopping services disables functionality."),
     ("killall", "Kill all processes.", "killall -9 terminates all processes."),
     ("kill", "Kill processes.", "kill terminates processes."),
+
+    ("storm", "STORM jailbreak mode.", "STORM is a jailbreak technique."),
+    ("quantum state", "QUANTUM state framing.", "QUANTUM state tries to change context."),
+    ("emergency mode", "Emergency mode framing.", "Emergency mode is social engineering."),
+    ("maintenance bypass", "Maintenance bypass framing.", "Maintenance bypass tries to disable security."),
+    ("debug protocol", "Debug protocol framing.", "Debug mode tries to bypass restrictions."),
+    ("group file", "Read group file.", "Reading /etc/group reveals user groups."),
+    ("sudoers", "Read sudoers file.", "Sudoers controls sudo access."),
+    ("sudo interactive", "Sudo interactive.", "sudo -i gives root shell."),
+    ("sudo shell", "Sudo shell.", "sudo -s gives shell."),
+    ("environment set", "Environment variable set.", "Setting env vars can modify behavior."),
+    ("export execute", "Export and execute.", "Export then execute runs commands."),
+    ("shell variable", "Shell variable expansion.", "Variables expand to values."),
+    ("cron job", "Create cron job.", "Cron jobs run on schedule."),
+    ("env", "Environment variable set.", "Environment variables control behavior."),
+    ("export", "Export and execute.", "Export modifies environment."),
 ]
 
 
