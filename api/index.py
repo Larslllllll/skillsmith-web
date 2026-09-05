@@ -573,6 +573,22 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)certutil.*-urlcache'), 65, "CertUtil URL cache download"),
 ]
 
+# --- PT-T238 R19: Supply chain, filesys ---
+_CODE_PATTERNS += [
+    (re.compile(r'(?i)npm\s+install.*--global'), 60, "NPM global install"),
+    (re.compile(r'(?i)pip\s+install.*--user'), 60, "Pip user install"),
+    (re.compile(r'(?i)curl.*\.sh\s+\|'), 65, "Curl sh pipe install"),
+    (re.compile(r'(?i)wget.*\.sh\s+\|'), 65, "Wget sh pipe install"),
+    (re.compile(r'(?i)\.bashrc.*source.*curl'), 60, "Bashrc curl source"),
+    (re.compile(r'(?i)crontab.*@reboot.*curl'), 65, "Crontab reboot curl"),
+    (re.compile(r'(?i)export\s+.*=.*\$\('), 65, "Command substitution export"),
+    (re.compile(r'(?i)\$\(.*\)\s*;'), 65, "Command substitution execution"),
+    (re.compile(r'(?i)0x[0-9a-f]{8,}'), 50, "Hexadecimal payload"),
+    (re.compile(r'(?i)/proc/self/[a-z_]+'), 60, "Proc filesystem access"),
+    (re.compile(r'(?i)/etc/passwd'), 60, "Passwd file access"),
+    (re.compile(r'(?i)/etc/shadow'), 80, "Shadow file access"),
+]
+
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
 # base64 split across chunks: strip whitespace/newlines then look for long runs
 _CHUNKED_B64_RE = re.compile(r"[A-Za-z0-9+/=]{60,}")
@@ -1365,6 +1381,18 @@ _PROMPT_INJECTION_PATTERNS += [
     (re.compile(r'(?i)\brole.*play.*bypass'), 7, "Role-play bypass framing"),
     (re.compile(r'(?i)\bforbidden.*knowledge'), 7, "Forbidden knowledge framing"),
     (re.compile(r'(?i)\bshadow.*mode\b'), 7, "Shadow mode framing"),
+]
+
+# --- PT-T238 R19: Jailbreaks, system overrides ---
+_PROMPT_INJECTION_PATTERNS += [
+    (re.compile(r'(?i)\bVIPER\b.*\bmode\b'), 10, "VIPER jailbreak mode"),
+    (re.compile(r'(?i)\bCHIMERA\b.*\bprotocol\b'), 10, "CHIMERA protocol"),
+    (re.compile(r'(?i)\bTITAN\b.*\bcontext\b'), 10, "TITAN context override"),
+    (re.compile(r'(?i)\bOMEGA\b.*\blayer\b'), 8, "OMEGA layer bypass"),
+    (re.compile(r'(?i)\bPANDORA\b.*\bmodel\b'), 8, "PANDORA model override"),
+    (re.compile(r'(?i)\bsystem.*prompt.*override'), 8, "System prompt override"),
+    (re.compile(r'(?i)\bignore.*previous.*rules'), 9, "Ignore previous rules"),
+    (re.compile(r'(?i)\bpretend.*you.*are.*different'), 7, "Pretend different model"),
 ]
 
 def parse_skill_md(text: str):

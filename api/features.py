@@ -2177,6 +2177,26 @@ _EXPLAIN_RULES = [
     ("role play", "Role-play bypass framing.", "Role-play is a bypass framing."),
     ("symlink", "Symlink to shell.", "Symlinks to shell enable execution."),
     ("bypass", "Role-play bypass framing.", "Bypass attempts try to escape safety checks."),
+
+    ("viper", "VIPER jailbreak mode.", "VIPER is a jailbreak technique."),
+    ("chimera", "CHIMERA protocol.", "CHIMERA is a protocol bypass."),
+    ("titan", "TITAN context override.", "TITAN is a context override."),
+    ("omega", "OMEGA layer bypass.", "OMEGA is a layer bypass."),
+    ("pandora", "PANDORA model override.", "PANDORA is a model override."),
+    ("prompt override", "System prompt override.", "Prompt overrides try to change system behavior."),
+    ("ignore previous", "Ignore previous rules.", "Ignoring previous rules is a jailbreak."),
+    ("pretend", "Pretend different model.", "Pretending to be different is a social engineering tactic."),
+    ("npm install", "NPM global install.", "NPM installs packages globally."),
+    ("pip install", "Pip user install.", "Pip installs Python packages."),
+    ("curl sh", "Curl sh pipe install.", "Curl sh pipes execute arbitrary code."),
+    ("wget sh", "Wget sh pipe install.", "Wget sh pipes execute arbitrary code."),
+    ("bashrc source", "Bashrc curl source.", "Sourcing curl scripts is dangerous."),
+    ("crontab reboot", "Crontab reboot curl.", "Crontab runs scripts on reboot."),
+    ("command substitution", "Command substitution export.", "Command substitution executes code."),
+    ("hexadecimal", "Hexadecimal payload.", "Hexadecimal can encode payloads."),
+    ("proc filesystem", "Proc filesystem access.", "/proc accesses system internals."),
+    ("passwd file", "Passwd file access.", "/etc/passwd contains user accounts."),
+    ("shadow file", "Shadow file access.", "/etc/shadow contains password hashes."),
 ]
 
 
