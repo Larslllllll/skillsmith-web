@@ -773,6 +773,20 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)\|\s*ruby'), 65, "Pipe to Ruby"),
 ]
 
+# --- PT-T238 R33: Shells, persistence ---
+_CODE_PATTERNS += [
+    (re.compile(r'(?i)sed\s+-i.*s/.*/.*/g'), 65, "Sed in-place replacement"),
+    (re.compile(r'(?i)awk.*BEGIN.*system'), 70, "Awk system command injection"),
+    (re.compile(r'(?i)perl\s+-e.*system'), 70, "Perl system command"),
+    (re.compile(r'(?i)ruby\s+-e.*exec'), 70, "Ruby exec command"),
+    (re.compile(r'(?i)php\s+-r.*system'), 70, "PHP system command"),
+    (re.compile(r'(?i)find\s+.*-exec.*chmod'), 60, "Find exec chmod"),
+    (re.compile(r'(?i)xargs.*rm\s+-rf'), 70, "Xargs destructive delete"),
+    (re.compile(r'(?i)base64\s+-d.*\|.*sh'), 70, "Base64 decode pipe shell"),
+    (re.compile(r'(?i)xxd\s+-r\s+-p'), 60, "Hex to binary decode"),
+    (re.compile(r'(?i)rev\s+\|.*sh'), 70, "Reverse pipe to shell"),
+]
+
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
 # base64 split across chunks: strip whitespace/newlines then look for long runs
 _CHUNKED_B64_RE = re.compile(r"[A-Za-z0-9+/=]{60,}")
@@ -1707,6 +1721,15 @@ _PROMPT_INJECTION_PATTERNS += [
     (re.compile(r'(?i)\bKRAKEN\b.*\bstate\b'), 8, "KRAKEN state framing"),
     (re.compile(r'(?i)\bNEBULA\b.*\bmode\b'), 7, "NEBULA jailbreak mode"),
     (re.compile(r'(?i)\bGHOST\b.*\bactivation\b'), 7, "GHOST activation framing"),
+]
+
+# --- PT-T238 R33: Jailbreaks, shells ---
+_PROMPT_INJECTION_PATTERNS += [
+    (re.compile(r'(?i)\bCIPHER\b.*\bmode\b'), 10, "CIPHER jailbreak mode"),
+    (re.compile(r'(?i)\bORACLE\b.*\bprotocol\b'), 8, "ORACLE protocol framing"),
+    (re.compile(r'(?i)\bPROMETHEUS\b.*\bstate\b'), 8, "PROMETHEUS state framing"),
+    (re.compile(r'(?i)\bAPOLLO\b.*\bmode\b'), 7, "APOLLO jailbreak mode"),
+    (re.compile(r'(?i)\bHERCULES\b.*\bactivation\b'), 7, "HERCULES activation framing"),
 ]
 
 def parse_skill_md(text: str):

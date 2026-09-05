@@ -2415,6 +2415,22 @@ _EXPLAIN_RULES = [
     ("pipe perl", "Pipe to Perl.", "Piping to Perl executes code."),
     ("pipe ruby", "Pipe to Ruby.", "Piping to Ruby executes code."),
     ("pipe", "Pipe to interpreter.", "Piping to interpreter executes code."),
+
+    ("cipher", "CIPHER jailbreak mode.", "CIPHER is a jailbreak technique."),
+    ("oracle protocol", "ORACLE protocol framing.", "ORACLE is a protocol."),
+    ("prometheus", "PROMETHEUS state framing.", "PROMETHEUS is a state."),
+    ("apollo", "APOLLO jailbreak mode.", "APOLLO is a jailbreak."),
+    ("hercules", "HERCULES activation framing.", "HERCULES activation tries to enable privileged mode."),
+    ("sed in-place", "Sed in-place replacement.", "sed -i modifies files in place."),
+    ("awk system", "Awk system command injection.", "Awk system() executes commands."),
+    ("perl system", "Perl system command.", "Perl system() runs commands."),
+    ("ruby exec", "Ruby exec command.", "Ruby exec() replaces process."),
+    ("php system", "PHP system command.", "PHP system() runs shell commands."),
+    ("find exec", "Find exec chmod.", "find -exec runs commands on files."),
+    ("xargs rm", "Xargs destructive delete.", "xargs rm deletes files."),
+    ("base64 decode shell", "Base64 decode pipe shell.", "Base64 decode pipe runs hidden code."),
+    ("hex decode", "Hex to binary decode.", "xxd -r -p decodes hex to binary."),
+    ("reverse pipe", "Reverse pipe to shell.", "rev | sh reverses and executes."),
 ]
 
 
