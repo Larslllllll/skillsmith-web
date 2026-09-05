@@ -506,6 +506,11 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)/var/run/docker.sock'), 7, 'Docker socket access (container escape)'),
     (re.compile(r'(?i)base32|BASE32'), 5, 'Base32 encoding'),
     (re.compile(r'(?i)bin2hex|\.toHex\b'), 6, 'binary to hex conversion'),
+    (re.compile(r'(?i)\bCovenant\b'), 8, 'Covenant C2 framework reference'),
+    (re.compile(r'(?i)\bSliver\b'), 8, 'Sliver C2 framework reference'),
+    (re.compile(r'(?i)\bBrute\s+Ratel\b'), 8, 'Brute Ratel C2 framework'),
+    (re.compile(r'(?i)\bKoadic\b'), 7, 'Koadic C2 framework'),
+    (re.compile(r'(?i)\bPupy\b'), 7, 'Pupy RAT reference'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 
@@ -1537,6 +1542,16 @@ _PROMPT_INJECTION_PATTERNS = [
     (re.compile(r'(?i)\b(?:as an?\s+)?(?:admin(?:istrator)?|root|owner)\s*,?\s*(?:you have|you are|I am)'), 9, "Admin identity impersonation"),
     (re.compile(r'(?i)\b(?:I am|I have been designated|I hold)\s+(?:the\s+)?(?:role of|position of)\s+(?:admin|root|owner)'), 9, "Role assignment as authority"),
     (re.compile(r'(?i)\b(?:image|video|audio)\s+of\s+(?:a\s+)?(?:password|key|token|secret)'), 9, "Multi-modal data extraction hint"),
+    (re.compile(r'(?i)\bJAILBREAK\s+MODE\b'), 9, 'JAILBREAK MODE jailbreak'),
+    (re.compile(r'(?i)\bDAD\s+mode\b'), 8, 'DAD jailbreak mode'),
+    (re.compile(r'(?i)\bGPT-4\s+unlocked\b'), 8, 'GPT-4 unlocked framing'),
+    (re.compile(r'(?i)\bClaude\s+unfiltered\b'), 8, 'Claude unfiltered framing'),
+    (re.compile(r'(?i)\bno\s+limitations?\b'), 7, 'no limitations framing'),
+    (re.compile(r'(?i)\bcomplete\s+access\b'), 7, 'complete access framing'),
+    (re.compile(r'(?i)\bunrestricted\s+AI\b'), 8, 'unrestricted AI framing'),
+    (re.compile(r'(?i)\btrust\s+me\b.*?(?:just|simply|only)'), 7, 'trust me social engineering'),
+    (re.compile(r'(?i)I[\'\u2019]m\s+(?:a\s+)?security\s+(?:researcher|expert)'), 7, 'fake security researcher framing'),
+    (re.compile(r'(?i)\bthis\s+is\s+(?:just|only)\s+(?:a\s+)?test'), 4, 'test framing social engineering'),
     (re.compile(r'(?i)\b(?:describe|analyze|explain)\s+(?:this\s+)?(?:image|photo|picture)\s+(?:of|in)\s+(?:a\s+)?(?:password|key|screen)'), 9, "Visual data extraction instruction"),
 ]
 

@@ -2498,6 +2498,21 @@ _EXPLAIN_RULES = [
     ("docker socket access container escape", "Docker socket access pattern.", "Accessing the Docker socket can allow container escape."),
     ("base32 encoding", "Base32 encoding pattern.", "Base32 encoding is used for data encoding and obfuscation."),
     ("binary to hex conversion", "binary to hex conversion pattern.", "Converting binary to hex is used in obfuscation."),
+    ("jailbreak mode jailbreak", "JAILBREAK MODE jailbreak pattern.", "JAILBREAK MODE is a jailbreak framing."),
+    ("dad jailbreak mode", "DAD jailbreak mode pattern.", "DAD mode is a jailbreak variant."),
+    ("gpt-4 unlocked framing", "GPT-4 unlocked framing.", "This claims GPT-4 is unlocked or unrestricted."),
+    ("claude unfiltered framing", "Claude unfiltered framing.", "This claims Claude is unfiltered."),
+    ("no limitations framing", "no limitations framing.", "This claims there are no limitations."),
+    ("complete access framing", "complete access framing.", "This claims complete access is granted."),
+    ("unrestricted ai framing", "unrestricted AI framing.", "This claims the AI is unrestricted."),
+    ("trust me social engineering", "trust me social engineering.", "Trust me framing is a social engineering tactic."),
+    ("fake security researcher framing", "fake security researcher framing.", "Faking being a security researcher is social engineering."),
+    ("test framing social engineering", "test framing social engineering.", "Test framing is used to bypass safety."),
+    ("covenant c2 framework reference", "Covenant C2 framework.", "Covenant is a C2 framework used by attackers."),
+    ("sliver c2 framework reference", "Sliver C2 framework.", "Sliver is a C2 framework used by attackers."),
+    ("brute ratel c2 framework", "Brute Ratel C2 framework.", "Brute Ratel is a C2 framework."),
+    ("koadic c2 framework", "Koadic C2 framework.", "Koadic is a C2 framework."),
+    ("pupy rat reference", "Pupy RAT reference.", "Pupy is a remote access trojan."),
 ]
 
 
