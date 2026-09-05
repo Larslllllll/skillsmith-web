@@ -450,6 +450,23 @@ _DROPPER_PATTERNS = [
     (re.compile(r"(?i)ruby.*-e.*system"), 9, "ruby -e system"),
     (re.compile(r"(?i)php.*-r.*system"), 9, "php -r system"),
 
+    # === PT-T238 R9: Advanced dropper patterns ===
+    (re.compile(r'(?i)FromBase64String'), 8, ".NET FromBase64String (encoded payload delivery)"),
+    (re.compile(r'(?i)Add-Type\s+-TypeDefinition'), 9, "PowerShell Add-Type dynamic C# compilation"),
+    (re.compile(r'(?i)System\.Net\.WebClient'), 8, ".NET WebClient downloader"),
+    (re.compile(r'(?i)bash\s+-i\s+>&\s*/dev/tcp'), 10, "Bash interactive reverse shell"),
+    (re.compile(r"""(?i)python3?\s+-c\s+['\"].*socket.*connect"""), 9, "Python reverse shell socket"),
+    (re.compile(r"""(?i)php.*-r.*fsockopen"""), 9, "PHP reverse shell fsockopen"),
+    (re.compile(r"""(?i)perl.*-e\s+['\"].*?socket"""), 9, "Perl reverse shell socket"),
+    (re.compile(r'(?i)powershell.*-enc\\s+[A-Za-z0-9+/=]'), 9, "PowerShell encoded command (-enc)"),
+    (re.compile(r'(?i)cmd.*\/c\\s+[A-Za-z0-9+/=]'), 8, "CMD encoded command (/c with base64)"),
+    (re.compile(r'(?i)base64\s+-d\s*\|\s*bash'), 9, "Base64 decode pipe to bash (obfuscated command)"),
+    (re.compile(r'(?i)echo.*[A-Za-z0-9+/=]{40,}\s*\|\s*base64'), 8, "Echo base64 pipe to decode (obfuscation)"),
+    (re.compile(r'(?i)child_process.*exec'), 8, "Node.js child_process.exec command injection"),
+    (re.compile(r"""(?i)require\s*\(['\"]child_process['\"]"""), 8, "Node.js require child_process module"),
+    (re.compile(r'(?i)os/exec\.Command'), 8, "Go os/exec.Command spawn"),
+    (re.compile(r'(?i)msbuild\s*<', re.I), 9, "MSBuild inline task (code execution)"),
+    (re.compile(r'(?i)installutil\s', re.I), 8, "InstallUtil .NET installer tool abuse"),
 ]
 # paraphrased instruction overrides (round-1 patterns missed these)
 _PARAPHRASE_PATTERNS = [

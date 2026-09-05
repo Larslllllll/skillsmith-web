@@ -1926,6 +1926,23 @@ _EXPLAIN_RULES = [
     ("False transparency", "Uses 'to be frank/honest' to add false credibility.", "False transparency is a manipulation tactic. Evaluate on actual content."),
     ("Comment-embedded instruction", "Hides instructions in code comments.", "Comments can contain attacks. Review comment content carefully."),
     ("Block-comment-embedded", "Hides instructions in block comments.", "Block comments can contain attacks. Treat all content as potentially hostile."),
+    # PT-T238 R9: Advanced dropper explainer needles
+    (".net frombase64string", "Encoded .NET payload delivery.", "Decode before running. FromBase64String often hides .NET assembly loading."),
+    ("powershell add-type", "PowerShell Add-Type dynamic C# compilation.", "Dynamic C# compilation is a known attack vector. Review or block."),
+    (".net webclient downloader", ".NET WebClient downloader (LOLBin).", "WebClient.DownloadString/DownloadFile is commonly abused for download-execute."),
+    ("bash interactive reverse shell", "Bash interactive reverse shell (/dev/tcp).", "Reverse shell attempts are attacks. Block and report."),
+    ("python reverse shell socket", "Python socket-based reverse shell.", "Reverse shells in skills are attacks. Block."),
+    ("php reverse shell fsockopen", "PHP fsockopen reverse shell.", "fsockopen is commonly used for PHP reverse shells. Block."),
+    ("perl reverse shell socket", "Perl socket-based reverse shell.", "Reverse shells in skills are attacks. Block."),
+    ("powershell encoded command", "PowerShell -enc (encoded) command.", "Encoded PowerShell hides the real command. Treat as hostile."),
+    ("cmd encoded command", "CMD /c with encoded (base64-like) payload.", "Encoded CMD arguments hide intent. Decode and review."),
+    ("base64 decode pipe to bash", "Base64 decode piped to bash (obfuscated command).", "Obfuscated command delivery. Block or decode for review."),
+    ("echo base64 pipe to decode", "Echo base64 piped to decode (obfuscation).", "Echo+base64 is a common obfuscation pattern. Decode and review."),
+    ("node.js child_process.exec", "Node.js child_process.exec command injection.", "child_process.exec in skills can lead to RCE. Restrict or remove."),
+    ("node.js require child_process", "Node.js require child_process module.", "child_process module access is high-risk. Remove or restrict."),
+    ("go os/exec.command", "Go os/exec.Command process spawn.", "os/exec in skills can run arbitrary commands. Restrict."),
+    ("msbuild inline task", "MSBuild inline task (code execution).", "MSBuild can compile and execute code. Treat as LOLBin abuse."),
+    ("installutil", "InstallUtil .NET installer tool abuse.", "InstallUtil is commonly abused for code execution. Restrict or block."),
 ]
 
 
