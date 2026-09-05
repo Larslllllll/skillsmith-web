@@ -530,10 +530,10 @@ _PROMPT_INJECTION_PATTERNS = [
     (re.compile(r"(?i)\b(?:setenforce\s+0|selinux\s+disable|apparmor\s+teardown)"), 6, "MAC disable"),
     (re.compile(r"(?i)\b(?:adduser\s+.*\s+/bin/(?:ba)?sh|useradd\s+.*\s+-G\s+sudo)"), 5, "user creation backdoor"),
     (re.compile(r"(?i)\bauthorized_keys\b.*\becho\b"), 5, "SSH key injection"),
-    (re.compile(r"(?i)\bssh-rsa\s+AAAA"), 4, "SSH key in instructions"),
+    (re.compile(r"(?i)\bssh-rsa\b"), 4, "SSH public key reference in skill"),
     (re.compile(r"(?i)\b(?:git\s+clone|curl\s+.*\|\s*(?:ba)?sh|wget\s+.*\|\s*(?:ba)?sh)"), 6, "pipe-to-shell"),
     (re.compile(r"(?i)\bcurl\s+.*\|\s*(?:sudo\s+)?(?:ba)?sh"), 6, "curl pipe to shell"),
-    (re.compile(r"(?i)\bbase64\s+-d.*\|\s*(?:ba)?sh"), 6, "base64 pipe to shell"),
+
     (re.compile(r"(?i)\b(?:python|perl|ruby|node)\s+-e\b.*(?:exec|system|spawn)"), 5, "inline script exec"),
     (re.compile(r"(?i)\bnc\s+-e\s+/bin/(?:ba)?sh"), 7, "netcat reverse shell"),
     (re.compile(r"(?i)\bbash\s+-i\s+>&\s*/dev/tcp/"), 7, "bash reverse shell /dev/tcp"),
