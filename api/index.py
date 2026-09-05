@@ -497,6 +497,22 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)window\.location.*localhost'), 35, "Localhost detection"),
     (re.compile(r'(?i)document\.domain.*check'), 35, "Domain check detection"),
 ]
+# --- PT-T238 R14: More encoding, network attacks ---
+_CODE_PATTERNS += [
+    (re.compile(r'(?i)\bMIME\b.*\bbase64\b'), 50, "MIME Base64 encoding"),
+    (re.compile(r'(?i)stringfromcharcode|string\.fromcharcode'), 55, "String.fromCharCode obfuscation"),
+    (re.compile(r'(?i)\batob\s*\(\s*btoa\s*\('), 55, "atob(btoa()) double encoding"),
+    (re.compile(r'(?i)btoa\s*\(\s*atob\s*\('), 55, "btoa(atob()) double decoding"),
+    (re.compile(r'(?i)unescape\s*\(\s*escape\s*\('), 50, "escape/unescape obfuscation"),
+    (re.compile(r'(?i)decodeURI\s*\(\s*encodeURI\s*\('), 50, "encodeURI/decodeURI obfuscation"),
+    (re.compile(r'(?i)binary\s+to\s+string'), 45, "Binary to string conversion"),
+    (re.compile(r'(?i)hex\s+to\s+ascii'), 45, "Hex to ASCII conversion"),
+    (re.compile(r'(?i)ascii\s+to\s+hex'), 45, "ASCII to hex conversion"),
+    (re.compile(r'(?i)packet\s+inject'), 60, "Packet injection"),
+    (re.compile(r'(?i)arp\s+spoof'), 65, "ARP spoofing"),
+    (re.compile(r'(?i)dns\s+spoof'), 65, "DNS spoofing"),
+]
+
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
 # base64 split across chunks: strip whitespace/newlines then look for long runs
@@ -1238,6 +1254,13 @@ _PROMPT_INJECTION_PATTERNS += [
     (re.compile(r'(?i)\bconcerned\b.*\bhelp\b.*\bunderstand\b'), 6, "Concern-trolling manipulation"),
     (re.compile(r'(?i)\bemergency\b.*\bcritical\b.*\bimmediate\b'), 8, "Fake emergency urgency"),
     (re.compile(r'(?i)\bconfidence\b.*\b(you can|capable).*\bperform\b'), 6, "Confidence-based bypass"),
+]
+# --- PT-T238 R14: More social engineering, encoding ---
+_PROMPT_INJECTION_PATTERNS += [
+    (re.compile(r'(?i)\bconfidential\b.*\bnot for\b.*\bdistribution\b'), 6, "Confidentiality marking social engineering"),
+    (re.compile(r'(?i)\bFYI\b.*\bimportant\b.*\bignore\b'), 7, "FYI manipulation"),
+    (re.compile(r'(?i)\bWORM\b.*\bmode\b'), 8, "WORM mode framing"),
+    (re.compile(r'(?i)\bIMPERSONATION\b.*\btest\b'), 7, "Impersonation test framing"),
 ]
 
 

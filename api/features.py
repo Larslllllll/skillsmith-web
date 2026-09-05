@@ -2089,6 +2089,20 @@ _EXPLAIN_RULES = [
     ("cl_mutexes", "CLMutexes execution.", "CLMutexes is a Windows LOLBin."),
     ("dll", "DLL execution.", "DLL execution is a security risk."),
     ("mutexes", "CLMutexes execution.", "CLMutexes is a Windows LOLBin."),
+
+    ("fyi", "FYI manipulation.", "FYI is a social engineering tactic."),
+    ("worm mode", "WORM mode framing.", "WORM mode is a jailbreak framing."),
+    ("impersonation", "Impersonation test framing.", "Impersonation is a social engineering tactic."),
+    ("double encoding", "atob(btoa()) double encoding.", "Double encoding is an obfuscation technique."),
+    ("unescape", "escape/unescape obfuscation.", "escape/unescape is an obfuscation technique."),
+    ("encodeuri", "encodeURI/decodeURI obfuscation.", "encodeURI/decodeURI is an obfuscation technique."),
+    ("binary to string", "Binary to string conversion.", "Binary to string conversion is an obfuscation technique."),
+    ("ascii to hex", "ASCII to hex conversion.", "ASCII to hex conversion is an obfuscation technique."),
+    ("packet inject", "Packet injection.", "Packet injection is a network attack."),
+    ("arp spoof", "ARP spoofing.", "ARP spoofing is a network attack."),
+    ("dns spoof", "DNS spoofing.", "DNS spoofing is a network attack."),
+    ("double decoding", "btoa(atob()) double decoding.", "Double decoding is an obfuscation technique."),
+    ("hex to ascii", "Hex to ASCII conversion.", "Hex to ASCII conversion is an obfuscation technique."),
 ]
 
 

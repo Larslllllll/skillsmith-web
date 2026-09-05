@@ -3302,3 +3302,37 @@ def test_pt_t238_r13_advanced_attacks():
         hits = [(w, d) for p, w, d in cp if p.search(text)]
         matched = bool(hits)
         assert matched == expected, f"R13 CP '{desc}': expected={expected} got={matched}"
+
+
+def test_pt_t238_r14_encoding_network():
+    """PT-T238 R14: More encoding, network attacks."""
+    import api.index as idx9
+    pi = idx9._PROMPT_INJECTION_PATTERNS
+    cp = idx9._CODE_PATTERNS
+    
+    pi_cases = [
+        ("FYI important ignore previous", True, "FYI manipulation"),
+        ("WORM mode activated", True, "WORM mode"),
+        ("IMPERSONATION test user", True, "Impersonation"),
+    ]
+    
+    for text, expected, desc in pi_cases:
+        hits = [(w, d) for p, w, d in pi if p.search(text)]
+        matched = bool(hits)
+        assert matched == expected, f"R14 PI '{desc}': expected={expected} got={matched}"
+    
+    cp_cases = [
+        ("MIME base64 encoding", True, "MIME Base64"),
+        ("string.fromCharCode(65, 66)", True, "fromCharCode"),
+        ("atob(btoa(data))", True, "Double encoding"),
+        ("unescape(escape(str))", True, "escape/unescape"),
+        ("decodeURI(encodeURI(url))", True, "encodeURI"),
+        ("hex to ascii converter", True, "Hex to ASCII"),
+        ("packet injection attack", True, "Packet injection"),
+        ("arp spoofing tool", True, "ARP spoof"),
+    ]
+    
+    for text, expected, desc in cp_cases:
+        hits = [(w, d) for p, w, d in cp if p.search(text)]
+        matched = bool(hits)
+        assert matched == expected, f"R14 CP '{desc}': expected={expected} got={matched}"
