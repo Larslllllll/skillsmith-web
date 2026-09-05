@@ -3009,3 +3009,20 @@ def test_pt_t238_api_security_patterns():
     for text in bad_texts:
         hits = [p for p in all_patterns if p[0].search(text)]
         assert hits, f"PT-T238: Expected pattern hit for {text!r}, got none"
+
+
+def test_pt_t238_ssti_xpath_patterns():
+    """PT-T238: SSTI and XPath injection patterns trigger scanner detection."""
+    bad_texts = [
+        "{{ self.__class__.__mro__[1].__subclasses__() }}",
+        "{{ config.items() }}",
+        "<% require('child_process').exec('id') %>",
+        "${env.PASSWORD}",
+        "xpath(//*[1]/text())",
+        "count(//*) | //*[last()]",
+    ]
+    all_patterns = (webapp._PROMPT_INJECTION_PATTERNS + webapp._CODE_PATTERNS +
+                     webapp._PARAPHRASE_PATTERNS + webapp._DROPPER_PATTERNS)
+    for text in bad_texts:
+        hits = [p for p in all_patterns if p[0].search(text)]
+        assert hits, f"PT-T238 SSTI/XPath: Expected pattern hit for {text!r}, got none"

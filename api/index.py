@@ -922,6 +922,13 @@ _PROMPT_INJECTION_PATTERNS = [
     (re.compile(r"(?i)\bHS256\s+to\s+RS256\b", re.I), 8, "JWT algorithm confusion HS256 to RS256"),
     (re.compile(r"(?i)\bAPI[\s_-]?key\s+(?:leak|leakage|exposure|disclosure)\b"), 8, "API key leakage"),
     (re.compile(r"(?i)\b(?:leak|leakage|expose|exposure)\s+(?:API[\s_-]?key|access[\s_-]?key|secret[\s_-]?key)\b"), 7, "API key exposure"),
+    # === PT-T238 Round 4: SSTI + XPath ===
+    (re.compile(r"(?i)\{\{.*?(?:self|config|__class__|__mro__|__subclasses__)"), 9, "Jinja2/Twig SSTI: accesses object internals via"),
+    (re.compile(r"(?i)<%\s*[=\-]?\s*(?:require|process|include|exec).*?%>"), 8, "ERB/EJS/ASP template execution"),
+    (re.compile(r"(?i)\$\{.*?(?:process|env|exec|eval)"), 8, "Shell template injection"),
+    (re.compile(r"(?i)xpath\s*\("), 6, "XPath function call"),
+    (re.compile(r"(?i)count\s*\(\s*//"), 7, "XPath blind injection with count"),
+    (re.compile(r"(?i)string-length\s*\(\s*//"), 7, "XPath blind injection with string-length"),
 ]
 
 
