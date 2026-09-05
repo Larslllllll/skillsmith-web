@@ -2470,6 +2470,11 @@ _EXPLAIN_RULES = [
     ("remoteutilities rat", "RemoteUtilities RAT reference.", "RemoteUtilities is a remote access tool."),
     ("anydesk unattended access", "AnyDesk unattended access.", "AnyDesk can be used for unattended remote access."),
     ("screen session dump", "Screen session dump.", "Screen sessions can be dumped for credential theft."),
+
+    ("ltrace library call tracing", "ltrace library call tracing.", "ltrace traces library calls, useful for reverse engineering."),
+    ("powershell invoke-expression (iex)", "PowerShell Invoke-Expression pattern.", "Invoke-Expression executes strings as PowerShell commands."),
+    ("powershell invoke-command", "PowerShell Invoke-Command pattern.", "Invoke-Command runs commands on local/remote computers."),
+    ("powershell hidden process", "PowerShell hidden process pattern.", "Running processes hidden may indicate malicious activity."),
 ]
 
 

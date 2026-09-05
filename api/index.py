@@ -475,6 +475,16 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)\bnjRAT\b'), 9, 'njRAT remote access trojan'),
     (re.compile(r'(?i)\bRemoteUtilities\b'), 8, 'RemoteUtilities RAT'),
     (re.compile(r'(?i)\bAnyDesk\b.*?(?:password|unattended)'), 7, 'AnyDesk unattended access'),
+    (re.compile(r'(?i)\b(?:sudoedit|sudo\s+-e)\b'), 8, 'sudoedit privilege escalation'),
+    (re.compile(r'(?i)\bstrace\b'), 5, 'strace system call tracing'),
+    (re.compile(r'(?i)\bltrace\b'), 5, 'ltrace library call tracing'),
+    (re.compile(r'(?i)\blsof\s+-i\b'), 5, 'lsof network connections'),
+    (re.compile(r'(?i)Invoke-Expression'), 7, 'PowerShell Invoke-Expression (iex)'),
+    (re.compile(r'(?i)Invoke-Command'), 7, 'PowerShell Invoke-Command'),
+    (re.compile(r'(?i)Start-Process\b[^\n]*-WindowStyle\s+Hidden'), 7, 'PowerShell hidden process'),
+    (re.compile(r'(?i)\bsudo\s+ALL\b'), 7, 'sudo ALL privilege escalation'),
+    (re.compile(r'(?i)\bNOPASSWD:\s*ALL\b'), 8, 'passwordless sudo configuration'),
+    (re.compile(r'(?i)python.*socket\.gethostbyname'), 6, 'Python DNS resolution'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 
