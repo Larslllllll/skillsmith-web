@@ -749,6 +749,8 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)rubeus.*asktgt|asktgt'), 9, 'Rubeus asktgt ticket request'),
     (re.compile(r'(?i)kekeo.*asktgt'), 9, 'Kekeo asktgt ticket request'),
     (re.compile(r'(?i)\bevilgrade\b'), 7, 'evilgrade HTTPS injection'),
+    (re.compile(r'(?i)kerberoast|Kerberoast|Request-SPN'), 9, 'Kerberoast attack'),
+    (re.compile(r'(?i)\bBloodHound\b|BloodHound'), 8, 'BloodHound Active Directory enumeration'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 

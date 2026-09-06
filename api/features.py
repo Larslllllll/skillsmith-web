@@ -2805,6 +2805,9 @@ _EXPLAIN_RULES = [
     ("kekeo asktgt ticket request", "Kekeo pattern.", "Kekeo asktgt requests Kerberos tickets."),
     ("evilgrade https injection", "evilgrade pattern.", "evilgrade injects malicious updates via HTTPS."),
 
+    ("kerberoast attack", "Kerberoast pattern.", "Kerberoast extracts service tickets for offline cracking."),
+    ("bloodhound active directory enumeration", "BloodHound pattern.", "BloodHound maps Active Directory relationships."),
+
 ]
 
 
