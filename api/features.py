@@ -2820,6 +2820,9 @@ _EXPLAIN_RULES = [
     ("wmiexec lateral movement", "WMIExec pattern.", "WMIExec executes remote commands via WMI."),
     ("asyncrat atexec module", "AsyncRAT pattern.", "AsyncRAT atexec executes commands remotely."),
 
+    ("covenant c2 framework", "Covenant pattern.", "Covenant C2 provides Python-based C2 infrastructure."),
+    ("koadic c2 framework", "Koadic pattern.", "Koadic C2 uses VBScript for post-exploitation."),
+
 ]
 
 

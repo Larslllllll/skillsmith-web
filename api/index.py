@@ -759,6 +759,8 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)\bsmbexec\b|SMBExec'), 8, 'SMBExec lateral movement'),
     (re.compile(r'(?i)\bwmiexec\b|WMIExec'), 8, 'WMIExec lateral movement'),
     (re.compile(r'(?i)atexec|AsyncRAT'), 7, 'AsyncRAT atexec module'),
+    (re.compile(r'(?i)\bcovenant\b|Covenant.*C2|Grunt'), 9, 'Covenant C2 framework'),
+    (re.compile(r'(?i)\bkoadic\b|Koadic.*C2'), 9, 'Koadic C2 framework'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 
