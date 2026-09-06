@@ -722,6 +722,11 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)\bhping3\b'), 6, 'hping3 packet crafting'),
     (re.compile(r'(?i)az.*vm.*extension|vm.*extension.*add'), 5, 'Azure VM extension'),
     (re.compile(r'(?i)aws.*lambda.*update-function|UpdateFunction'), 5, 'AWS Lambda update'),
+    (re.compile(r'(?i)out-minidump|Out-Minidump'), 8, 'PowerShell minidump extraction'),
+    (re.compile(r'(?i)invoke-mimikatz|Invoke-Mimikatz'), 9, 'Invoke-Mimikatz credential theft'),
+    (re.compile(r'(?i)\bproxychains\b'), 5, 'proxychains proxy'),
+    (re.compile(r'(?i)tor.*-f|torrc'), 3, 'tor configuration'),
+    (re.compile(r'(?i)gcloud.*compute.*scp|compute.*scp'), 5, 'GCP compute scp file transfer'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 

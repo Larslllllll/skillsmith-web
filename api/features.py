@@ -2772,6 +2772,12 @@ _EXPLAIN_RULES = [
     ("azure vm extension", "Azure VM extension pattern.", "Azure VM extensions modify systems."),
     ("aws lambda update", "AWS Lambda update pattern.", "Lambda updates inject code."),
 
+    ("powershell minidump extraction", "PowerShell minidump pattern.", "Out-Minidump extracts process memory."),
+    ("invoke mimikatz credential theft", "Invoke-Mimikatz pattern.", "Invoke-Mimikatz extracts credentials from memory."),
+    ("proxychains proxy", "proxychains pattern.", "proxychains routes traffic through proxies."),
+    ("tor configuration", "tor config pattern.", "tor configuration enables anonymity."),
+    ("gcp compute scp file transfer", "GCP compute scp pattern.", "gcloud compute scp transfers files."),
+
 ]
 
 
