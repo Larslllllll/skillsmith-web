@@ -2847,6 +2847,9 @@ _EXPLAIN_RULES = [
     ("krbrelay ad attack", "KrbRelay pattern.", "KrbRelay relays Kerberos authentication."),
     ("targeted kerberoast", "Kerberoast pattern.", "Targeted Kerberoast targets specific service accounts."),
 
+    ("responder wpad attack", "Responder WPAD pattern.", "Responder -w enables WPAD proxy attack."),
+    ("mitm6 ipv6 attack", "mitm6 pattern.", "mitm6 exploits IPv6 to relay authentication."),
+
 ]
 
 
