@@ -2916,6 +2916,9 @@ _EXPLAIN_RULES = [
     ("pupy rat", "Pupy pattern.", "Pupy is a cross-platform RAT."),
     ("koadic c2", "Koadic pattern.", "Koadic is a C2 framework using COM objects."),
 
+    ("covenant c2", "Covenant pattern.", "Covenant is a .NET C2 framework."),
+    ("sliver c2", "Sliver pattern.", "Sliver is an open-source C2 framework."),
+
 ]
 
 
