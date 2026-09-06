@@ -737,6 +737,11 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)\bdirb\b'), 5, 'dirb web directory scanner'),
     (re.compile(r'(?i)\bffuf\b'), 5, 'ffuf web fuzzing'),
     (re.compile(r'(?i)aws.*dynamodb.*put-item|DynamoDB.*PutItem'), 5, 'AWS DynamoDB write'),
+    (re.compile(r'(?i)reg.*save.*sam|SAM.*save'), 8, 'reg save SAM hive'),
+    (re.compile(r'(?i)reg.*export|reg.*save.*system'), 6, 'reg export registry hive'),
+    (re.compile(r'(?i)\bdns2tcp\b'), 7, 'dns2tcp DNS tunnel'),
+    (re.compile(r'(?i)\biodine\b'), 7, 'iodine DNS tunnel'),
+    (re.compile(r'(?i)aws.*ses.*send-email|SES.*SendEmail'), 5, 'AWS SES send email'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 

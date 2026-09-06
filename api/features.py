@@ -2790,6 +2790,12 @@ _EXPLAIN_RULES = [
     ("ffuf web fuzzing", "ffuf pattern.", "ffuf fuzzes web parameters."),
     ("aws dynamodb write", "DynamoDB write pattern.", "DynamoDB PutItem writes data to tables."),
 
+    ("reg save sam hive", "reg save SAM pattern.", "Saving SAM registry hive extracts password hashes."),
+    ("reg export registry hive", "reg export pattern.", "Exporting registry hives exposes system configuration."),
+    ("dns2tcp dns tunnel", "dns2tcp pattern.", "dns2tcp tunnels traffic over DNS."),
+    ("iodine dns tunnel", "iodine pattern.", "iodine tunnels IP over DNS."),
+    ("aws ses send email", "AWS SES pattern.", "AWS SES sends emails for phishing."),
+
 ]
 
 
