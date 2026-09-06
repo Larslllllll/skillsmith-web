@@ -2693,6 +2693,15 @@ _EXPLAIN_RULES = [
     ("compression oracle attack", "compression oracle pattern.", "Compression oracles exploit compression side channels."),
     ("semantic sabotage attack", "semantic sabotage pattern.", "Semantic sabotage corrupts model understanding."),
 
+    ("silentbreak security toolkit", "SilentBreak pattern.", "SilentBreak provides offensive security tools."),
+    ("ghostpack security tools", "GhostPack pattern.", "GhostPack is a collection of .NET security tools."),
+    ("raccoon stealer", "Raccoon Stealer pattern.", "Raccoon Stealer steals credentials and cryptocurrency."),
+    ("redline stealer", "RedLine Stealer pattern.", "RedLine Stealer targets browsers and crypto wallets."),
+    ("kubectl set credentials", "kubectl credentials pattern.", "kubectl config set-credentials modifies cluster credentials."),
+    ("helm rollback", "helm rollback pattern.", "helm rollback reverts to previous releases."),
+    ("docker commit image", "docker commit pattern.", "docker commit creates images from containers."),
+    ("setcap capability escalation", "setcap pattern.", "setcap grants Linux capabilities for privilege escalation."),
+
 ]
 
 

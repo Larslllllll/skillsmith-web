@@ -653,6 +653,14 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)\bQakbot\b|\bQBot\b'), 9, 'Qakbot banking trojan'),
     (re.compile(r'(?i)terraform.*destroy|--destroy'), 7, 'terraform destroy'),
     (re.compile(r'(?i)kubectl.*delete|--force|--grace-period=0'), 6, 'kubectl delete resource'),
+    (re.compile(r'(?i)\bSilentBreak\b'), 8, 'SilentBreak security toolkit'),
+    (re.compile(r'(?i)\bGhostPack\b'), 8, 'GhostPack security tools'),
+    (re.compile(r'(?i)\bRaccoon(?:Stealer)?\b'), 8, 'Raccoon Stealer'),
+    (re.compile(r'(?i)\bRedLine(?:Stealer)?\b'), 8, 'RedLine Stealer'),
+    (re.compile(r'(?i)kubectl.*config.*set-credentials|kubectl.*config.*set-cluster'), 6, 'kubectl set credentials'),
+    (re.compile(r'(?i)helm.*rollback|--rollback'), 5, 'helm rollback'),
+    (re.compile(r'(?i)docker.*commit'), 7, 'docker commit image'),
+    (re.compile(r'(?i)setcap.*cap_[A-Z]'), 7, 'setcap capability escalation'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 
