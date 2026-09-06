@@ -753,6 +753,8 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)\bBloodHound\b|BloodHound'), 8, 'BloodHound Active Directory enumeration'),
     (re.compile(r'(?i)sekurlsa::|sekurlsa::logonpasswords'), 9, 'Mimikatz sekurlsa module'),
     (re.compile(r'(?i)privilege::debug'), 9, 'Mimikatz privilege::debug'),
+    (re.compile(r'(?i)secretsdump|SecretsDump'), 9, 'Impacket secretsdump'),
+    (re.compile(r'(?i)aws.*iam.*create-user|iam.*CreateUser'), 6, 'AWS IAM create user'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 

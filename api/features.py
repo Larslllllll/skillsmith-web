@@ -2811,6 +2811,9 @@ _EXPLAIN_RULES = [
     ("mimikatz sekurlsa module", "Mimikatz sekurlsa pattern.", "sekurlsa extracts logon passwords from memory."),
     ("mimikatz privilege debug", "Mimikatz privilege pattern.", "privilege::debug enables debugging for credential theft."),
 
+    ("impacket secretsdump", "Impacket secretsdump pattern.", "secretsdump dumps SAM and LSA secrets from remote machines."),
+    ("aws iam create user", "AWS IAM pattern.", "Creating IAM users establishes persistent access."),
+
 ]
 
 
