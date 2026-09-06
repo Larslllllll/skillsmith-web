@@ -661,6 +661,14 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)helm.*rollback|--rollback'), 5, 'helm rollback'),
     (re.compile(r'(?i)docker.*commit'), 7, 'docker commit image'),
     (re.compile(r'(?i)setcap.*cap_[A-Z]'), 7, 'setcap capability escalation'),
+    (re.compile(r'(?i)aws.*lambda.*update-function-code|lambda.*UpdateFunctionCode'), 7, 'AWS Lambda update function code'),
+    (re.compile(r'(?i)az.*storage.*account.*keys.*list|StorageAccountKeys.*List'), 8, 'Azure storage account keys'),
+    (re.compile(r'(?i)gcloud.*secrets.*create|--create.*secret'), 7, 'GCP secrets create'),
+    (re.compile(r'(?i)\bNanoCore\b'), 9, 'NanoCore RAT'),
+    (re.compile(r'(?i)\bOrcus\b'), 8, 'Orcus RAT'),
+    (re.compile(r'(?i)\bEttercap\b'), 8, 'Ettercap MITM attack'),
+    (re.compile(r'(?i)\bBettercap\b'), 8, 'Bettercap MITM attack'),
+    (re.compile(r'(?i)pkexec|polkit|--action=org'), 7, 'polkit privilege escalation'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 

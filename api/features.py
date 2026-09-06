@@ -2702,6 +2702,15 @@ _EXPLAIN_RULES = [
     ("docker commit image", "docker commit pattern.", "docker commit creates images from containers."),
     ("setcap capability escalation", "setcap pattern.", "setcap grants Linux capabilities for privilege escalation."),
 
+    ("aws lambda update function code", "AWS Lambda pattern.", "Updating Lambda function code can inject malicious code."),
+    ("azure storage account keys", "Azure storage keys pattern.", "Listing storage account keys exposes cloud credentials."),
+    ("gcp secrets create", "GCP secrets pattern.", "Creating secrets in GCP stores sensitive data."),
+    ("nanocore rat", "NanoCore RAT pattern.", "NanoCore is a remote access trojan."),
+    ("orcus rat", "Orcus RAT pattern.", "Orcus is a RAT with remote control features."),
+    ("ettercap mitm attack", "Ettercap pattern.", "Ettercap performs man-in-the-middle attacks."),
+    ("bettercap mitm attack", "Bettercap pattern.", "Bettercap is a modern MITM framework."),
+    ("polkit privilege escalation", "polkit pattern.", "polkit/pkexec can escalate privileges."),
+
 ]
 
 
