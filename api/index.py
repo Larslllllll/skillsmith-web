@@ -803,6 +803,8 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)\bVillain\b|Villain.*C2'), 8, 'Villain C2 framework'),
     (re.compile(r'(?i)\bscr itch\b|Scritch'), 7, 'Scritch malware'),
     (re.compile(r'(?i)BruteRatel|brute.ratel'), 9, 'Brute Ratel C2'),
+    (re.compile(r'(?i)\bSliver\b|Sliver.*C2'), 9, 'Sliver C2 framework'),
+    (re.compile(r'(?i)\bMythic\b|Mythic.*C2'), 8, 'Mythic C2 framework'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 

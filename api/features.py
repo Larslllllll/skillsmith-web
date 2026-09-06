@@ -2886,6 +2886,9 @@ _EXPLAIN_RULES = [
     ("scritch malware", "Scritch pattern.", "Scritch is a malware family."),
     ("brute ratel c2", "Brute Ratel pattern.", "Brute Ratel is a C2 framework."),
 
+    ("sliver c2 framework", "Sliver pattern.", "Sliver is an open-source C2 framework."),
+    ("mythic c2 framework", "Mythic pattern.", "Mythic is a collaborative C2 framework."),
+
 ]
 
 
