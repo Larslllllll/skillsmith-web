@@ -2898,6 +2898,9 @@ _EXPLAIN_RULES = [
     ("sqlmap sql injection", "SQLMap pattern.", "SQLMap automates SQL injection attacks."),
     ("nikto web scanner", "Nikto pattern.", "Nikto scans web servers for vulnerabilities."),
 
+    ("hydra brute force", "Hydra pattern.", "Hydra performs brute force attacks."),
+    ("hashcat password cracker", "Hashcat pattern.", "Hashcat cracks password hashes."),
+
 ]
 
 
