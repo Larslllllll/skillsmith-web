@@ -779,6 +779,8 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)TargetedKerberoast|Kerberoast.*targeted'), 8, 'Targeted Kerberoast'),
     (re.compile(r'(?i)Responder.*-w|--wpad|WPAD.*proxy'), 8, 'Responder WPAD attack'),
     (re.compile(r'(?i)\bmitm6\b'), 8, 'mitm6 IPv6 attack'),
+    (re.compile(r'(?i)\baclpwn\b|acl.*pwn'), 8, 'aclwpn AD ACL attack'),
+    (re.compile(r'(?i)password.spray|Spray.*password'), 7, 'Password spray attack'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 

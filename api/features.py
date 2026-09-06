@@ -2850,6 +2850,9 @@ _EXPLAIN_RULES = [
     ("responder wpad attack", "Responder WPAD pattern.", "Responder -w enables WPAD proxy attack."),
     ("mitm6 ipv6 attack", "mitm6 pattern.", "mitm6 exploits IPv6 to relay authentication."),
 
+    ("aclwpn ad acl attack", "aclwpn pattern.", "aclwpn exploits AD ACL misconfigurations."),
+    ("password spray attack", "Password spray pattern.", "Password spray tests common passwords across accounts."),
+
 ]
 
 
