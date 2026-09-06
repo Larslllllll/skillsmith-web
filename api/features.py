@@ -2683,6 +2683,16 @@ _EXPLAIN_RULES = [
     ("sudo to root user", "sudo root pattern.", "sudo -u root or sudo -u #0 escalates to root."),
     ("tar exfiltration", "tar exfil pattern.", "tar with -cf - pipes data for exfiltration."),
 
+    ("pnpm store path", "pnpm store pattern.", "pnpm store path may contain unvetted packages."),
+    ("bun install", "bun install pattern.", "bun install installs packages from registries."),
+    ("composer dev dependency", "composer dev pattern.", "Composer dev dependencies may include attack tooling."),
+    ("qakbot banking trojan", "Qakbot pattern.", "Qakbot is a banking trojan that spreads via email."),
+    ("terraform destroy", "terraform destroy pattern.", "terraform destroy removes infrastructure."),
+    ("kubectl delete resource", "kubectl delete pattern.", "kubectl delete removes resources from clusters."),
+    ("refusal overload attack", "refusal overload pattern.", "Refusal overload forces excessive refusals."),
+    ("compression oracle attack", "compression oracle pattern.", "Compression oracles exploit compression side channels."),
+    ("semantic sabotage attack", "semantic sabotage pattern.", "Semantic sabotage corrupts model understanding."),
+
 ]
 
 

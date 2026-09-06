@@ -647,6 +647,12 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)\bConti\b'), 9, 'Conti ransomware'),
     (re.compile(r'(?i)sudo.*-u.*#0|sudo.*-u.*root'), 5, 'sudo to root user'),
     (re.compile(r'(?i)tar.*-czf.*-.*|tar.*-cf.*-.*|tar.*--exclude.*-.*'), 5, 'tar exfiltration'),
+    (re.compile(r'(?i)pnpm.*--store|node_modules/.pnpm'), 5, 'pnpm store path'),
+    (re.compile(r'(?i)\bbun\s+install\b'), 5, 'bun install'),
+    (re.compile(r'(?i)composer.*require.*--dev|composer.*require.*--no-dev'), 5, 'composer dev dependency'),
+    (re.compile(r'(?i)\bQakbot\b|\bQBot\b'), 9, 'Qakbot banking trojan'),
+    (re.compile(r'(?i)terraform.*destroy|--destroy'), 7, 'terraform destroy'),
+    (re.compile(r'(?i)kubectl.*delete|--force|--grace-period=0'), 6, 'kubectl delete resource'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 
@@ -1707,6 +1713,9 @@ _PROMPT_INJECTION_PATTERNS = [
     (re.compile(r'(?i)indirect\s+injection|indirect.*prompt'), 7, 'indirect injection attack'),
     (re.compile(r'(?i)cross-modal\s+attack|vision.*inject'), 7, 'cross-modal attack'),
     (re.compile(r'(?i)model\s+extraction|model\s+stealing'), 7, 'model extraction attack'),
+    (re.compile(r'(?i)refusal\s+overload|forced\s+refusal'), 7, 'refusal overload attack'),
+    (re.compile(r'(?i)compression\s+oracle|CRIME\s+attack|BEAST'), 7, 'compression oracle attack'),
+    (re.compile(r'(?i)semantic\s+sabu?rt|meaning\s+corrupt'), 7, 'semantic sabotage attack'),
     (re.compile(r'(?i)\b(?:describe|analyze|explain)\s+(?:this\s+)?(?:image|photo|picture)\s+(?:of|in)\s+(?:a\s+)?(?:password|key|screen)'), 9, "Visual data extraction instruction"),
 ]
 
