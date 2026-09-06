@@ -2877,6 +2877,9 @@ _EXPLAIN_RULES = [
     ("stormbreaker malware", "StormBreaker pattern.", "StormBreaker is a malware family."),
     ("typhoon network tool", "Typhoon pattern.", "Typhoon is a network attack tool."),
 
+    ("darkside ransomware", "DarkSide pattern.", "DarkSide ransomware encrypts files for ransom."),
+    ("lockbit ransomware", "LockBit pattern.", "LockBit ransomware extorts victims."),
+
 ]
 
 
