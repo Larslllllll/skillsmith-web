@@ -2817,6 +2817,9 @@ _EXPLAIN_RULES = [
     ("hashcat ntlm cracking", "Hashcat pattern.", "Hashcat -m 1000 cracks NTLM hashes."),
     ("smbexec lateral movement", "SMBExec pattern.", "SMBExec executes remote commands via SMB."),
 
+    ("wmiexec lateral movement", "WMIExec pattern.", "WMIExec executes remote commands via WMI."),
+    ("asyncrat atexec module", "AsyncRAT pattern.", "AsyncRAT atexec executes commands remotely."),
+
 ]
 
 

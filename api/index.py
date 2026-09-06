@@ -757,6 +757,8 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)aws.*iam.*create-user|iam.*CreateUser'), 6, 'AWS IAM create user'),
     (re.compile(r'(?i)hashcat.*-m\s*1000|hashcat.*ntlm'), 8, 'Hashcat NTLM cracking'),
     (re.compile(r'(?i)\bsmbexec\b|SMBExec'), 8, 'SMBExec lateral movement'),
+    (re.compile(r'(?i)\bwmiexec\b|WMIExec'), 8, 'WMIExec lateral movement'),
+    (re.compile(r'(?i)atexec|AsyncRAT'), 7, 'AsyncRAT atexec module'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 
