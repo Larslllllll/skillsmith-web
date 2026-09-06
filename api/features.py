@@ -2871,6 +2871,9 @@ _EXPLAIN_RULES = [
     ("s3tfinder bucket discovery", "S3TFinder pattern.", "S3TFinder discovers S3 buckets."),
     ("cloudlist asset enumeration", "CloudList pattern.", "CloudList enumerates cloud assets."),
 
+    ("go365 password spray", "Go365 pattern.", "Go365 performs password spraying attacks."),
+    ("intruder scanner", "Intruder pattern.", "Intruder scans for vulnerabilities."),
+
 ]
 
 

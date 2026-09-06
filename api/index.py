@@ -793,6 +793,8 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)azurra|Azura.*framework'), 6, 'Azura attack framework'),
     (re.compile(r'(?i)s3tfinder|S3TFinder'), 6, 'S3TFinder bucket discovery'),
     (re.compile(r'(?i)cloudlist|CloudList'), 6, 'CloudList asset enumeration'),
+    (re.compile(r'(?i)go365|Go365'), 7, 'Go365 password spray'),
+    (re.compile(r'(?i)\bintruder\b|Intruder'), 5, 'Intruder scanner'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 
