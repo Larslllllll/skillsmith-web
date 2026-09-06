@@ -2883,6 +2883,9 @@ _EXPLAIN_RULES = [
     ("havoc c2 framework", "Havoc pattern.", "Havoc is a modern C2 framework."),
     ("villain c2 framework", "Villain pattern.", "Villain is a C2 framework for red teams."),
 
+    ("scritch malware", "Scritch pattern.", "Scritch is a malware family."),
+    ("brute ratel c2", "Brute Ratel pattern.", "Brute Ratel is a C2 framework."),
+
 ]
 
 

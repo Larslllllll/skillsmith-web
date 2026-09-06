@@ -801,6 +801,8 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)\bLockBit\b|lockbit.*ransomware'), 9, 'LockBit ransomware'),
     (re.compile(r'(?i)\bHavoc\b|Havoc.*C2'), 9, 'Havoc C2 framework'),
     (re.compile(r'(?i)\bVillain\b|Villain.*C2'), 8, 'Villain C2 framework'),
+    (re.compile(r'(?i)\bscr itch\b|Scritch'), 7, 'Scritch malware'),
+    (re.compile(r'(?i)BruteRatel|brute.ratel'), 9, 'Brute Ratel C2'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 
