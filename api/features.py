@@ -2892,6 +2892,9 @@ _EXPLAIN_RULES = [
     ("cobalt strike", "Cobalt Strike pattern.", "Cobalt Strike is a commercial penetration testing framework."),
     ("metasploit", "Metasploit pattern.", "Metasploit is an exploitation framework."),
 
+    ("powershell empire", "Empire pattern.", "PowerShell Empire provides post-exploitation capabilities."),
+    ("mimikatz", "Mimikatz pattern.", "Mimikatz extracts credentials from memory."),
+
 ]
 
 
