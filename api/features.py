@@ -2865,6 +2865,9 @@ _EXPLAIN_RULES = [
     ("privexchange attack", "PrivExchange pattern.", "PrivExchange exploits Exchange for privilege escalation."),
     ("purplesharp simulated attack", "PurpleSharp pattern.", "PurpleSharp simulates attacker techniques."),
 
+    ("ssh audit ssh scanner", "ssh-audit pattern.", "ssh-audit scans SSH configurations."),
+    ("azura attack framework", "Azura pattern.", "Azura framework automates attack workflows."),
+
 ]
 
 
