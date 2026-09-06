@@ -2889,6 +2889,9 @@ _EXPLAIN_RULES = [
     ("sliver c2 framework", "Sliver pattern.", "Sliver is an open-source C2 framework."),
     ("mythic c2 framework", "Mythic pattern.", "Mythic is a collaborative C2 framework."),
 
+    ("cobalt strike", "Cobalt Strike pattern.", "Cobalt Strike is a commercial penetration testing framework."),
+    ("metasploit", "Metasploit pattern.", "Metasploit is an exploitation framework."),
+
 ]
 
 
