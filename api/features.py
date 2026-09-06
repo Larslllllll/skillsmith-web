@@ -2778,6 +2778,12 @@ _EXPLAIN_RULES = [
     ("tor configuration", "tor config pattern.", "tor configuration enables anonymity."),
     ("gcp compute scp file transfer", "GCP compute scp pattern.", "gcloud compute scp transfers files."),
 
+    ("base64 obfuscation", "base64 obfuscation pattern.", "btoa/atob obfuscates JavaScript code."),
+    ("certutil decode", "certutil decode pattern.", "certutil -decode decodes encoded data."),
+    ("socat fork", "socat fork pattern.", "socat --fork creates multiple connections."),
+    ("gobuster directory scan", "gobuster pattern.", "gobuster enumerates web directories."),
+    ("azure key vault secret set", "Azure Key Vault pattern.", "Setting secrets in Key Vault stores attacker credentials."),
+
 ]
 
 

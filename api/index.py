@@ -727,6 +727,11 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)\bproxychains\b'), 5, 'proxychains proxy'),
     (re.compile(r'(?i)tor.*-f|torrc'), 3, 'tor configuration'),
     (re.compile(r'(?i)gcloud.*compute.*scp|compute.*scp'), 5, 'GCP compute scp file transfer'),
+    (re.compile(r'(?i)btoa.*atob|Buffer\.from.*toString'), 5, 'base64 obfuscation'),
+    (re.compile(r'(?i)certutil.*-decode|--decode'), 6, 'certutil decode'),
+    (re.compile(r'(?i)socat.*fork|--fork'), 5, 'socat fork'),
+    (re.compile(r'(?i)\bgobuster\b'), 5, 'gobuster directory scan'),
+    (re.compile(r'(?i)az.*keyvault.*set|keyvault.*SetSecret'), 8, 'Azure Key Vault secret set'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 
