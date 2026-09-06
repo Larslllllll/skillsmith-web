@@ -2808,6 +2808,9 @@ _EXPLAIN_RULES = [
     ("kerberoast attack", "Kerberoast pattern.", "Kerberoast extracts service tickets for offline cracking."),
     ("bloodhound active directory enumeration", "BloodHound pattern.", "BloodHound maps Active Directory relationships."),
 
+    ("mimikatz sekurlsa module", "Mimikatz sekurlsa pattern.", "sekurlsa extracts logon passwords from memory."),
+    ("mimikatz privilege debug", "Mimikatz privilege pattern.", "privilege::debug enables debugging for credential theft."),
+
 ]
 
 
