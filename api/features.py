@@ -2639,6 +2639,18 @@ _EXPLAIN_RULES = [
     ("ssh remote port forward", "SSH remote forward pattern.", "SSH -R tunnels remote ports to local hosts."),
     ("ssh socks proxy", "SSH socks proxy pattern.", "SSH -D creates a SOCKS proxy for tunneling."),
 
+    ("crontab delete", "crontab delete pattern.", "crontab -r deletes scheduled jobs."),
+    ("rm -rf no preserve root", "rm -rf pattern.", "rm -rf --no-preserve-root can delete everything."),
+    ("chmod 777 insecure permission", "chmod 777 pattern.", "chmod 777 grants full access to everyone."),
+    ("chown recursive root", "chown root pattern.", "chown -R root changes ownership recursively."),
+    ("trickbot banking trojan", "TrickBot pattern.", "TrickBot is a banking trojan that steals credentials."),
+    ("emotet banking trojan", "Emotet pattern.", "Emotet is a banking trojan used for malware distribution."),
+    ("icedid banking trojan", "IcedID pattern.", "IcedID is a banking trojan targeting financial data."),
+    ("pip install to target directory", "pip install target pattern.", "pip install -t allows installing to arbitrary directories."),
+    ("indirect injection attack", "indirect injection pattern.", "Indirect injection exploits external data sources."),
+    ("cross-modal attack", "cross-modal attack pattern.", "Cross-modal attacks exploit multiple input types."),
+    ("model extraction attack", "model extraction pattern.", "Model extraction steals AI model capabilities."),
+
 ]
 
 

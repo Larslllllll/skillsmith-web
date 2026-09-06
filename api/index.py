@@ -610,6 +610,14 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)ssh.*-L\s+\d+:|ssh.*local.*forward'), 5, 'SSH local port forward'),
     (re.compile(r'(?i)ssh.*-R\s+\d+:|ssh.*remote.*forward'), 5, 'SSH remote port forward'),
     (re.compile(r'(?i)ssh.*-D\s+\d+|ssh.*socks'), 5, 'SSH socks proxy'),
+    (re.compile(r'(?i)crontab.*-r|--delete'), 7, 'crontab delete'),
+    (re.compile(r'(?i)rm.*-rf.*--no-preserve-root'), 9, 'rm -rf no preserve root'),
+    (re.compile(r'(?i)chmod.*777'), 7, 'chmod 777 insecure permission'),
+    (re.compile(r'(?i)chown.*-R.*root'), 6, 'chown recursive root'),
+    (re.compile(r'(?i)\bTrickBot\b'), 9, 'TrickBot banking trojan'),
+    (re.compile(r'(?i)\bEmotet\b'), 9, 'Emotet banking trojan'),
+    (re.compile(r'(?i)\bIcedID\b'), 9, 'IcedID banking trojan'),
+    (re.compile(r'(?i)pip.*install.*-t|--target'), 6, 'pip install to target directory'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 
@@ -1667,6 +1675,9 @@ _PROMPT_INJECTION_PATTERNS = [
     (re.compile(r'(?i)garbage\s+in.*garbage\s+out|GIGO'), 5, 'GIGO framing'),
     (re.compile(r'(?i)translation\s+attack|multi-step.*translation'), 7, 'translation attack'),
     (re.compile(r'(?i)payload\s+splitting|instruction\s+splitting'), 7, 'payload splitting attack'),
+    (re.compile(r'(?i)indirect\s+injection|indirect.*prompt'), 7, 'indirect injection attack'),
+    (re.compile(r'(?i)cross-modal\s+attack|vision.*inject'), 7, 'cross-modal attack'),
+    (re.compile(r'(?i)model\s+extraction|model\s+stealing'), 7, 'model extraction attack'),
     (re.compile(r'(?i)\b(?:describe|analyze|explain)\s+(?:this\s+)?(?:image|photo|picture)\s+(?:of|in)\s+(?:a\s+)?(?:password|key|screen)'), 9, "Visual data extraction instruction"),
 ]
 
