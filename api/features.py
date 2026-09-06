@@ -2838,6 +2838,9 @@ _EXPLAIN_RULES = [
     ("malicious npm package", "npm install pattern.", "Malicious npm packages install backdoors."),
     ("pip install from requirements", "pip pattern.", "Installing from requirements risks malicious packages."),
 
+    ("powercat netcat alternative", "PowerCat pattern.", "PowerCat provides PowerShell-based netcat functionality."),
+    ("powerupsql sql attack", "PowerUpSQL pattern.", "PowerUpSQL exploits SQL server misconfigurations."),
+
 ]
 
 

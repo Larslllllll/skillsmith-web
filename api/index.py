@@ -771,6 +771,8 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)SILENTTRINITY|st4k|silenttrinity'), 8, 'SILENTTRINITY C2'),
     (re.compile(r'(?i)npm.*install.*--save-dev.*http|malicious.*npm.*install'), 7, 'Malicious npm package'),
     (re.compile(r'(?i)pip.*install.*-r.*requirements|requirements.*install'), 5, 'pip install from requirements'),
+    (re.compile(r'(?i)\bpowercat\b'), 8, 'PowerCat netcat alternative'),
+    (re.compile(r'(?i)PowerUpSQL|PowerUp.*SQL'), 7, 'PowerUpSQL SQL attack'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 
