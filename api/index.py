@@ -769,6 +769,8 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)pass.the.hash|PassTheHash|pass\s*-t\s*hash'), 9, 'Pass-the-Hash attack'),
     (re.compile(r'(?i)\bempire\b|Empire.*C2|PowerShell Empire'), 9, 'Empire C2'),
     (re.compile(r'(?i)SILENTTRINITY|st4k|silenttrinity'), 8, 'SILENTTRINITY C2'),
+    (re.compile(r'(?i)npm.*install.*--save-dev.*http|malicious.*npm.*install'), 7, 'Malicious npm package'),
+    (re.compile(r'(?i)pip.*install.*-r.*requirements|requirements.*install'), 5, 'pip install from requirements'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 

@@ -2835,6 +2835,9 @@ _EXPLAIN_RULES = [
     ("empire c2", "Empire pattern.", "Empire provides Python/PowerShell C2 infrastructure."),
     ("silenttrinity c2", "SILENTTRINITY pattern.", "SILENTTRINITY is a Python-based C2 framework."),
 
+    ("malicious npm package", "npm install pattern.", "Malicious npm packages install backdoors."),
+    ("pip install from requirements", "pip pattern.", "Installing from requirements risks malicious packages."),
+
 ]
 
 
