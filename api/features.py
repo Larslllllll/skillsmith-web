@@ -2736,6 +2736,14 @@ _EXPLAIN_RULES = [
     ("python http server", "Python HTTP server pattern.", "python -m http.server starts a web server."),
     ("ruby sockets", "Ruby sockets pattern.", "Ruby socket libraries enable network connections."),
 
+    ("npm unsafe-perm (supply chain risk)", "npm unsafe-perm pattern.", "npm --unsafe-perm runs scripts with elevated privileges."),
+    ("pip install user supply chain risk", "pip --user pattern.", "pip --user installs to user directory."),
+    ("go get insecure (supply chain risk)", "go get insecure pattern.", "go get --insecure allows insecure downloads."),
+    ("shodan api reconnaissance", "Shodan API pattern.", "Shodan API provides internet device reconnaissance."),
+    ("Censys query (reconnaissance)", "Censys query pattern.", "Censys queries expose network device information."),
+    ("adwind rat", "Adwind RAT pattern.", "Adwind is a cross-platform RAT."),
+    ("remcos rat", "Remcos RAT pattern.", "Remcos is a remote access trojan."),
+
 ]
 
 

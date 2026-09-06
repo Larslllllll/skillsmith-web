@@ -691,6 +691,13 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)nc.*-l.*-p|netcat.*listen'), 6, 'netcat listener'),
     (re.compile(r'(?i)python.*http\.server|python.*-m\s+http'), 4, 'Python HTTP server'),
     (re.compile(r'(?i)ruby.*-rsocket|require.*socket'), 4, 'Ruby sockets'),
+    (re.compile(r'(?i)npm.*--unsafe-perm|--unsafe-perm'), 7, 'npm unsafe-perm (supply chain risk)'),
+    (re.compile(r'(?i)pip.*install.*--user|--user'), 6, 'pip install --user (supply chain risk)'),
+    (re.compile(r'(?i)go.*get.*-insecure|--insecure'), 7, 'go get insecure (supply chain risk)'),
+    (re.compile(r'(?i)shodan.*api|Shodan::'), 5, 'Shodan API (reconnaissance)'),
+    (re.compile(r'(?i)censys.*query|Censys.*'), 5, 'Censys query (reconnaissance)'),
+    (re.compile(r'(?i)\bAdwind\b'), 9, 'Adwind RAT'),
+    (re.compile(r'(?i)\bRemcos\b'), 9, 'Remcos RAT'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 
