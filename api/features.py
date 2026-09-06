@@ -2874,6 +2874,9 @@ _EXPLAIN_RULES = [
     ("go365 password spray", "Go365 pattern.", "Go365 performs password spraying attacks."),
     ("intruder scanner", "Intruder pattern.", "Intruder scans for vulnerabilities."),
 
+    ("stormbreaker malware", "StormBreaker pattern.", "StormBreaker is a malware family."),
+    ("typhoon network tool", "Typhoon pattern.", "Typhoon is a network attack tool."),
+
 ]
 
 

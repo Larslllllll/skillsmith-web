@@ -795,6 +795,8 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)cloudlist|CloudList'), 6, 'CloudList asset enumeration'),
     (re.compile(r'(?i)go365|Go365'), 7, 'Go365 password spray'),
     (re.compile(r'(?i)\bintruder\b|Intruder'), 5, 'Intruder scanner'),
+    (re.compile(r'(?i)stormbreaker|StormBreaker'), 7, 'StormBreaker malware'),
+    (re.compile(r'(?i)\btyphoon\b|Typhoon'), 6, 'Typhoon network tool'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 
