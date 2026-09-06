@@ -2853,6 +2853,9 @@ _EXPLAIN_RULES = [
     ("aclwpn ad acl attack", "aclwpn pattern.", "aclwpn exploits AD ACL misconfigurations."),
     ("password spray attack", "Password spray pattern.", "Password spray tests common passwords across accounts."),
 
+    ("ruler outlook abuse", "Ruler pattern.", "Ruler exploits Outlook forms for remote access."),
+    ("mailsniper email attack", "MailSniper pattern.", "MailSniper steals emails and credentials."),
+
 ]
 
 
