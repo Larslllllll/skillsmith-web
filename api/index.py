@@ -773,6 +773,8 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)pip.*install.*-r.*requirements|requirements.*install'), 5, 'pip install from requirements'),
     (re.compile(r'(?i)\bpowercat\b'), 8, 'PowerCat netcat alternative'),
     (re.compile(r'(?i)PowerUpSQL|PowerUp.*SQL'), 7, 'PowerUpSQL SQL attack'),
+    (re.compile(r'(?i)\binveigh\b|Inveigh'), 7, 'Inveigh LLMNR/NBNS spoofer'),
+    (re.compile(r'(?i)\bresploit\b|Resploit'), 6, 'Resploit hardware exploit'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 

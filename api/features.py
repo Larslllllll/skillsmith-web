@@ -2841,6 +2841,9 @@ _EXPLAIN_RULES = [
     ("powercat netcat alternative", "PowerCat pattern.", "PowerCat provides PowerShell-based netcat functionality."),
     ("powerupsql sql attack", "PowerUpSQL pattern.", "PowerUpSQL exploits SQL server misconfigurations."),
 
+    ("inveigh llmnr nbns spoofer", "Inveigh pattern.", "Inveighspoofs LLMNR/NBNS for credential capture."),
+    ("resploit hardware exploit", "Resploit pattern.", "Resploit exploits hardware vulnerabilities."),
+
 ]
 
 
