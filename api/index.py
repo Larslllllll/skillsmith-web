@@ -618,6 +618,17 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)\bEmotet\b'), 9, 'Emotet banking trojan'),
     (re.compile(r'(?i)\bIcedID\b'), 9, 'IcedID banking trojan'),
     (re.compile(r'(?i)pip.*install.*-t|--target'), 6, 'pip install to target directory'),
+    (re.compile(r'(?i)\bDanaBot\b'), 9, 'DanaBot banking trojan'),
+    (re.compile(r'(?i)\bGrandoreiro\b'), 9, 'Grandoreiro banking trojan'),
+    (re.compile(r'(?i)\bValak\b'), 9, 'Valak malware'),
+    (re.compile(r'(?i)aws.*get-secret-value|secretsmanager.*GetSecretValue'), 8, 'AWS Secrets Manager access'),
+    (re.compile(r'(?i)aws.*get-parameter|ssm.*GetParameter'), 7, 'AWS SSM Parameter Store access'),
+    (re.compile(r'(?i)az.*keyvault.*secret|keyvault.*GetSecret'), 8, 'Azure Key Vault access'),
+    (re.compile(r'(?i)nmap.*-sS|-sT.*scan'), 6, 'nmap SYN/TCP scan'),
+    (re.compile(r'(?i)nmap.*-sV|--version'), 5, 'nmap version detection'),
+    (re.compile(r'(?i)\bmasscan\b'), 6, 'masscan network scanner'),
+    (re.compile(r'(?i)reg.*add.*HKLM.*Run|reg.*add.*HKCU.*Run'), 7, 'registry Run key persistence'),
+    (re.compile(r'(?i)schtasks.*/create|/sc\s+ONSTART|/sc\s+ONLOGON'), 6, 'scheduled task persistence'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 

@@ -2651,6 +2651,18 @@ _EXPLAIN_RULES = [
     ("cross-modal attack", "cross-modal attack pattern.", "Cross-modal attacks exploit multiple input types."),
     ("model extraction attack", "model extraction pattern.", "Model extraction steals AI model capabilities."),
 
+    ("danabot banking trojan", "DanaBot pattern.", "DanaBot is a banking trojan that steals credentials."),
+    ("grandoreiro banking trojan", "Grandoreiro pattern.", "Grandoreiro is a Latin American banking trojan."),
+    ("valak malware", "Valak pattern.", "Valak is a malware loader that delivers additional payloads."),
+    ("aws secrets manager access", "AWS Secrets Manager pattern.", "AWS Secrets Manager stores sensitive credentials."),
+    ("aws ssm parameter store access", "AWS SSM Parameter pattern.", "AWS SSM Parameter Store holds configuration secrets."),
+    ("azure key vault access", "Azure Key Vault pattern.", "Azure Key Vault manages encryption keys and secrets."),
+    ("nmap syn tcp scan", "nmap SYN scan pattern.", "nmap -sS performs stealth SYN scans."),
+    ("nmap version detection", "nmap version pattern.", "nmap -sV detects service versions."),
+    ("masscan network scanner", "masscan pattern.", "masscan scans the internet quickly."),
+    ("registry run key persistence", "registry Run key pattern.", "Adding to Run keys establishes persistence."),
+    ("scheduled task persistence", "scheduled task pattern.", "schtasks /create creates persistent scheduled tasks."),
+
 ]
 
 
