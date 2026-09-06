@@ -2829,6 +2829,9 @@ _EXPLAIN_RULES = [
     ("certipy ad cs abuse", "Certipy pattern.", "Certipy exploits Active Directory Certificate Services."),
     ("vssadmin shadow copy", "vssadmin pattern.", "vssadmin creates volume shadow copies for credential extraction."),
 
+    ("crackmapexec", "CrackMapExec pattern.", "CrackMapExec automates network pentesting."),
+    ("pass the hash attack", "Pass-the-Hash pattern.", "Pass-the-Hash reuses NTLM hashes for authentication."),
+
 ]
 
 
