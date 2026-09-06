@@ -2826,6 +2826,9 @@ _EXPLAIN_RULES = [
     ("mimikatz logonpasswords", "Mimikatz logonpasswords pattern.", "logonpasswords extracts plaintext passwords from memory."),
     ("ntlm relay attack", "NTLM relay pattern.", "ntlmrelayx relays NTLM authentication to other targets."),
 
+    ("certipy ad cs abuse", "Certipy pattern.", "Certipy exploits Active Directory Certificate Services."),
+    ("vssadmin shadow copy", "vssadmin pattern.", "vssadmin creates volume shadow copies for credential extraction."),
+
 ]
 
 

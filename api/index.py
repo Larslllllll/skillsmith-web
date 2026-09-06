@@ -763,6 +763,8 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)\bkoadic\b|Koadic.*C2'), 9, 'Koadic C2 framework'),
     (re.compile(r'(?i)logonpasswords|sekurlsa::logonpasswords'), 9, 'Mimikatz logonpasswords'),
     (re.compile(r'(?i)\bntlmrelayx\b|NTLMRelayx'), 8, 'NTLM relay attack'),
+    (re.compile(r'(?i)\bcertipy\b|Certipy'), 9, 'Certipy AD CS abuse'),
+    (re.compile(r'(?i)shadowcopy|shadow.*copy|vssadmin'), 7, 'vssadmin shadow copy'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 
