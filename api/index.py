@@ -698,6 +698,12 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)censys.*query|Censys.*'), 5, 'Censys query (reconnaissance)'),
     (re.compile(r'(?i)\bAdwind\b'), 9, 'Adwind RAT'),
     (re.compile(r'(?i)\bRemcos\b'), 9, 'Remcos RAT'),
+    (re.compile(r'(?i)aws.*put-bucket-policy|s3api.*PutBucketPolicy'), 7, 'AWS S3 bucket policy modification'),
+    (re.compile(r'(?i)az.*login.*--service-principal|az\s+login.*--identity'), 6, 'Azure service principal login'),
+    (re.compile(r'(?i)\bNeutrino\b'), 9, 'Neutrino bot'),
+    (re.compile(r'(?i)\bKovter\b'), 9, 'Kovter malware'),
+    (re.compile(r'(?i)tcpdump.*-i.*-w|tcpdump.*--snapshot-length'), 5, 'tcpdump packet capture'),
+    (re.compile(r'(?i)wireshark.*-r|tshark.*-r'), 5, 'Wireshark/TShark capture'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 

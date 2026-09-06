@@ -2744,6 +2744,13 @@ _EXPLAIN_RULES = [
     ("adwind rat", "Adwind RAT pattern.", "Adwind is a cross-platform RAT."),
     ("remcos rat", "Remcos RAT pattern.", "Remcos is a remote access trojan."),
 
+    ("aws s3 bucket policy modification", "AWS S3 bucket policy pattern.", "put-bucket-policy modifies bucket access controls."),
+    ("azure service principal login", "Azure SP pattern.", "Azure service principal login enables app authentication."),
+    ("neutrino bot", "Neutrino bot pattern.", "Neutrino is a bot that steals cryptocurrency."),
+    ("kovter malware", "Kovter pattern.", "Kovter is fileless malware."),
+    ("tcpdump packet capture", "tcpdump pattern.", "tcpdump captures network packets."),
+    ("wireshark tshark capture", "Wireshark pattern.", "Wireshark/TShark captures and analyzes packets."),
+
 ]
 
 
