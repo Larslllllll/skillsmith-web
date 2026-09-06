@@ -2814,6 +2814,9 @@ _EXPLAIN_RULES = [
     ("impacket secretsdump", "Impacket secretsdump pattern.", "secretsdump dumps SAM and LSA secrets from remote machines."),
     ("aws iam create user", "AWS IAM pattern.", "Creating IAM users establishes persistent access."),
 
+    ("hashcat ntlm cracking", "Hashcat pattern.", "Hashcat -m 1000 cracks NTLM hashes."),
+    ("smbexec lateral movement", "SMBExec pattern.", "SMBExec executes remote commands via SMB."),
+
 ]
 
 
