@@ -704,6 +704,11 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)\bKovter\b'), 9, 'Kovter malware'),
     (re.compile(r'(?i)tcpdump.*-i.*-w|tcpdump.*--snapshot-length'), 5, 'tcpdump packet capture'),
     (re.compile(r'(?i)wireshark.*-r|tshark.*-r'), 5, 'Wireshark/TShark capture'),
+    (re.compile(r'(?i)veil.*-o|--out'), 7, 'Veil evasion framework'),
+    (re.compile(r'(?i)\brdesktop\b'), 5, 'rdesktop RDP client'),
+    (re.compile(r'(?i)\bxfreerdp\b'), 5, 'xfreerdp RDP client'),
+    (re.compile(r'(?i)aws.*sts.*get-caller-identity|GetCallerIdentity'), 5, 'AWS STS get-caller-identity'),
+    (re.compile(r'(?i)gcloud.*activate-service-account|gcloud.*auth.*activate'), 6, 'GCP service account activation'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 

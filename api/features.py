@@ -2751,6 +2751,12 @@ _EXPLAIN_RULES = [
     ("tcpdump packet capture", "tcpdump pattern.", "tcpdump captures network packets."),
     ("wireshark tshark capture", "Wireshark pattern.", "Wireshark/TShark captures and analyzes packets."),
 
+    ("veil evasion framework", "Veil pattern.", "Veil creates evade antivirus detection."),
+    ("rdesktop rdp client", "rdesktop pattern.", "rdesktop connects to Windows RDP servers."),
+    ("xfreerdp rdp client", "xfreerdp pattern.", "xfreerdp is a free RDP client."),
+    ("aws sts get-caller-identity", "AWS STS identity pattern.", "STS get-caller-identity reveals AWS account."),
+    ("gcp service account activation", "GCP service account pattern.", "Activating service accounts enables cloud access."),
+
 ]
 
 
