@@ -2895,6 +2895,9 @@ _EXPLAIN_RULES = [
     ("powershell empire", "Empire pattern.", "PowerShell Empire provides post-exploitation capabilities."),
     ("mimikatz", "Mimikatz pattern.", "Mimikatz extracts credentials from memory."),
 
+    ("sqlmap sql injection", "SQLMap pattern.", "SQLMap automates SQL injection attacks."),
+    ("nikto web scanner", "Nikto pattern.", "Nikto scans web servers for vulnerabilities."),
+
 ]
 
 

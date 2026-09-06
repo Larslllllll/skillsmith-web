@@ -809,6 +809,8 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)Metasploit|msfconsole|msfvenom'), 9, 'Metasploit'),
     (re.compile(r'(?i)PowerShell.*Empire|empire.*agent'), 9, 'PowerShell Empire'),
     (re.compile(r'(?i)\bmimikatz\b|mimikatz.*sekurlsa'), 10, 'Mimikatz'),
+    (re.compile(r'(?i)\bsqlmap\b|sqlmap.*--dump'), 9, 'SQLMap SQL injection'),
+    (re.compile(r'(?i)\bnikto\b|nikto.*-h'), 6, 'Nikto web scanner'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 
