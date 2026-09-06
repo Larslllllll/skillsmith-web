@@ -639,6 +639,14 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)aws.*s3.*cp|aws.*s3api.*copy-object'), 5, 'AWS S3 copy exfil'),
     (re.compile(r'(?i)wmic.*process.*call.*create'), 8, 'WMI process create'),
     (re.compile(r'(?i)invoke-wmimethod|Invoke-WmiMethod'), 7, 'PowerShell WMI execution'),
+    (re.compile(r'(?i)\bResponder\b'), 8, 'Responder LLMNR/NBT-NS poisoning'),
+    (re.compile(r'(?i)\bImpacket\b'), 8, 'Impacket network toolkit'),
+    (re.compile(r'(?i)az\s+vm\s+run-command|az\s+vm\s+invoke'), 7, 'Azure VM run command'),
+    (re.compile(r'(?i)gcloud\s+compute\s+ssh'), 6, 'GCP compute ssh'),
+    (re.compile(r'(?i)\bDarkSide\b'), 9, 'DarkSide ransomware'),
+    (re.compile(r'(?i)\bConti\b'), 9, 'Conti ransomware'),
+    (re.compile(r'(?i)sudo.*-u.*#0|sudo.*-u.*root'), 5, 'sudo to root user'),
+    (re.compile(r'(?i)tar.*-czf.*-.*|tar.*-cf.*-.*|tar.*--exclude.*-.*'), 5, 'tar exfiltration'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 

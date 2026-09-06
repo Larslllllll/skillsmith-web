@@ -2674,6 +2674,15 @@ _EXPLAIN_RULES = [
     ("wmi process create", "WMI process create pattern.", "WMI process creation enables lateral movement."),
     ("powershell wmi execution", "PowerShell WMI pattern.", "Invoke-WmiMethod executes via WMI."),
 
+    ("responder llmnr nbt-ns poisoning", "Responder pattern.", "Responder poisons LLMNR/NBT-NS for credential theft."),
+    ("impacket network toolkit", "Impacket pattern.", "Impacket provides network protocol manipulation."),
+    ("azure vm run command", "Azure VM run command pattern.", "az vm run-command executes code on VMs."),
+    ("gcp compute ssh", "GCP compute ssh pattern.", "gcloud compute ssh provides remote access."),
+    ("darkside ransomware", "DarkSide pattern.", "DarkSide is ransomware that targets organizations."),
+    ("conti ransomware", "Conti pattern.", "Conti is ransomware used in attacks."),
+    ("sudo to root user", "sudo root pattern.", "sudo -u root or sudo -u #0 escalates to root."),
+    ("tar exfiltration", "tar exfil pattern.", "tar with -cf - pipes data for exfiltration."),
+
 ]
 
 
