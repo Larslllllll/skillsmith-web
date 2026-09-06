@@ -813,6 +813,8 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)\bnikto\b|nikto.*-h'), 6, 'Nikto web scanner'),
     (re.compile(r'(?i)\bhydra\b|hydra.*-l|-P.*password'), 8, 'Hydra brute force'),
     (re.compile(r'(?i)\bhashcat\b|hashcat.*-m'), 7, 'Hashcat password cracker'),
+    (re.compile(r'(?i)\bnmap\b|nmap.*-sS|-sV|-O'), 6, 'Nmap network scan'),
+    (re.compile(r'(?i)\bmasscan\b|masscan.*-p'), 6, 'Masscan port scanner'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 

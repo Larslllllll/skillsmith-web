@@ -2901,6 +2901,9 @@ _EXPLAIN_RULES = [
     ("hydra brute force", "Hydra pattern.", "Hydra performs brute force attacks."),
     ("hashcat password cracker", "Hashcat pattern.", "Hashcat cracks password hashes."),
 
+    ("nmap network scan", "Nmap pattern.", "Nmap scans networks and discovers hosts."),
+    ("masscan port scanner", "Masscan pattern.", "Masscan scans ports at high speed."),
+
 ]
 
 
