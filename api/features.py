@@ -2757,6 +2757,14 @@ _EXPLAIN_RULES = [
     ("aws sts get-caller-identity", "AWS STS identity pattern.", "STS get-caller-identity reveals AWS account."),
     ("gcp service account activation", "GCP service account pattern.", "Activating service accounts enables cloud access."),
 
+    ("sharpcode injection", "SharpCode pattern.", "SharpCode exploits vulnerable .NET compilation."),
+    ("seatbelt enumeration", "Seatbelt pattern.", "Seatbelt enumerates system security information."),
+    ("powerup privilege escalation", "PowerUp pattern.", "PowerUp finds Windows privilege escalation paths."),
+    ("sharpwmi execution", "SharpWMI pattern.", "SharpWMI executes WMI commands."),
+    ("rpcinfo enumeration", "rpcinfo pattern.", "rpcinfo enumerates RPC services."),
+    ("enum4linux smb enumeration", "enum4linux pattern.", "enum4linux enumerates SMB shares and users."),
+    ("aws s3 bucket acl read", "AWS S3 ACL pattern.", "Reading S3 bucket ACLs reveals access policies."),
+
 ]
 
 

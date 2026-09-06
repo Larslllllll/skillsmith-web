@@ -709,6 +709,13 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)\bxfreerdp\b'), 5, 'xfreerdp RDP client'),
     (re.compile(r'(?i)aws.*sts.*get-caller-identity|GetCallerIdentity'), 5, 'AWS STS get-caller-identity'),
     (re.compile(r'(?i)gcloud.*activate-service-account|gcloud.*auth.*activate'), 6, 'GCP service account activation'),
+    (re.compile(r'(?i)sharpcode|sharp.*code.*injection'), 8, 'SharpCode injection'),
+    (re.compile(r'(?i)seatbelt.*-c.*user|Seatbelt.*user'), 7, 'Seatbelt enumeration'),
+    (re.compile(r'(?i)powerup\.ps1|PowerUp'), 7, 'PowerUp privilege escalation'),
+    (re.compile(r'(?i)sharpwmi|SharpWMI'), 8, 'SharpWMI execution'),
+    (re.compile(r'(?i)\brpcinfo\b'), 5, 'rpcinfo enumeration'),
+    (re.compile(r'(?i)enum4linux|enum4linux\.pl'), 6, 'enum4linux SMB enumeration'),
+    (re.compile(r'(?i)aws.*get-bucket-acl|s3api.*GetBucketAcl'), 5, 'AWS S3 bucket ACL read'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 
