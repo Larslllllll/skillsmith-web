@@ -2856,6 +2856,9 @@ _EXPLAIN_RULES = [
     ("ruler outlook abuse", "Ruler pattern.", "Ruler exploits Outlook forms for remote access."),
     ("mailsniper email attack", "MailSniper pattern.", "MailSniper steals emails and credentials."),
 
+    ("cloudfrs cloud attack", "CloudFrs pattern.", "CloudFrs attacks cloud storage services."),
+    ("pacu aws exploitation", "Pacu pattern.", "Pacu exploits AWS misconfigurations."),
+
 ]
 
 

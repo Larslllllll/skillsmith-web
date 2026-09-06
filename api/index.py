@@ -783,6 +783,8 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)password.spray|Spray.*password'), 7, 'Password spray attack'),
     (re.compile(r'(?i)\bruler\b|Ruler'), 7, 'Ruler Outlook abuse'),
     (re.compile(r'(?i)mailsniper|MailSniper'), 7, 'MailSniper email attack'),
+    (re.compile(r'(?i)cloudfrs|CloudFrs'), 6, 'CloudFrs cloud attack'),
+    (re.compile(r'(?i)\bpacu\b|Pacu'), 6, 'Pacu AWS exploitation'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 
