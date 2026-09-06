@@ -2844,6 +2844,9 @@ _EXPLAIN_RULES = [
     ("inveigh llmnr nbns spoofer", "Inveigh pattern.", "Inveighspoofs LLMNR/NBNS for credential capture."),
     ("resploit hardware exploit", "Resploit pattern.", "Resploit exploits hardware vulnerabilities."),
 
+    ("krbrelay ad attack", "KrbRelay pattern.", "KrbRelay relays Kerberos authentication."),
+    ("targeted kerberoast", "Kerberoast pattern.", "Targeted Kerberoast targets specific service accounts."),
+
 ]
 
 

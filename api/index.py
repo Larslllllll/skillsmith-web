@@ -775,6 +775,8 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)PowerUpSQL|PowerUp.*SQL'), 7, 'PowerUpSQL SQL attack'),
     (re.compile(r'(?i)\binveigh\b|Inveigh'), 7, 'Inveigh LLMNR/NBNS spoofer'),
     (re.compile(r'(?i)\bresploit\b|Resploit'), 6, 'Resploit hardware exploit'),
+    (re.compile(r'(?i)\bkrbrelay\b|KrbRelay'), 9, 'KrbRelay AD attack'),
+    (re.compile(r'(?i)TargetedKerberoast|Kerberoast.*targeted'), 8, 'Targeted Kerberoast'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 
