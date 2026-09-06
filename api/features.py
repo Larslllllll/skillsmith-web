@@ -2904,6 +2904,9 @@ _EXPLAIN_RULES = [
     ("nmap network scan", "Nmap pattern.", "Nmap scans networks and discovers hosts."),
     ("masscan port scanner", "Masscan pattern.", "Masscan scans ports at high speed."),
 
+    ("burp suite", "Burp Suite pattern.", "Burp Suite intercepts and analyzes web traffic."),
+    ("wireshark packet analyzer", "Wireshark pattern.", "Wireshark captures and analyzes network packets."),
+
 ]
 
 
