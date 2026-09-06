@@ -2859,6 +2859,9 @@ _EXPLAIN_RULES = [
     ("cloudfrs cloud attack", "CloudFrs pattern.", "CloudFrs attacks cloud storage services."),
     ("pacu aws exploitation", "Pacu pattern.", "Pacu exploits AWS misconfigurations."),
 
+    ("lsassy credential extraction", "Lsassy pattern.", "Lsassy extracts credentials from lsass."),
+    ("nanocore rat", "NanoCore pattern.", "NanoCore RAT provides remote access."),
+
 ]
 
 
