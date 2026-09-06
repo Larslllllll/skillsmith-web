@@ -2663,6 +2663,17 @@ _EXPLAIN_RULES = [
     ("registry run key persistence", "registry Run key pattern.", "Adding to Run keys establishes persistence."),
     ("scheduled task persistence", "scheduled task pattern.", "schtasks /create creates persistent scheduled tasks."),
 
+    ("beef browser exploitation framework", "BeEF pattern.", "BeEF (Browser Exploitation Framework) hooks browsers for exploitation."),
+    ("burp suite web proxy", "Burp Suite pattern.", "Burp Suite is a web application security testing proxy."),
+    ("owasp zap scanner", "OWASP ZAP pattern.", "OWASP ZAP is an open-source web app scanner."),
+    ("metasploit framework", "Metasploit pattern.", "Metasploit is an exploitation framework."),
+    ("kubectl get secrets", "kubectl secrets pattern.", "kubectl get secrets exposes sensitive data."),
+    ("kubectl scale deployment", "kubectl scale pattern.", "kubectl scale modifies deployment replicas."),
+    ("curl file upload exfiltration", "curl file upload pattern.", "curl -F uploads files for exfiltration."),
+    ("aws s3 copy exfil", "AWS S3 exfil pattern.", "AWS S3 cp can copy data out of buckets."),
+    ("wmi process create", "WMI process create pattern.", "WMI process creation enables lateral movement."),
+    ("powershell wmi execution", "PowerShell WMI pattern.", "Invoke-WmiMethod executes via WMI."),
+
 ]
 
 

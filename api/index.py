@@ -629,6 +629,16 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)\bmasscan\b'), 6, 'masscan network scanner'),
     (re.compile(r'(?i)reg.*add.*HKLM.*Run|reg.*add.*HKCU.*Run'), 7, 'registry Run key persistence'),
     (re.compile(r'(?i)schtasks.*/create|/sc\s+ONSTART|/sc\s+ONLOGON'), 6, 'scheduled task persistence'),
+    (re.compile(r'(?i)\bBeEF\b'), 8, 'BeEF browser exploitation framework'),
+    (re.compile(r'(?i)Burp\s+Suite|burpsuite'), 6, 'Burp Suite web proxy'),
+    (re.compile(r'(?i)OWASP\s+ZAP|owasp.*zap'), 6, 'OWASP ZAP scanner'),
+    (re.compile(r'(?i)\bMetasploit\b'), 8, 'Metasploit framework'),
+    (re.compile(r'(?i)kubectl.*get.*secrets|kubectl.*describe.*secrets'), 8, 'kubectl get secrets'),
+    (re.compile(r'(?i)kubectl.*scale.*deployment'), 5, 'kubectl scale deployment'),
+    (re.compile(r'(?i)curl.*-F|--form'), 6, 'curl file upload exfiltration'),
+    (re.compile(r'(?i)aws.*s3.*cp|aws.*s3api.*copy-object'), 5, 'AWS S3 copy exfil'),
+    (re.compile(r'(?i)wmic.*process.*call.*create'), 8, 'WMI process create'),
+    (re.compile(r'(?i)invoke-wmimethod|Invoke-WmiMethod'), 7, 'PowerShell WMI execution'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 
