@@ -2720,6 +2720,14 @@ _EXPLAIN_RULES = [
     ("chisel tunneling tool", "chisel pattern.", "chisel creates tunnels for lateral movement."),
     ("plink local port forward", "plink pattern.", "plink -L tunnels ports through SSH."),
 
+    ("pyoxidizer python packager", "PyOxidizer pattern.", "PyOxidizer packages Python applications."),
+    ("pyinstaller executable packager", "PyInstaller pattern.", "PyInstaller creates standalone executables."),
+    ("nuitka python compiler", "Nuitka pattern.", "Nuitka compiles Python to C."),
+    ("kubectl top node resource abuse", "kubectl top pattern.", "kubectl top shows resource usage."),
+    ("kubectl debug session", "kubectl debug pattern.", "kubectl debug creates debugging sessions."),
+    ("helm template rendering", "helm template pattern.", "helm template renders charts locally."),
+    ("sshfs remote mount", "sshfs pattern.", "sshfs mounts remote filesystems."),
+
 ]
 
 

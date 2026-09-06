@@ -677,6 +677,13 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)docker.*save.*>|docker.*export.*>'), 5, 'docker save/export exfiltration'),
     (re.compile(r'(?i)chisel.*client|chisel.*reverse'), 7, 'chisel tunneling tool'),
     (re.compile(r'(?i)plink.*-L\s+\d+|plink.*local.*forward'), 5, 'plink local port forward'),
+    (re.compile(r'(?i)\bPyOxidizer\b'), 5, 'PyOxidizer Python packager'),
+    (re.compile(r'(?i)\bPyInstaller\b'), 5, 'PyInstaller executable packager'),
+    (re.compile(r'(?i)\bNuitka\b'), 5, 'Nuitka Python compiler'),
+    (re.compile(r'(?i)kubectl.*top.*node|top.*node'), 4, 'kubectl top node (resource abuse)'),
+    (re.compile(r'(?i)kubectl.*debug|--debug'), 5, 'kubectl debug session'),
+    (re.compile(r'(?i)helm.*template|--template'), 4, 'helm template rendering'),
+    (re.compile(r'(?i)\bsshfs\b'), 5, 'sshfs remote mount'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 
