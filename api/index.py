@@ -819,6 +819,8 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)Wireshark|tshark|ethereal'), 5, 'Wireshark packet analyzer'),
     (re.compile(r'(?i)\btcpdump\b|tcpdump.*-i|-nn'), 5, 'tcpdump packet capture'),
     (re.compile(r'(?i)ettercap|ettercap.*-T|-M'), 7, 'Ettercap MITM'),
+    (re.compile(r'(?i)\bResponder\b|Responder.*-I'), 8, 'Responder LLMNR poisoner'),
+    (re.compile(r'(?i)Impacket|impacket.*secretsdump'), 9, 'Impacket toolkit'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 

@@ -2910,6 +2910,9 @@ _EXPLAIN_RULES = [
     ("tcpdump packet capture", "tcpdump pattern.", "tcpdump captures network packets."),
     ("ettercap mitm", "Ettercap pattern.", "Ettercap performs man-in-the-middle attacks."),
 
+    ("responder llmnr poisoner", "Responder pattern.", "Responder poisons LLMNR/NBT-NS for credential theft."),
+    ("impacket toolkit", "Impacket pattern.", "Impacket provides Python scripts for network attacks."),
+
 ]
 
 
