@@ -2728,6 +2728,14 @@ _EXPLAIN_RULES = [
     ("helm template rendering", "helm template pattern.", "helm template renders charts locally."),
     ("sshfs remote mount", "sshfs pattern.", "sshfs mounts remote filesystems."),
 
+    ("ncat keep-alive listener", "ncat keep-alive pattern.", "ncat -k keeps connections open for persistent access."),
+    ("gcp iam policy binding", "GCP IAM pattern.", "add-iam-policy-binding grants permissions to attackers."),
+    ("openssl certificate generation", "openssl pattern.", "openssl req -x509 generates certificates for MITM."),
+    ("msfvenom linux payload", "msfvenom Linux pattern.", "msfvenom creates Linux payloads for exploitation."),
+    ("netcat listener", "netcat listener pattern.", "netcat -l -p creates network listeners."),
+    ("python http server", "Python HTTP server pattern.", "python -m http.server starts a web server."),
+    ("ruby sockets", "Ruby sockets pattern.", "Ruby socket libraries enable network connections."),
+
 ]
 
 

@@ -684,6 +684,13 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)kubectl.*debug|--debug'), 5, 'kubectl debug session'),
     (re.compile(r'(?i)helm.*template|--template'), 4, 'helm template rendering'),
     (re.compile(r'(?i)\bsshfs\b'), 5, 'sshfs remote mount'),
+    (re.compile(r'(?i)ncat.*-k|--keep-open'), 6, 'ncat keep-alive listener'),
+    (re.compile(r'(?i)gcloud.*add-iam-policy-binding|projects.*set-iam-policy'), 7, 'GCP IAM policy binding'),
+    (re.compile(r'(?i)openssl.*req.*-x509|openssl.*genrsa'), 5, 'openssl certificate generation'),
+    (re.compile(r'(?i)msfvenom.*-p\s+linux|linux/x86/'), 8, 'msfvenom Linux payload'),
+    (re.compile(r'(?i)nc.*-l.*-p|netcat.*listen'), 6, 'netcat listener'),
+    (re.compile(r'(?i)python.*http\.server|python.*-m\s+http'), 4, 'Python HTTP server'),
+    (re.compile(r'(?i)ruby.*-rsocket|require.*socket'), 4, 'Ruby sockets'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 
