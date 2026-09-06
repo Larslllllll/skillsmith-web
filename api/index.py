@@ -746,6 +746,9 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)\blaZagne\b'), 7, 'LaZagne credential recovery'),
     (re.compile(r'(?i)responder.*-I|--interface'), 6, 'Responder interface selection'),
     (re.compile(r'(?i)\bmitmproxy\b'), 5, 'mitmproxy HTTPS proxy'),
+    (re.compile(r'(?i)rubeus.*asktgt|asktgt'), 9, 'Rubeus asktgt ticket request'),
+    (re.compile(r'(?i)kekeo.*asktgt'), 9, 'Kekeo asktgt ticket request'),
+    (re.compile(r'(?i)\bevilgrade\b'), 7, 'evilgrade HTTPS injection'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 

@@ -2801,6 +2801,10 @@ _EXPLAIN_RULES = [
     ("responder interface selection", "Responder pattern.", "Responder -I selects network interface for poisoning."),
     ("mitmproxy https proxy", "mitmproxy pattern.", "mitmproxy intercepts HTTPS traffic."),
 
+    ("rubeus asktgt ticket request", "Rubeus pattern.", "Rubeus asktgt requests Kerberos TGT tickets."),
+    ("kekeo asktgt ticket request", "Kekeo pattern.", "Kekeo asktgt requests Kerberos tickets."),
+    ("evilgrade https injection", "evilgrade pattern.", "evilgrade injects malicious updates via HTTPS."),
+
 ]
 
 
