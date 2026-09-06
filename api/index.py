@@ -742,6 +742,10 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)\bdns2tcp\b'), 7, 'dns2tcp DNS tunnel'),
     (re.compile(r'(?i)\biodine\b'), 7, 'iodine DNS tunnel'),
     (re.compile(r'(?i)aws.*ses.*send-email|SES.*SendEmail'), 5, 'AWS SES send email'),
+    (re.compile(r'(?i)\bsharpdpapi\b|SharpDPAPI'), 8, 'SharpDPAPI credential decryption'),
+    (re.compile(r'(?i)\blaZagne\b'), 7, 'LaZagne credential recovery'),
+    (re.compile(r'(?i)responder.*-I|--interface'), 6, 'Responder interface selection'),
+    (re.compile(r'(?i)\bmitmproxy\b'), 5, 'mitmproxy HTTPS proxy'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 

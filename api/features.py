@@ -2796,6 +2796,11 @@ _EXPLAIN_RULES = [
     ("iodine dns tunnel", "iodine pattern.", "iodine tunnels IP over DNS."),
     ("aws ses send email", "AWS SES pattern.", "AWS SES sends emails for phishing."),
 
+    ("sharpdpapi credential decryption", "SharpDPAPI pattern.", "SharpDPAPI decrypts Windows credentials."),
+    ("lazagne credential recovery", "LaZagne pattern.", "LaZagne recovers passwords from browsers and apps."),
+    ("responder interface selection", "Responder pattern.", "Responder -I selects network interface for poisoning."),
+    ("mitmproxy https proxy", "mitmproxy pattern.", "mitmproxy intercepts HTTPS traffic."),
+
 ]
 
 
