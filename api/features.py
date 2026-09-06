@@ -2784,6 +2784,12 @@ _EXPLAIN_RULES = [
     ("gobuster directory scan", "gobuster pattern.", "gobuster enumerates web directories."),
     ("azure key vault secret set", "Azure Key Vault pattern.", "Setting secrets in Key Vault stores attacker credentials."),
 
+    ("ntdsutil dc dump", "NTDSUTIL pattern.", "ntdsutil extracts Active Directory database."),
+    ("vssadmin create shadow", "vssadmin shadow pattern.", "vssadmin create shadow copies volumes."),
+    ("dirb web directory scanner", "dirb pattern.", "dirb scans web directories."),
+    ("ffuf web fuzzing", "ffuf pattern.", "ffuf fuzzes web parameters."),
+    ("aws dynamodb write", "DynamoDB write pattern.", "DynamoDB PutItem writes data to tables."),
+
 ]
 
 

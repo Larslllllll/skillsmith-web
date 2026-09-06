@@ -732,6 +732,11 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)socat.*fork|--fork'), 5, 'socat fork'),
     (re.compile(r'(?i)\bgobuster\b'), 5, 'gobuster directory scan'),
     (re.compile(r'(?i)az.*keyvault.*set|keyvault.*SetSecret'), 8, 'Azure Key Vault secret set'),
+    (re.compile(r'(?i)\bntdsutil\b'), 9, 'NTDSUTIL DC dump'),
+    (re.compile(r'(?i)vssadmin.*create.*shadow|volume.*shadow.*copy'), 8, 'vssadmin create shadow'),
+    (re.compile(r'(?i)\bdirb\b'), 5, 'dirb web directory scanner'),
+    (re.compile(r'(?i)\bffuf\b'), 5, 'ffuf web fuzzing'),
+    (re.compile(r'(?i)aws.*dynamodb.*put-item|DynamoDB.*PutItem'), 5, 'AWS DynamoDB write'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 
