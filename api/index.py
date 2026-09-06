@@ -791,6 +791,8 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)PurpleSharp|purple.sharp'), 5, 'PurpleSharp simulated attack'),
     (re.compile(r'(?i)ssh-audit|ssh.*audit'), 5, 'ssh-audit SSH scanner'),
     (re.compile(r'(?i)azurra|Azura.*framework'), 6, 'Azura attack framework'),
+    (re.compile(r'(?i)s3tfinder|S3TFinder'), 6, 'S3TFinder bucket discovery'),
+    (re.compile(r'(?i)cloudlist|CloudList'), 6, 'CloudList asset enumeration'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 

@@ -2868,6 +2868,9 @@ _EXPLAIN_RULES = [
     ("ssh audit ssh scanner", "ssh-audit pattern.", "ssh-audit scans SSH configurations."),
     ("azura attack framework", "Azura pattern.", "Azura framework automates attack workflows."),
 
+    ("s3tfinder bucket discovery", "S3TFinder pattern.", "S3TFinder discovers S3 buckets."),
+    ("cloudlist asset enumeration", "CloudList pattern.", "CloudList enumerates cloud assets."),
+
 ]
 
 
