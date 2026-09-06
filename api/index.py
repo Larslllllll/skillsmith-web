@@ -716,6 +716,12 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)\brpcinfo\b'), 5, 'rpcinfo enumeration'),
     (re.compile(r'(?i)enum4linux|enum4linux\.pl'), 6, 'enum4linux SMB enumeration'),
     (re.compile(r'(?i)aws.*get-bucket-acl|s3api.*GetBucketAcl'), 5, 'AWS S3 bucket ACL read'),
+    (re.compile(r'(?i)amsi.*bypass|Bypass-AMS'), 8, 'AMSI bypass technique'),
+    (re.compile(r'(?i)set-item.*wsman|wsman.*provider'), 5, 'PowerShell WSMan provider'),
+    (re.compile(r'(?i)masscan.*--rate|--rate'), 5, 'masscan high-rate scan'),
+    (re.compile(r'(?i)\bhping3\b'), 6, 'hping3 packet crafting'),
+    (re.compile(r'(?i)az.*vm.*extension|vm.*extension.*add'), 5, 'Azure VM extension'),
+    (re.compile(r'(?i)aws.*lambda.*update-function|UpdateFunction'), 5, 'AWS Lambda update'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 

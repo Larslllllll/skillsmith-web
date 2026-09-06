@@ -2765,6 +2765,13 @@ _EXPLAIN_RULES = [
     ("enum4linux smb enumeration", "enum4linux pattern.", "enum4linux enumerates SMB shares and users."),
     ("aws s3 bucket acl read", "AWS S3 ACL pattern.", "Reading S3 bucket ACLs reveals access policies."),
 
+    ("amsi bypass technique", "AMSI bypass pattern.", "AMSI bypass disables antivirus scanning."),
+    ("powershell wsman provider", "WSMan pattern.", "WSMan manages remote connections."),
+    ("masscan high-rate scan", "masscan pattern.", "masscan --rate scans at high speed."),
+    ("hping3 packet crafting", "hping3 pattern.", "hping3 crafts custom network packets."),
+    ("azure vm extension", "Azure VM extension pattern.", "Azure VM extensions modify systems."),
+    ("aws lambda update", "AWS Lambda update pattern.", "Lambda updates inject code."),
+
 ]
 
 
