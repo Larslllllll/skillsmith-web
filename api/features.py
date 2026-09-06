@@ -2832,6 +2832,9 @@ _EXPLAIN_RULES = [
     ("crackmapexec", "CrackMapExec pattern.", "CrackMapExec automates network pentesting."),
     ("pass the hash attack", "Pass-the-Hash pattern.", "Pass-the-Hash reuses NTLM hashes for authentication."),
 
+    ("empire c2", "Empire pattern.", "Empire provides Python/PowerShell C2 infrastructure."),
+    ("silenttrinity c2", "SILENTTRINITY pattern.", "SILENTTRINITY is a Python-based C2 framework."),
+
 ]
 
 

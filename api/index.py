@@ -767,6 +767,8 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)shadowcopy|shadow.*copy|vssadmin'), 7, 'vssadmin shadow copy'),
     (re.compile(r'(?i)\bcrackmapexec\b|cme'), 8, 'CrackMapExec'),
     (re.compile(r'(?i)pass.the.hash|PassTheHash|pass\s*-t\s*hash'), 9, 'Pass-the-Hash attack'),
+    (re.compile(r'(?i)\bempire\b|Empire.*C2|PowerShell Empire'), 9, 'Empire C2'),
+    (re.compile(r'(?i)SILENTTRINITY|st4k|silenttrinity'), 8, 'SILENTTRINITY C2'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 
