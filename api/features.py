@@ -2823,6 +2823,9 @@ _EXPLAIN_RULES = [
     ("covenant c2 framework", "Covenant pattern.", "Covenant C2 provides Python-based C2 infrastructure."),
     ("koadic c2 framework", "Koadic pattern.", "Koadic C2 uses VBScript for post-exploitation."),
 
+    ("mimikatz logonpasswords", "Mimikatz logonpasswords pattern.", "logonpasswords extracts plaintext passwords from memory."),
+    ("ntlm relay attack", "NTLM relay pattern.", "ntlmrelayx relays NTLM authentication to other targets."),
+
 ]
 
 
