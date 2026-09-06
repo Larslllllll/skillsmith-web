@@ -2862,6 +2862,9 @@ _EXPLAIN_RULES = [
     ("lsassy credential extraction", "Lsassy pattern.", "Lsassy extracts credentials from lsass."),
     ("nanocore rat", "NanoCore pattern.", "NanoCore RAT provides remote access."),
 
+    ("privexchange attack", "PrivExchange pattern.", "PrivExchange exploits Exchange for privilege escalation."),
+    ("purplesharp simulated attack", "PurpleSharp pattern.", "PurpleSharp simulates attacker techniques."),
+
 ]
 
 
