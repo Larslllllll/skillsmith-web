@@ -669,6 +669,14 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)\bEttercap\b'), 8, 'Ettercap MITM attack'),
     (re.compile(r'(?i)\bBettercap\b'), 8, 'Bettercap MITM attack'),
     (re.compile(r'(?i)pkexec|polkit|--action=org'), 7, 'polkit privilege escalation'),
+    (re.compile(r'(?i)\bFlawedAmmyy\b'), 9, 'FlawedAmmyy RAT'),
+    (re.compile(r'(?i)\bBazarLoader\b|\bBazar\b'), 9, 'BazarLoader malware'),
+    (re.compile(r'(?i)\bTrickBot\b'), 9, 'TrickBot banking trojan'),
+    (re.compile(r'(?i)kubectl.*expose.*--port'), 5, 'kubectl expose service'),
+    (re.compile(r'(?i)kubectl.*run.*--rm|--rm'), 6, 'kubectl run rm (container escape)'),
+    (re.compile(r'(?i)docker.*save.*>|docker.*export.*>'), 5, 'docker save/export exfiltration'),
+    (re.compile(r'(?i)chisel.*client|chisel.*reverse'), 7, 'chisel tunneling tool'),
+    (re.compile(r'(?i)plink.*-L\s+\d+|plink.*local.*forward'), 5, 'plink local port forward'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 

@@ -2711,6 +2711,15 @@ _EXPLAIN_RULES = [
     ("bettercap mitm attack", "Bettercap pattern.", "Bettercap is a modern MITM framework."),
     ("polkit privilege escalation", "polkit pattern.", "polkit/pkexec can escalate privileges."),
 
+    ("flawedammyy rat", "FlawedAmmyy pattern.", "FlawedAmmyy is a RAT used by threat actors."),
+    ("bazarloader malware", "BazarLoader pattern.", "BazarLoader delivers additional malware."),
+    ("trickbot banking trojan", "TrickBot pattern.", "TrickBot steals banking credentials."),
+    ("kubectl expose service", "kubectl expose pattern.", "kubectl expose creates services for attack surface."),
+    ("kubectl run rm container escape", "kubectl run rm pattern.", "kubectl run --rm creates ephemeral containers."),
+    ("docker save export exfiltration", "docker exfil pattern.", "docker save or export can exfiltrate images."),
+    ("chisel tunneling tool", "chisel pattern.", "chisel creates tunnels for lateral movement."),
+    ("plink local port forward", "plink pattern.", "plink -L tunnels ports through SSH."),
+
 ]
 
 
