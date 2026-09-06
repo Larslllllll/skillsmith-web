@@ -821,6 +821,8 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)ettercap|ettercap.*-T|-M'), 7, 'Ettercap MITM'),
     (re.compile(r'(?i)\bResponder\b|Responder.*-I'), 8, 'Responder LLMNR poisoner'),
     (re.compile(r'(?i)Impacket|impacket.*secretsdump'), 9, 'Impacket toolkit'),
+    (re.compile(r'(?i)\bPupy\b|Pupy.*RAT'), 8, 'Pupy RAT'),
+    (re.compile(r'(?i)Koadic|koadic.*cmdshell'), 8, 'Koadic C2'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 

@@ -2913,6 +2913,9 @@ _EXPLAIN_RULES = [
     ("responder llmnr poisoner", "Responder pattern.", "Responder poisons LLMNR/NBT-NS for credential theft."),
     ("impacket toolkit", "Impacket pattern.", "Impacket provides Python scripts for network attacks."),
 
+    ("pupy rat", "Pupy pattern.", "Pupy is a cross-platform RAT."),
+    ("koadic c2", "Koadic pattern.", "Koadic is a C2 framework using COM objects."),
+
 ]
 
 
