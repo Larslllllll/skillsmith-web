@@ -2907,6 +2907,9 @@ _EXPLAIN_RULES = [
     ("burp suite", "Burp Suite pattern.", "Burp Suite intercepts and analyzes web traffic."),
     ("wireshark packet analyzer", "Wireshark pattern.", "Wireshark captures and analyzes network packets."),
 
+    ("tcpdump packet capture", "tcpdump pattern.", "tcpdump captures network packets."),
+    ("ettercap mitm", "Ettercap pattern.", "Ettercap performs man-in-the-middle attacks."),
+
 ]
 
 

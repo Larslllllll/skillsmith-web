@@ -817,6 +817,8 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)\bmasscan\b|masscan.*-p'), 6, 'Masscan port scanner'),
     (re.compile(r'(?i)BurpSuite|burp.*pro|intruder.*burp'), 7, 'Burp Suite'),
     (re.compile(r'(?i)Wireshark|tshark|ethereal'), 5, 'Wireshark packet analyzer'),
+    (re.compile(r'(?i)\btcpdump\b|tcpdump.*-i|-nn'), 5, 'tcpdump packet capture'),
+    (re.compile(r'(?i)ettercap|ettercap.*-T|-M'), 7, 'Ettercap MITM'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 
