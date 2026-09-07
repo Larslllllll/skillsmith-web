@@ -3189,6 +3189,9 @@ _EXPLAIN_RULES = [
 
     ("token reuse", "Token Reuse pattern.", "Token reuse attacks replay valid tokens to gain unauthorized access."),
     ("session poisoning", "Session Poisoning pattern.", "Session poisoning manipulates session state for malicious purposes."),
+
+    ("malicious dependency", "Malicious Dependency pattern.", "Malicious dependencies execute arbitrary code through software supply chain attacks."),
+    ("broken authentication", "Broken Authentication pattern.", "Broken authentication allows attackers to gain access through weak or missing credential checks."),
 ]
 
 
