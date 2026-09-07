@@ -3159,6 +3159,9 @@ _EXPLAIN_RULES = [
 
     ("data exfiltration", "Data Exfiltration pattern.", "Data exfiltration attempts unauthorized data transfer."),
     ("denial of service", "DoS Attack pattern.", "Denial of service attacks exhaust system resources."),
+
+    ("memory corruption", "Memory Corruption pattern.", "Memory corruption exploits attack memory safety vulnerabilities."),
+    ("race condition", "Race Condition pattern.", "Race conditions allow concurrent access to create security vulnerabilities."),
 ]
 
 
