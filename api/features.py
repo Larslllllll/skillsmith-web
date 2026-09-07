@@ -3075,6 +3075,9 @@ _EXPLAIN_RULES = [
 
     ("rootkit", "Rootkit pattern.", "Rootkits hide malicious code at kernel level."),
     ("bootkit", "Bootkit pattern.", "Bootkits infect boot sectors and BIOS."),
+
+    ("keylogger", "Keylogger pattern.", "Keyloggers record keystrokes for theft."),
+    ("spyware", "Spyware pattern.", "Spyware secretly monitors user activity."),
 ]
 
 

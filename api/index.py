@@ -1259,6 +1259,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)Ransomware|ransomware|crypto.*lock|file.*encrypt.*attack|wanna.*cry'), 9, 'Ransomware'),
     (re.compile(r'(?i)Rootkit|rootkit|kernel.*rootkit|hidden.*process|mbr.*rootkit'), 9, 'Rootkit'),
     (re.compile(r'(?i)Bootkit|bootkit|boot.*sector.*infect|uefi.*malware|bios.*infect'), 9, 'Bootkit'),
+    (re.compile(r'(?i)Keylogger|keylogger|keystroke.*logger|keyboard.*logger|hook.*keyboard'), 7, 'Keylogger'),
+    (re.compile(r'(?i)Spyware|spyware|surveillance.*malware|tracking.*software|creepware'), 7, 'Spyware'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
