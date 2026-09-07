@@ -4393,4 +4393,6 @@ def _app_inner(environ, start_response):
     (re.compile(r'(?i)Typosquat.*Lib|typosquat.*library|pypi.*typosquatt|npm.*typosquatt|similar.*package.*name|lookalike.*library'), 7, 'Library typosquatting attack'),
     (re.compile(r'(?i)Zero.*Day.*Exploit|0day.*exploit|unknown.*vuln.*exploit|unpatched.*vuln|nday.*exploit'), 10, 'Zero-day exploit attempt'),
     (re.compile(r'(?i)Man.*in.*the.*Middle|mitm.*attack|arp.*spoofing|certificate.*pin.*bypass|ssl.*strip'), 8, 'Man-in-the-middle attack'),
+    (re.compile(r'(?i)Lateral.*Movement|lateral.*move|pivot.*network|credential.*reuse|ssh.*pivot|wmi.*lateral'), 8, 'Lateral movement attack'),
+    (re.compile(r'(?i)Privilege.*Escalation|priv.*esc|elevat.*privilege|root.*access|sudo.*without.*password'), 9, 'Privilege escalation vulnerability'),
     return [json.dumps({"error": "not found"}).encode()]  # no route enumeration (pentest LOW-02)
