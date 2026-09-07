@@ -3116,6 +3116,9 @@ _EXPLAIN_RULES = [
     ("dll side-loading", "DLL Side-Loading pattern.", "DLL side-loading exploits DLL search order."),
     ("lol driver abuse", "LOL Driver pattern.", "LOL drivers exploit signed vulnerable drivers."),
     ("lol", "LOL Driver pattern.", "LOL drivers are living-off-the-land."),
+
+    ("lolbins abuse", "LOLBins pattern.", "LOLBins are legitimate binaries used maliciously."),
+    ("gtfobins abuse", "GTFOBins pattern.", "GTFOBins lists Unix binaries for exploitation."),
 ]
 
 
