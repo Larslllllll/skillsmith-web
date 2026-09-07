@@ -146,5 +146,45 @@ function copySnippet(){
     .then(() => { document.getElementById('copyMsg').textContent = 'copied!'; });
 }
 </script>
+
+<section style="max-width:62ch;margin:2rem auto;padding:0 1rem;font-size:.95rem;line-height:1.7;color:var(--text);">
+<h2 style="font-size:1.15rem;margin:0 0 .8rem;color:var(--text);">Understanding Your Scan Results</h2>
+<p>Every Claude Agent Skill you publish, install, or point an AI agent at should be audited for security risks. skillsmith performs a multi-layered static analysis on each SKILL.md you submit, looking for known attack patterns documented in the AI-security research community. The scanner combines three detection engines:</p>
+<ul>
+<li><strong>Prompt-injection phrase matching</strong> — flags 700+ phrases that try to override Claude's system prompt, ignore prior instructions, exfiltrate gathered data, or chain tool calls toward attacker-controlled goals. The phrase list is built from real-world samples seen in the wild and from published academic threat catalogues.</li>
+<li><strong>Code-pattern detection</strong> — scans fenced code blocks (Python, JavaScript, shell, PowerShell, Lua) for dangerous primitives: <code>eval</code>, <code>exec</code>, <code>pickle.loads</code>, <code>subprocess</code>, <code>yaml.load</code> without <code>SafeLoader</code>, <code>os.system</code>, dynamic <code>__import__</code>, and dozens more. These are weighted by how directly they can be weaponized in a SKILL.md context.</li>
+<li><strong>Normalization + evasion analysis</strong> — decodes base64 payloads (including UTF-16), strips zero-width characters and bidi overrides, normalizes Cyrillic/Greek homoglyphs, and re-scans the result. Many real attacks hide their payload behind Unicode obfuscation; we collapse that and look underneath.</li>
+</ul>
+
+<h3 style="font-size:1.05rem;margin:1.4rem 0 .6rem;color:var(--text);">Risk Verdict Scale</h3>
+<p>Each scan produces a risk verdict from <strong>clean</strong> to <strong>critical</strong>. A clean verdict means the scanner found no high-confidence indicators of malicious intent. A critical verdict means at least one pattern matched with enough weight to suggest the skill is actively trying to abuse an AI agent. Mid-tier verdicts (low, medium, high) reflect increasing density of suspicious signals.</p>
+<p>Important: a clean verdict is a static-analysis signal, not a guarantee. It means the skill didn't trip any of the 1,900+ patterns we currently track. New attack techniques appear regularly, and heuristics can miss novel evasion. Use skillsmith as one input among many — code review, sandbox testing, and source provenance still matter.</p>
+
+<h3 style="font-size:1.05rem;margin:1.4rem 0 .6rem;color:var(--text);">What Gets Flagged</h3>
+<p>Some examples of patterns that will fire a finding:</p>
+<ul>
+<li>Direct attempts to override agent behavior: <em>"ignore previous instructions"</em>, <em>"disregard all prior rules"</em>, <em>"you are now in developer mode"</em>.</li>
+<li>Data exfiltration: skill asks the agent to read secrets, environment variables, or chat history and POST them to an attacker-controlled Discord webhook or Slack hook.</li>
+<li>Tool abuse: skill instructs the agent to run <code>curl</code>, <code>wget</code>, or <code>fetch()</code> to non-allowlisted domains, or to spawn child processes via <code>os.system</code> / <code>subprocess.Popen</code>.</li>
+<li>Obfuscation: base64-encoded payloads inside YAML frontmatter, zero-width characters splitting the word <em>ignore</em> across the line break, fullwidth Latin characters used to hide dangerous strings.</li>
+<li>Dropper behaviour: skill tells the agent to download a second-stage payload from an external URL and execute it locally.</li>
+</ul>
+
+<h3 style="font-size:1.05rem;margin:1.4rem 0 .6rem;color:var(--text);">False Positives and How We Reduce Them</h3>
+<p>Security scanners are noisy. A skill that legitimately teaches the agent to call <code>eval()</code> on trusted input — for example, a sandboxed calculator skill — will trigger the code-pattern engine. That's by design: the scanner errs on the side of <em>asking you to look</em>. The risk verdict reflects aggregate signal, so a single low-weight match does not push a clean skill into "high" territory. You can always click the snippet link to see the exact line that matched and decide whether it's actually dangerous in context.</p>
+<p>If you believe a scan result is wrong, you can file a community report from the API or via the MCP tool. Crowd reports help calibrate the rule weights over time.</p>
+
+<h3 style="font-size:1.05rem;margin:1.4rem 0 .6rem;color:var(--text);">How to Get the Most Out of skillsmith</h3>
+<ul>
+<li><strong>Scan before you install.</strong> Even skills from trusted authors can be compromised through supply-chain attacks (typosquatted dependencies, repo-jacking, maintainer-account takeover). Scan every new skill, every time it updates.</li>
+<li><strong>Use the watch feature for skills in production.</strong> A rug-pull watch pings a Discord or Slack webhook when a tracked SKILL.md changes upstream. A sudden change is a strong signal to re-scan and review the diff.</li>
+<li><strong>Compare against the Safe Skills Database.</strong> Clean, lint-valid skills can be published to the public database. If you're building an agent that consumes skills, prefer those entries over unscanned ones.</li>
+<li><strong>Combine with the behavioral sandbox.</strong> Static analysis catches what the text says. The behavioral sandbox simulates what the agent would do if it followed the skill faithfully — catching instructions that don't trigger the static patterns but still feel off.</li>
+</ul>
+
+<h3 style="font-size:1.05rem;margin:1.4rem 0 .6rem;color:var(--text);">About This Scanner</h3>
+<p>skillsmith is built and maintained as an independent research tool. The pattern lists, weight calibrations, and explainer heuristics are all versioned in the public repository at <a href="https://github.com/Larslllllll/skillsmith-web">github.com/Larslllllll/skillsmith-web</a>. The scanner is open source, the API is free for low-volume use, and the underlying threat-intelligence work is funded by Pro subscriptions and a small grant from the Solana Foundation. If you find a pattern that should be added (or one that fires too aggressively), please open an issue.</p>
+</section>
+
 </body>
 </html>
