@@ -2937,6 +2937,9 @@ _EXPLAIN_RULES = [
     ("kerbrute ad attack", "Kerbrute pattern.", "Kerbrute performs Kerberos brute force attacks."),
     ("secretsdump credential dump", "secretsdump pattern.", "secretsdump extracts credential hashes."),
 
+    ("crackmapexec lateral movement", "CrackMapExec pattern.", "CrackMapExec automates network attacks."),
+    ("wmiexec lateral movement", "WMIExec pattern.", "WMIExec uses WMI for lateral movement."),
+
 ]
 
 

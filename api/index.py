@@ -1167,6 +1167,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)mimikatz|sekurlsa::logonpasswords'), 9, 'Mimikatz credential dumper'),
     (re.compile(r'(?i)kerbrute|kerbrute.*passwordspray'), 7, 'Kerbrute AD attack'),
     (re.compile(r'(?i)secretsdump|secretsdump.*-sam'), 8, 'secretsdump credential dump'),
+    (re.compile(r'(?i)CrackMapExec|cme.*smb'), 7, 'CrackMapExec lateral movement'),
+    (re.compile(r'(?i)wmiexec|wmi.*exec'), 7, 'WMIExec lateral movement'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
