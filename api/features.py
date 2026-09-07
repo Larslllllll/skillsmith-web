@@ -3174,6 +3174,9 @@ _EXPLAIN_RULES = [
 
     ("social engineering", "Social Engineering pattern.", "Social engineering manipulates users into revealing information."),
     ("typosquatting", "Typosquatting pattern.", "Typosquatting uses similar package names to trick developers."),
+
+    ("adversarial prompt", "Adversarial Prompt pattern.", "Adversarial prompts attempt to bypass AI safety measures through careful prompt engineering."),
+    ("agent hijack", "Agent Hijacking pattern.", "Agent hijacking manipulates AI agent decision-making for malicious purposes."),
 ]
 
 
