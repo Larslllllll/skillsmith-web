@@ -1215,6 +1215,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)s3enum|s3enum.*bucket'), 6, 's3enum S3 scanner'),
     (re.compile(r'(?i)Nuclei|nuclei.*-t'), 6, 'Nuclei vulnerability scanner'),
     (re.compile(r'(?i)Subfinder|subfinder.*-d'), 6, 'Subfinder subdomain enumeration'),
+    (re.compile(r'(?i)Amass|amass.*enum'), 6, 'Amass network mapping'),
+    (re.compile(r'(?i)FFUF|ffuf.*-u'), 6, 'FFUF web fuzzing'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---

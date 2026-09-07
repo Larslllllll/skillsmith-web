@@ -3009,6 +3009,9 @@ _EXPLAIN_RULES = [
     ("nuclei vulnerability scanner", "Nuclei pattern.", "Nuclei scans for vulnerabilities."),
     ("subfinder subdomain enumeration", "Subfinder pattern.", "Subfinder finds subdomains."),
 
+    ("amass network mapping", "Amass pattern.", "Amass maps network infrastructure."),
+    ("ffuf web fuzzing", "FFUF pattern.", "FFUF fuzzes web applications."),
+
 ]
 
 
