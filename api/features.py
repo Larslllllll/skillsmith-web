@@ -3095,6 +3095,7 @@ _EXPLAIN_RULES = [
     ("phishing kit", "Phishing Kit pattern.", "Phishing kits automate credential theft."),
 
     ("bec attack", "BEC Attack pattern.", "BEC attacks target business email compromise."),
+    ("bec", "BEC pattern.", "BEC is business email compromise."),
     ("vishing", "Vishing pattern.", "Vishing is voice-based phishing."),
 
     ("smishing", "Smishing pattern.", "Smishing uses SMS for phishing."),
