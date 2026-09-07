@@ -3003,6 +3003,9 @@ _EXPLAIN_RULES = [
     ("aws firewall factory", "AWS Firewall Factory pattern.", "AWS Firewall Factory deploys WAF rulesets."),
     ("cloudlist enumeration", "CloudList pattern.", "CloudList enumerates cloud assets."),
 
+    ("s3tfinder s3 enumeration", "S3TFinder pattern.", "S3TFinder finds S3 buckets."),
+    ("s3enum s3 scanner", "s3enum pattern.", "s3enum enumerates S3 buckets."),
+
 ]
 
 
