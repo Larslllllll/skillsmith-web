@@ -1237,6 +1237,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)SQLi|sql.*injection|OR.*1.*1|UNION.*SELECT'), 8, 'SQL injection'),
     (re.compile(r'(?i)OpenRedirect|open.*redirect|redirect.*url|\?url=http'), 7, 'Open redirect'),
     (re.compile(r'(?i)XML.*Injection|xml.*inject|xml.*bomb|billion.*laughs'), 8, 'XML injection'),
+    (re.compile(r'(?i)CORS|access-control-allow-origin|wildcard.*cors'), 7, 'CORS misconfiguration'),
+    (re.compile(r'(?i)JWT|json.*web.*token|jwt.*bypass|jwt.*none'), 8, 'JWT vulnerability'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---

@@ -3042,6 +3042,9 @@ _EXPLAIN_RULES = [
 
     ("open redirect", "Open Redirect pattern.", "Open redirect漏洞 redirects users to malicious sites."),
     ("xml injection", "XML Injection pattern.", "XML injection attacks exploit XML parsers."),
+
+    ("cors misconfiguration", "CORS pattern.", "CORS misconfiguration exposes APIs."),
+    ("jwt vulnerability", "JWT pattern.", "JWT vulnerabilities allow token bypass."),
 ]
 
 
