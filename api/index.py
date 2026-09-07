@@ -1263,6 +1263,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)Spyware|spyware|surveillance.*malware|tracking.*software|creepware'), 7, 'Spyware'),
     (re.compile(r'(?i)Fileless.*Malware|fileless.*malware|living-off-the-land|lolbin|powershell.*downloadstring'), 8, 'Fileless malware'),
     (re.compile(r'(?i)Polymorphic.*Malware|polymorphic.*malware|metamorphic|code.*morphing|encrypted.*payload'), 8, 'Polymorphic malware'),
+    (re.compile(r'(?i)Trojan.*Horse|trojan|malicious.*disguised|spear.*phishing.*payload'), 8, 'Trojan horse'),
+    (re.compile(r'(?i)Backdoor|backdoor|trapdoor|hidden.*access|unauthorized.*entry'), 9, 'Backdoor'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---

@@ -3082,6 +3082,9 @@ _EXPLAIN_RULES = [
     ("fileless malware", "Fileless Malware pattern.", "Fileless malware runs in memory only."),
     ("polymorphic malware", "Polymorphic Malware pattern.", "Polymorphic malware changes its code."),
     ("polymorphic", "Polymorphic Malware pattern.", "Polymorphic malware morphs its code."),
+
+    ("trojan horse", "Trojan Horse pattern.", "Trojan horses disguise as legitimate software."),
+    ("backdoor", "Backdoor pattern.", "Backdoors provide hidden unauthorized access."),
 ]
 
 
