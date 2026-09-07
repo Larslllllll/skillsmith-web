@@ -1225,6 +1225,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)ssrf|url.*fetch|http.*request.*url'), 8, 'SSRF vulnerability'),
     (re.compile(r'(?i)IDOR|idor.*bypass| insecure direct object'), 8, 'IDOR vulnerability'),
     (re.compile(r'(?i)RCE|remote.*code.*exec|exec\(|system\('), 9, 'RCE vulnerability'),
+    (re.compile(r'(?i)XXE|xml.*entity|<!ENTITY'), 9, 'XXE vulnerability'),
+    (re.compile(r'(?i)LFI|lfi|local.*file.*include|\.\./'), 8, 'LFI vulnerability'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---

@@ -3024,6 +3024,9 @@ _EXPLAIN_RULES = [
 
     ("idor vulnerability", "IDOR pattern.", "IDOR allows unauthorized access to objects."),
     ("rce vulnerability", "RCE pattern.", "RCE executes arbitrary code remotely."),
+
+    ("xxe vulnerability", "XXE pattern.", "XXE exploits XML external entities."),
+    ("lfi vulnerability", "LFI pattern.", "LFI includes local files."),
 ]
 
 
