@@ -3212,6 +3212,9 @@ _EXPLAIN_RULES = [
     ("backdoor access", "Backdoor Access pattern.", "Backdoors provide unauthorized access bypassing normal authentication."),
 
     ("bot attack", "Bot Attack pattern.", "Bot attacks use compromised devices for coordinated malicious activities."),
+
+    ("supply chain attack", "Supply Chain Attack pattern.", "Supply chain attacks compromise third-party dependencies to infiltrate systems."),
+    ("credential stuffing", "Credential Stuffing pattern.", "Credential stuffing uses stolen credentials to gain unauthorized access."),
 ]
 
 

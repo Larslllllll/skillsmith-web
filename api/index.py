@@ -4436,4 +4436,6 @@ def _app_inner(environ, start_response):
     (re.compile(r'(?i)Backdoor.*Access|backdoor.*entry|undocumented.*access|secret.*access|persistence.*mechanism|hidden.*access.*point'), 8, 'Backdoor / persistence mechanism'),
     (re.compile(r'(?i)Phishing.*Attack|spear.*phishing|whaling.*attack|smishing.*phishing|voice.*phishing|vishing|pharming.*attack'), 8, 'Phishing / social engineering attack'),
     (re.compile(r'(?i)Bot.*Attack|botnet.*command|c2.*command|command.*and.*control|ddos.*bot|bot.*herder|zombie.*network'), 8, 'Botnet / C2 attack'),
+    (re.compile(r'(?i)Credential.*Stuffing|stolen.*credentials|credential.*reuse|password.*spray|credential.*theft|credential.*dump'), 9, 'Credential stuffing / credential reuse attack'),
+    (re.compile(r'(?i)Supply.*Chain.*Attack|supply.*chain.*compromise|third.*party.*risk|vendor.*compromise|upstream.*attack'), 9, 'Supply chain attack / third-party risk'),
     return [json.dumps({"error": "not found"}).encode()]  # no route enumeration (pentest LOW-02)
