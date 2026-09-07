@@ -3057,6 +3057,9 @@ _EXPLAIN_RULES = [
 
     ("oauth attack", "OAuth Attack pattern.", "OAuth attacks exploit authentication flows."),
     ("saml attack", "SAML Attack pattern.", "SAML attacks forge authentication assertions."),
+
+    ("container escape", "Container Escape pattern.", "Container escape breaks out of container isolation."),
+    ("kubernetes attack", "Kubernetes Attack pattern.", "Kubernetes attacks target cluster infrastructure."),
 ]
 
 

@@ -1247,6 +1247,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)NoSQL.*Injection|nosql.*inject|\$where|\$ne|\$regex'), 8, 'NoSQL injection'),
     (re.compile(r'(?i)OAuth.*Attack|oauth.*bypass|oauth.*misconfig|redirect_uri.*inject'), 7, 'OAuth attack'),
     (re.compile(r'(?i)SAML.*Attack|saml.*bypass|saml.*assertion|saml.*spoof'), 8, 'SAML attack'),
+    (re.compile(r'(?i)Container.*Escape|container.*escape|cgroup.*escape|docker.*breakout'), 9, 'Container escape'),
+    (re.compile(r'(?i)Kubernetes.*Attack|k8s.*attack|kubectl.*exec|etcd.*compromise'), 8, 'Kubernetes attack'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
