@@ -3141,6 +3141,9 @@ _EXPLAIN_RULES = [
 
     ("dead man's switch", "Dead Man's Switch pattern.", "Dead man's switch triggers action when user is inactive."),
     ("strategic web compromise", "Strategic Web Compromise pattern.", "Strategic web compromise targets specific visitors."),
+
+    ("typosquat library", "Typosquat Library pattern.", "Typosquatting uses similar names to trick users."),
+    ("supply chain compromise", "Supply Chain Compromise pattern.", "Supply chain attacks target third-party dependencies."),
 ]
 
 
