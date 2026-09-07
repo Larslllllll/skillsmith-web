@@ -3162,6 +3162,9 @@ _EXPLAIN_RULES = [
 
     ("memory corruption", "Memory Corruption pattern.", "Memory corruption exploits attack memory safety vulnerabilities."),
     ("race condition", "Race Condition pattern.", "Race conditions allow concurrent access to create security vulnerabilities."),
+
+    ("session hijacking", "Session Hijacking pattern.", "Session hijacking steals user sessions."),
+    ("sql injection", "SQL Injection pattern.", "SQL injection attacks manipulate database queries."),
 ]
 
 
