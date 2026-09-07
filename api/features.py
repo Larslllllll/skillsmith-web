@@ -3144,6 +3144,9 @@ _EXPLAIN_RULES = [
 
     ("typosquat library", "Typosquat Library pattern.", "Typosquatting uses similar names to trick users."),
     ("supply chain compromise", "Supply Chain Compromise pattern.", "Supply chain attacks target third-party dependencies."),
+
+    ("man-in-the-middle", "MITM Attack pattern.", "MITM attacks intercept communications between parties."),
+    ("zero-day exploit", "Zero-Day Exploit pattern.", "Zero-day exploits target unpatched vulnerabilities."),
 ]
 
 

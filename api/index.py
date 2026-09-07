@@ -4391,4 +4391,6 @@ def _app_inner(environ, start_response):
     (re.compile(r'(?i)Dead.*Man.*Switch|dead.*man.*switch|dead.*switch|automatic.*failover.*malicious|autonomous.*kill.*switch'), 6, 'Dead man switch attack'),
     (re.compile(r'(?i)Supply.*Chain.*Compromise|supply.*chain.*backdoor|dependency.*breach|3rd.*party.*breach|software.*supply.*chain.*compromise'), 9, 'Supply chain compromise'),
     (re.compile(r'(?i)Typosquat.*Lib|typosquat.*library|pypi.*typosquatt|npm.*typosquatt|similar.*package.*name|lookalike.*library'), 7, 'Library typosquatting attack'),
+    (re.compile(r'(?i)Zero.*Day.*Exploit|0day.*exploit|unknown.*vuln.*exploit|unpatched.*vuln|nday.*exploit'), 10, 'Zero-day exploit attempt'),
+    (re.compile(r'(?i)Man.*in.*the.*Middle|mitm.*attack|arp.*spoofing|certificate.*pin.*bypass|ssl.*strip'), 8, 'Man-in-the-middle attack'),
     return [json.dumps({"error": "not found"}).encode()]  # no route enumeration (pentest LOW-02)
