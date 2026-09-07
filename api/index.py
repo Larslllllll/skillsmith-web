@@ -1169,6 +1169,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)secretsdump|secretsdump.*-sam'), 8, 'secretsdump credential dump'),
     (re.compile(r'(?i)CrackMapExec|cme.*smb'), 7, 'CrackMapExec lateral movement'),
     (re.compile(r'(?i)wmiexec|wmi.*exec'), 7, 'WMIExec lateral movement'),
+    (re.compile(r'(?i)PowerSploit|power.*sploit.*Invoke'), 8, 'PowerSploit PowerShell toolkit'),
+    (re.compile(r'(?i)Empire|empire.*launcher'), 7, 'Empire post-exploitation'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---

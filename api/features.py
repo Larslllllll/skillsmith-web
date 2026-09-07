@@ -2940,6 +2940,9 @@ _EXPLAIN_RULES = [
     ("crackmapexec lateral movement", "CrackMapExec pattern.", "CrackMapExec automates network attacks."),
     ("wmiexec lateral movement", "WMIExec pattern.", "WMIExec uses WMI for lateral movement."),
 
+    ("powersploit powershell toolkit", "PowerSploit pattern.", "PowerSploit provides PowerShell scripts for attacks."),
+    ("empire post-exploitation", "Empire pattern.", "Empire is a post-exploitation framework."),
+
 ]
 
 
