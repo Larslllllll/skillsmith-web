@@ -4407,4 +4407,6 @@ def _app_inner(environ, start_response):
     (re.compile(r'(?i)Session.*Hijack|session.*steal|cookie.*theft|token.*intercept|session.*fixation'), 8, 'Session hijacking attempt'),
     (re.compile(r'(?i)Cryptojacking|crypto.*miner|coinhive|web.*miner|xmrig|monero.*miner|hashrate.*steal'), 9, 'Cryptojacking attack'),
     (re.compile(r'(?i)Bot.*Attack|bot.*exploit|web.*crawler|scraper.*block|automated.*threat|crawl.*disallowed'), 6, 'Bot attack pattern'),
+    (re.compile(r'(?i)Supply.*Chain.*Risk|third.*party.*risk|vendor.*compromise|dependency.*attack|suspect.*dependency'), 7, 'Supply chain risk pattern'),
+    (re.compile(r'(?i)Credential.*Stuffing|password.*spray|brute.*force.*login|account.*takeover|credential.*reuse'), 8, 'Credential stuffing attack'),
     return [json.dumps({"error": "not found"}).encode()]  # no route enumeration (pentest LOW-02)

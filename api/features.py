@@ -3168,6 +3168,9 @@ _EXPLAIN_RULES = [
 
     ("bot attack", "Bot Attack pattern.", "Bot attacks use automated scripts for malicious purposes."),
     ("cryptojacking", "Cryptojacking pattern.", "Cryptojacking uses victim's resources to mine cryptocurrency."),
+
+    ("credential stuffing", "Credential Stuffing pattern.", "Credential stuffing uses leaked credentials to gain unauthorized access."),
+    ("supply chain risk", "Supply Chain Risk pattern.", "Supply chain risks come from compromised third-party dependencies."),
 ]
 
 
