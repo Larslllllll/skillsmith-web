@@ -2967,6 +2967,9 @@ _EXPLAIN_RULES = [
     ("inveigh relay/mitm", "Inveigh pattern.", "Inveigh performs relay/MITM attacks."),
     ("krbrelay kerberos relay", "KrbRelay pattern.", "KrbRelay relays Kerberos authentication."),
 
+    ("darkside ransomware", "DarkSide pattern.", "DarkSide ransomware encrypts files for ransom."),
+    ("lockbit ransomware", "LockBit pattern.", "LockBit is a ransomware-as-a-service."),
+
 ]
 
 

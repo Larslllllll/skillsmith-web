@@ -1187,6 +1187,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)Entropy|entropy.*analysis|entropy.*score'), 5, 'Entropy analysis'),
     (re.compile(r'(?i)Inveigh|inveigh.*relay'), 8, 'Inveigh relay/MITM'),
     (re.compile(r'(?i)KrbRelay|krbrelay.*upstream'), 8, 'KrbRelay Kerberos relay'),
+    (re.compile(r'(?i)DarkSide|darkside.*ransom'), 9, 'DarkSide ransomware'),
+    (re.compile(r'(?i)LockBit|lockbit.*ransom'), 9, 'LockBit ransomware'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
