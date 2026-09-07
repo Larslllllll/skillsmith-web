@@ -3036,6 +3036,9 @@ _EXPLAIN_RULES = [
 
     ("deserialization attack", "Deserialization pattern.", "Deserialization attacks exploit unsafe object loading."),
     ("path traversal", "Path Traversal pattern.", "Path traversal accesses unauthorized files."),
+
+    ("command injection", "Command Injection pattern.", "Command injection executes OS commands."),
+    ("sql injection", "SQLi pattern.", "SQL injection exploits database queries."),
 ]
 
 

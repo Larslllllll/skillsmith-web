@@ -1233,6 +1233,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)RaceCondition|race.*condition|TOCTOU|time-of-check'), 7, 'Race condition'),
     (re.compile(r'(?i)Deserialization|deserialize|pickle\.|yaml\.load'), 9, 'Deserialization attack'),
     (re.compile(r'(?i)PathTraversal|path.*traversal|\.\./|\.\.\\|traverse.*path'), 8, 'Path traversal'),
+    (re.compile(r'(?i)CommandInjection|cmd.*inject|;.*rm|\|.*nc|&&.*bash'), 9, 'Command injection'),
+    (re.compile(r'(?i)SQLi|sql.*injection|OR.*1.*1|UNION.*SELECT'), 8, 'SQL injection'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
