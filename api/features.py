@@ -3195,6 +3195,9 @@ _EXPLAIN_RULES = [
 
     ("memory leak", "Memory Safety pattern.", "Memory safety issues like buffer overflows can lead to code execution."),
     ("race condition", "Race Condition pattern.", "Race conditions allow attackers to exploit timing differences in operations."),
+
+    ("xml injection", "XML Injection pattern.", "XML injection exploits insecure XML parsers to access unauthorized data."),
+    ("ldap injection", "LDAP Injection pattern.", "LDAP injection manipulates LDAP queries to bypass authentication or access data."),
 ]
 
 

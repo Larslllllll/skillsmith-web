@@ -4425,4 +4425,6 @@ def _app_inner(environ, start_response):
     (re.compile(r'(?i)Malicious.*Dependency|supply.*chain.*inject|typosquat|npm.*malware|pypi.*malware|malicious.*package|compromised.*dependency'), 9, 'Malicious dependency / supply chain attack'),
     (re.compile(r'(?i)Race.*Condition|TOCTOU|time.*of.*check|concurrent.*access|deadlock|atomicity.*violation|check.*race.*condition'), 8, 'Race condition / TOCTOU vulnerability'),
     (re.compile(r'(?i)Memory.*Leak|heap.*overflow|stack.*overflow|buffer.*overflow|use.*after.*free|double.*free|null.*pointer'), 8, 'Memory safety vulnerability'),
+    (re.compile(r'(?i)LDAP.*Injection|ldap.*injection|inject.*ldap|blind.*ldap|ldap.*filter.*inject|ldapsearch.*inject'), 8, 'LDAP injection attack'),
+    (re.compile(r'(?i)XML.*Injection|xxe|xinclude|xml.*bomb|billion.*laughs|entity.*expansion|external.*entity|param.*entity'), 8, 'XML injection / XXE attack'),
     return [json.dumps({"error": "not found"}).encode()]  # no route enumeration (pentest LOW-02)
