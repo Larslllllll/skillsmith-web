@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Page Not Found | SkillSmith</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <meta name="robots" content="noindex">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            text-align: center;
+            padding: 2rem;
+            max-width: 600px;
+        }
+        .shield {
+            font-size: 120px;
+            margin-bottom: 2rem;
+            filter: drop-shadow(0 0 30px rgba(239, 68, 68, 0.5));
+        }
+        h1 {
+            font-size: 4rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #ef4444, #f97316);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        h2 {
+            font-size: 1.5rem;
+            color: #94a3b8;
+            margin-bottom: 2rem;
+        }
+        p {
+            color: #cbd5e1;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        .links {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .links a {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .links a:hover {
+            transform: translateY(-2px);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+        }
+        .btn-primary:hover {
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.5);
+        }
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        .code {
+            font-family: 'SF Mono', Monaco, monospace;
+            background: rgba(239, 68, 68, 0.1);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="shield">🛡️</div>
+        <h1>404</h1>
+        <h2>Page Not Found</h2>
+        <p>
+            The security pattern you're looking for doesn't exist or may have been moved.
+            <br><br>
+            <span class="code">Pattern: UNAUTHORIZED</span>
+            <br><br>
+            Redirect to safety:
+        </p>
+        <div class="links">
+            <a href="/" class="btn-primary">Go Home</a>
+            <a href="/scan.html" class="btn-secondary">Scan Skills</a>
+            <a href="/guides.html" class="btn-secondary">View Guides</a>
+        </div>
+    </div>
+</body>
+</html>

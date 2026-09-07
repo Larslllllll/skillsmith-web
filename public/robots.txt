@@ -1,7 +1,26 @@
 User-agent: *
 Allow: /
+Allow: /scan.html
+Allow: /analysis.html
+Allow: /faq.html
+Allow: /guides.html
+Allow: /guide-*.html
+Allow: /stats.html
+Allow: /api-docs.html
 Disallow: /api/
 Disallow: /mcp
 Disallow: /health
+Disallow: /buy_credit
+Disallow: /claim
+Disallow: /admin
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: GPTBot
+Disallow: /
+
+User-agent: CCBot
+Allow: /
 
 Sitemap: https://skillsmith.ch/sitemap.xml

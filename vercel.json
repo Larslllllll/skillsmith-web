@@ -105,5 +105,11 @@
     "api/index.py": {
       "maxDuration": 300
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/404.html"
+    }
+  ]
 }
