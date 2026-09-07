@@ -3177,6 +3177,9 @@ _EXPLAIN_RULES = [
 
     ("adversarial prompt", "Adversarial Prompt pattern.", "Adversarial prompts attempt to bypass AI safety measures through careful prompt engineering."),
     ("agent hijack", "Agent Hijacking pattern.", "Agent hijacking manipulates AI agent decision-making for malicious purposes."),
+
+    ("fileless attack", "Fileless Attack pattern.", "Fileless attacks execute in memory without writing to disk."),
+    ("business email compromise", "BEC Fraud pattern.", "Business email compromise tricks employees into transferring money."),
 ]
 
 
