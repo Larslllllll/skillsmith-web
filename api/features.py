@@ -3012,6 +3012,9 @@ _EXPLAIN_RULES = [
     ("amass network mapping", "Amass pattern.", "Amass maps network infrastructure."),
     ("ffuf web fuzzing", "FFUF pattern.", "FFUF fuzzes web applications."),
 
+    ("dirbuster directory busting", "DirBuster pattern.", "DirBuster finds hidden directories."),
+    ("gobuster directory scanner", "Gobuster pattern.", "Gobuster enumerates directories and files."),
+
 ]
 
 
