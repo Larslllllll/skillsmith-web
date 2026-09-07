@@ -4415,4 +4415,6 @@ def _app_inner(environ, start_response):
     (re.compile(r'(?i)adversarial.*prompt|prompt.*injection.*chain|chain.*of.*injection|recursive.*injection'), 8, 'Adversarial prompt chain attack'),
     (re.compile(r'(?i)Business.*Email.*Compromise|ceo.*fraud|wire.*fraud|executive.*impersonat|finance.*department.*scam'), 8, 'Business email compromise attack'),
     (re.compile(r'(?i)Fileless.*Attack|amSI|powerShell.*obfuscated|memory.*only.*malware|lolbin.*powershell'), 8, 'Fileless attack pattern'),
+    (re.compile(r'(?i)Kernel.*Exploit|cve\d{4}\d{4,7}|local.*privesc|dirty.*pipe|dirty.*cow|kernel.*memory.*corrupt|kernel.*race'), 8, 'Kernel-level exploit attempt'),
+    (re.compile(r'(?i)Browser.*Hijack|chromium.*inject|extension.*malware|malicious.*plugin|chrome.*backdoor|firefox.*exploit'), 8, 'Browser hijack / extension malware'),
     return [json.dumps({"error": "not found"}).encode()]  # no route enumeration (pentest LOW-02)

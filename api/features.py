@@ -3180,6 +3180,9 @@ _EXPLAIN_RULES = [
 
     ("fileless attack", "Fileless Attack pattern.", "Fileless attacks execute in memory without writing to disk."),
     ("business email compromise", "BEC Fraud pattern.", "Business email compromise tricks employees into transferring money."),
+
+    ("browser hijack", "Browser Hijack pattern.", "Browser hijacking takes control of browser settings for malicious purposes."),
+    ("kernel exploit", "Kernel Exploit pattern.", "Kernel exploits target OS kernel vulnerabilities for privilege escalation."),
 ]
 
 
