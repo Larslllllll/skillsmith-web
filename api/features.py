@@ -3006,6 +3006,9 @@ _EXPLAIN_RULES = [
     ("s3tfinder s3 enumeration", "S3TFinder pattern.", "S3TFinder finds S3 buckets."),
     ("s3enum s3 scanner", "s3enum pattern.", "s3enum enumerates S3 buckets."),
 
+    ("nuclei vulnerability scanner", "Nuclei pattern.", "Nuclei scans for vulnerabilities."),
+    ("subfinder subdomain enumeration", "Subfinder pattern.", "Subfinder finds subdomains."),
+
 ]
 
 
