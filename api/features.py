@@ -3060,6 +3060,9 @@ _EXPLAIN_RULES = [
 
     ("container escape", "Container Escape pattern.", "Container escape breaks out of container isolation."),
     ("kubernetes attack", "Kubernetes Attack pattern.", "Kubernetes attacks target cluster infrastructure."),
+
+    ("supply chain attack", "Supply Chain Attack pattern.", "Supply chain attacks compromise dependencies."),
+    ("typosquatting", "Typosquatting pattern.", "Typosquatting tricks users with misspelled packages."),
 ]
 
 

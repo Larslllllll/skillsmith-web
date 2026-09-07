@@ -1249,6 +1249,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)SAML.*Attack|saml.*bypass|saml.*assertion|saml.*spoof'), 8, 'SAML attack'),
     (re.compile(r'(?i)Container.*Escape|container.*escape|cgroup.*escape|docker.*breakout'), 9, 'Container escape'),
     (re.compile(r'(?i)Kubernetes.*Attack|k8s.*attack|kubectl.*exec|etcd.*compromise'), 8, 'Kubernetes attack'),
+    (re.compile(r'(?i)Supply.*Chain.*Attack|supply.*chain|dependency.*confusion|npm.*malware'), 8, 'Supply chain attack'),
+    (re.compile(r'(?i)Typosquatting|typo.*squat|pypi.*typo|domain.*typo|homograph.*attack'), 6, 'Typosquatting'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
