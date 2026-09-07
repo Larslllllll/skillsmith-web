@@ -2949,6 +2949,9 @@ _EXPLAIN_RULES = [
     ("ntlmrelayx ntlm relay", "ntlmrelayx pattern.", "ntlmrelayx performs NTLM relay attacks."),
     ("certipy ad cs attack", "Certipy pattern.", "Certipy attacks Active Directory Certificate Services."),
 
+    ("invoke-mimikatz loader", "Invoke-Mimikatz pattern.", "Invoke-Mimikatz loads Mimikatz in memory."),
+    ("vssadmin shadow copy", "vssadmin pattern.", "vssadmin creates volume shadow copies."),
+
 ]
 
 

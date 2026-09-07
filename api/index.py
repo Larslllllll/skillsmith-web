@@ -1175,6 +1175,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)mitm6|mitm6.*-d'), 7, 'mitm6 IPv6 poisoner'),
     (re.compile(r'(?i)ntlmrelayx|ntlmrelayx.*-tf'), 8, 'ntlmrelayx NTLM relay'),
     (re.compile(r'(?i)certipy|certipy.*auth'), 8, 'Certipy AD CS attack'),
+    (re.compile(r'(?i)Invoke-Mimikatz|invoke.*mimikatz'), 9, 'Invoke-Mimikatz loader'),
+    (re.compile(r'(?i)vssadmin|vssadmin.*shadow'), 7, 'vssadmin shadow copy'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
