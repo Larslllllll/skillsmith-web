@@ -3135,6 +3135,9 @@ _EXPLAIN_RULES = [
     ("goal hijacking", "Goal Hijack pattern.", "Goal hijacking overrides the agent's original objective."),
     ("goal hijack", "Goal Hijack pattern.", "Goal hijack exploits objective misalignment."),
     ("objective override", "Goal Hijack pattern.", "Objective override changes agent goals."),
+
+    ("urgency tactic", "Urgency Scam pattern.", "Urgency tactics create false time pressure."),
+    ("ceo fraud", "CEO Fraud pattern.", "CEO fraud impersonates executives to authorize payments."),
 ]
 
 
