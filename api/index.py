@@ -1183,6 +1183,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)AsyncRAT|asyncrat.*client'), 8, 'AsyncRAT malware'),
     (re.compile(r'(?i)BITSAdmin|bitsadmin.*transfer'), 7, 'BITSAdmin download'),
     (re.compile(r'(?i)SMBExec|smbexec.*share'), 7, 'SMBExec lateral movement'),
+    (re.compile(r'(?i)evilgrade|evilgrade.*isrvoof'), 8, 'evilgrade update injection'),
+    (re.compile(r'(?i)Entropy|entropy.*analysis|entropy.*score'), 5, 'Entropy analysis'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---

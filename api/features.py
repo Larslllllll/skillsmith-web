@@ -2961,6 +2961,9 @@ _EXPLAIN_RULES = [
     ("bitsadmin download", "BITSAdmin pattern.", "BITSAdmin downloads files via BITS service."),
     ("smbexec lateral movement", "SMBExec pattern.", "SMBExec provides lateral movement via SMB."),
 
+    ("evilgrade update injection", "evilgrade pattern.", "evilgrade injects fake software updates."),
+    ("entropy analysis", "Entropy pattern.", "Entropy analysis detects packed malware."),
+
 ]
 
 
