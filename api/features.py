@@ -3021,6 +3021,9 @@ _EXPLAIN_RULES = [
     ("csrf vulnerability", "CSRF pattern.", "CSRF exploits cross-site request forgery."),
     ("ssrf vulnerability", "SSRF pattern.", "SSRF exploits server-side request forgery."),
 
+
+    ("idor vulnerability", "IDOR pattern.", "IDOR allows unauthorized access to objects."),
+    ("rce vulnerability", "RCE pattern.", "RCE executes arbitrary code remotely."),
 ]
 
 

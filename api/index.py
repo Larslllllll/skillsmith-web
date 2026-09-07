@@ -1223,6 +1223,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)<script>|alert\(|onerror=|onclick='), 8, 'XSS injection'),
     (re.compile(r'(?i)csrf|anticsrf|csrf.*token'), 7, 'CSRF vulnerability'),
     (re.compile(r'(?i)ssrf|url.*fetch|http.*request.*url'), 8, 'SSRF vulnerability'),
+    (re.compile(r'(?i)IDOR|idor.*bypass| insecure direct object'), 8, 'IDOR vulnerability'),
+    (re.compile(r'(?i)RCE|remote.*code.*exec|exec\(|system\('), 9, 'RCE vulnerability'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
