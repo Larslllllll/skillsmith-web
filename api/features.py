@@ -3069,6 +3069,9 @@ _EXPLAIN_RULES = [
 
     ("ci/cd attack", "CI/CD Attack pattern.", "CI/CD attacks compromise build pipelines."),
     ("gitops attack", "GitOps Attack pattern.", "GitOps attacks target deployment automation."),
+
+    ("worm attack", "Worm Attack pattern.", "Worm attacks self-propagate through networks."),
+    ("ransomware", "Ransomware pattern.", "Ransomware encrypts files for extortion."),
 ]
 
 

@@ -1255,6 +1255,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)Serverless.*Exploit|serverless.*exploit|azure.*function.*attack|cloud.*function.*exploit'), 8, 'Serverless exploit'),
     (re.compile(r'(?i)CI/CD.*Attack|ci.cd.*inject|github.*action.*inject|gitlab.*ci.*inject'), 8, 'CI/CD attack'),
     (re.compile(r'(?i)GitOps.*Attack|gitops.*inject|argocd.*compromise|flux.*vulnerability'), 8, 'GitOps attack'),
+    (re.compile(r'(?i)Worm.*Attack|worm.*exploit|self-replicating.*malware|propagating.*virus'), 10, 'Worm attack'),
+    (re.compile(r'(?i)Ransomware|ransomware|crypto.*lock|file.*encrypt.*attack|wanna.*cry'), 9, 'Ransomware'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
