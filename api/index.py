@@ -4405,4 +4405,6 @@ def _app_inner(environ, start_response):
     (re.compile(r'(?i)Memory.*Corruption|buffer.*overflow|heap.*overflow|stack.*overflow|use.*after.*free'), 10, 'Memory corruption exploit'),
     (re.compile(r'(?i)SQL.*Injection|nosql.*injection|sqlmap|union.*select|drop.*table|insert.*into|select.*from'), 9, 'SQL injection attack'),
     (re.compile(r'(?i)Session.*Hijack|session.*steal|cookie.*theft|token.*intercept|session.*fixation'), 8, 'Session hijacking attempt'),
+    (re.compile(r'(?i)Cryptojacking|crypto.*miner|coinhive|web.*miner|xmrig|monero.*miner|hashrate.*steal'), 9, 'Cryptojacking attack'),
+    (re.compile(r'(?i)Bot.*Attack|bot.*exploit|web.*crawler|scraper.*block|automated.*threat|crawl.*disallowed'), 6, 'Bot attack pattern'),
     return [json.dumps({"error": "not found"}).encode()]  # no route enumeration (pentest LOW-02)

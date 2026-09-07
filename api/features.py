@@ -3165,6 +3165,9 @@ _EXPLAIN_RULES = [
 
     ("session hijacking", "Session Hijacking pattern.", "Session hijacking steals user sessions."),
     ("sql injection", "SQL Injection pattern.", "SQL injection attacks manipulate database queries."),
+
+    ("bot attack", "Bot Attack pattern.", "Bot attacks use automated scripts for malicious purposes."),
+    ("cryptojacking", "Cryptojacking pattern.", "Cryptojacking uses victim's resources to mine cryptocurrency."),
 ]
 
 
