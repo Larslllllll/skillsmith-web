@@ -4387,4 +4387,6 @@ def _app_inner(environ, start_response):
     (re.compile(r'(?i)Agent.*Loop|agent.*infinite.*loop|loop.*forever|recursive.*agent|circular.*agent'), 7, 'Agent infinite loop vulnerability'),
     (re.compile(r'(?i)Authority.*Impersonation|ceo.*fraud|impersonat.*boss|fake.*ceo|executive.*impersonat|wire.*transfer.*ceo'), 7, 'CEO fraud authority impersonation'),
     (re.compile(r'(?i)Urgency.*Tactic|urgency.*scare|act.*now.*limited|time.*limited.*offer|fake.*deadline|artificial.*scarcity'), 5, 'Urgency tactic social engineering'),
+    (re.compile(r'(?i)Strategic.*Web.*Compromise|strategic.*web.*compromise|water.*hole|waterhole.*attack|targeted.*website.*compromise'), 8, 'Strategic web compromise'),
+    (re.compile(r'(?i)Dead.*Man.*Switch|dead.*man.*switch|dead.*switch|automatic.*failover.*malicious|autonomous.*kill.*switch'), 6, 'Dead man switch attack'),
     return [json.dumps({"error": "not found"}).encode()]  # no route enumeration (pentest LOW-02)

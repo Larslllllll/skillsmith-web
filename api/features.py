@@ -3138,6 +3138,9 @@ _EXPLAIN_RULES = [
 
     ("urgency tactic", "Urgency Scam pattern.", "Urgency tactics create false time pressure."),
     ("ceo fraud", "CEO Fraud pattern.", "CEO fraud impersonates executives to authorize payments."),
+
+    ("dead man's switch", "Dead Man's Switch pattern.", "Dead man's switch triggers action when user is inactive."),
+    ("strategic web compromise", "Strategic Web Compromise pattern.", "Strategic web compromise targets specific visitors."),
 ]
 
 
