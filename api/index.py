@@ -1291,6 +1291,10 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)GCP.*IAM|gcp.*service.*account.*key|default.*compute.*service.*account|service.*account.*token|iam.*policy.*member'), 8, 'GCP IAM privilege escalation'),
     (re.compile(r'(?i)Model.*Pinning|model.*pin|ai.*model.*hijack|model.*trojan|backdoor.*model'), 9, 'AI model pinning/hijacking'),
     (re.compile(r'(?i)Multi.*Modal.*Inject|multimodal.*prompt|invisible.*prompt|image.*prompt.*inject|vision.*model.*poison'), 8, 'Multi-modal injection attack'),
+    (re.compile(r'(?i)Dependency.*Confusion|dependency.*confusion|namespace.*squatt|private.*public.*swap'), 9, 'Dependency confusion attack'),
+
+    (re.compile(r'(?i)Repo.*Jacking|repo.*jack|renamed.*repo|popular.*package.*renamed|github.*repo.*hijack'), 8, 'Repo jacking attack'),
+
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---

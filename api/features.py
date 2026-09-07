@@ -3127,6 +3127,9 @@ _EXPLAIN_RULES = [
 
     ("model pinning", "Model Pinning pattern.", "Model pinning locks an AI model to a specific behavior."),
     ("multimodal injection", "Multi-Modal Injection pattern.", "Multi-modal injection hides prompts in images or other media."),
+
+    ("dependency confusion", "Dependency Confusion pattern.", "Dependency confusion exploits namespace squatting."),
+    ("repo jacking", "Repo Jacking pattern.", "Repo jacking exploits renamed popular packages."),
 ]
 
 
