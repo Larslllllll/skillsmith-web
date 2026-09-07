@@ -2985,6 +2985,9 @@ _EXPLAIN_RULES = [
     ("stormbreaker malware", "StormBreaker pattern.", "StormBreaker is a malware toolkit."),
     ("typhoon ddos tool", "Typhoon pattern.", "Typhoon is a DDoS tool."),
 
+    ("lsassy credential extraction", "Lsassy pattern.", "Lsassy extracts credentials from lsass."),
+    ("nanocore rat", "NanoCore pattern.", "NanoCore is a remote access trojan."),
+
 ]
 
 
