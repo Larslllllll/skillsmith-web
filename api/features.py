@@ -3000,6 +3000,9 @@ _EXPLAIN_RULES = [
     ("cloudfrs enumeration", "CloudFrs pattern.", "CloudFrs enumerates cloud storage."),
     ("pacu aws exploitation", "Pacu pattern.", "Pacu is an AWS exploitation framework."),
 
+    ("aws firewall factory", "AWS Firewall Factory pattern.", "AWS Firewall Factory deploys WAF rulesets."),
+    ("cloudlist enumeration", "CloudList pattern.", "CloudList enumerates cloud assets."),
+
 ]
 
 

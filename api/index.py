@@ -1209,6 +1209,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)ssh-audit|ssh.*audit'), 5, 'ssh-audit scanner'),
     (re.compile(r'(?i)CloudFrs|cloudfrs.*enum'), 6, 'CloudFrs enumeration'),
     (re.compile(r'(?i)Pacu|pacu.*aws'), 6, 'Pacu AWS exploitation'),
+    (re.compile(r'(?i)aws-firewall-factory|aws.*firewall.*factory'), 6, 'AWS Firewall Factory'),
+    (re.compile(r'(?i)CloudList|cloudlist.*enum'), 6, 'CloudList enumeration'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
