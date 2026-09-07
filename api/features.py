@@ -3054,6 +3054,9 @@ _EXPLAIN_RULES = [
 
     ("ldap injection", "LDAP Injection pattern.", "LDAP injection exploits directory queries."),
     ("nosql injection", "NoSQL Injection pattern.", "NoSQL injection exploits database queries."),
+
+    ("oauth attack", "OAuth Attack pattern.", "OAuth attacks exploit authentication flows."),
+    ("saml attack", "SAML Attack pattern.", "SAML attacks forge authentication assertions."),
 ]
 
 

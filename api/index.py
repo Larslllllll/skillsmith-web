@@ -1245,6 +1245,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)HTTP.*Smuggling|http.*smuggling|CL.*TE|TE.*CL|request.*smuggling'), 8, 'HTTP smuggling'),
     (re.compile(r'(?i)LDAP.*Injection|ldap.*inject|\*.*admin|cn=.*admin'), 8, 'LDAP injection'),
     (re.compile(r'(?i)NoSQL.*Injection|nosql.*inject|\$where|\$ne|\$regex'), 8, 'NoSQL injection'),
+    (re.compile(r'(?i)OAuth.*Attack|oauth.*bypass|oauth.*misconfig|redirect_uri.*inject'), 7, 'OAuth attack'),
+    (re.compile(r'(?i)SAML.*Attack|saml.*bypass|saml.*assertion|saml.*spoof'), 8, 'SAML attack'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
