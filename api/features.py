@@ -3072,6 +3072,9 @@ _EXPLAIN_RULES = [
 
     ("worm attack", "Worm Attack pattern.", "Worm attacks self-propagate through networks."),
     ("ransomware", "Ransomware pattern.", "Ransomware encrypts files for extortion."),
+
+    ("rootkit", "Rootkit pattern.", "Rootkits hide malicious code at kernel level."),
+    ("bootkit", "Bootkit pattern.", "Bootkits infect boot sectors and BIOS."),
 ]
 
 

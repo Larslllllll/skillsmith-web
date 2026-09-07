@@ -1257,6 +1257,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)GitOps.*Attack|gitops.*inject|argocd.*compromise|flux.*vulnerability'), 8, 'GitOps attack'),
     (re.compile(r'(?i)Worm.*Attack|worm.*exploit|self-replicating.*malware|propagating.*virus'), 10, 'Worm attack'),
     (re.compile(r'(?i)Ransomware|ransomware|crypto.*lock|file.*encrypt.*attack|wanna.*cry'), 9, 'Ransomware'),
+    (re.compile(r'(?i)Rootkit|rootkit|kernel.*rootkit|hidden.*process|mbr.*rootkit'), 9, 'Rootkit'),
+    (re.compile(r'(?i)Bootkit|bootkit|boot.*sector.*infect|uefi.*malware|bios.*infect'), 9, 'Bootkit'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
