@@ -3118,6 +3118,7 @@ _EXPLAIN_RULES = [
     ("lol", "LOL Driver pattern.", "LOL drivers are living-off-the-land."),
 
     ("lolbins abuse", "LOLBins pattern.", "LOLBins are legitimate binaries used maliciously."),
+    ("lolbins", "LOLBins pattern.", "LOLBins are living-off-the-land binaries."),
     ("gtfobins abuse", "GTFOBins pattern.", "GTFOBins lists Unix binaries for exploitation."),
 ]
 
