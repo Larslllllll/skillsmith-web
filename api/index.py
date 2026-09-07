@@ -1268,6 +1268,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)Adware|adware|ad.*inject|pup.*adware|ad-supported|pop-up.*ad'), 6, 'Adware'),
     (re.compile(r'(?i)Android.*Malware|android.*malware|apk.*malicious|triple-threat.*android'), 7, 'Android malware'),
     (re.compile(r'(?i)iOS.*Jailbreak|ios.*jailbreak|cydia|jailbreak.*ios|untethered.*jailbreak'), 7, 'iOS jailbreak'),
+    (re.compile(r'(?i)APT.*Attack|advanced.*persistent.*threat|apt.*group|apt.*campaign'), 9, 'APT attack'),
+    (re.compile(r'(?i)Phishing.*Kit|phishing.*kit|cred.*harvester|evilginx|evilproxy|phishlet'), 8, 'Phishing kit'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---

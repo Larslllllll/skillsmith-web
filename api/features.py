@@ -3090,6 +3090,9 @@ _EXPLAIN_RULES = [
 
     ("android malware", "Android Malware pattern.", "Android malware targets mobile devices."),
     ("ios jailbreak", "iOS Jailbreak pattern.", "iOS jailbreak bypasses Apple security."),
+
+    ("apt attack", "APT Attack pattern.", "APT attacks are sophisticated persistent threats."),
+    ("phishing kit", "Phishing Kit pattern.", "Phishing kits automate credential theft."),
 ]
 
 
