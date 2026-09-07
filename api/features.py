@@ -3093,6 +3093,9 @@ _EXPLAIN_RULES = [
 
     ("apt attack", "APT Attack pattern.", "APT attacks are sophisticated persistent threats."),
     ("phishing kit", "Phishing Kit pattern.", "Phishing kits automate credential theft."),
+
+    ("bec attack", "BEC Attack pattern.", "BEC attacks target business email compromise."),
+    ("vishing", "Vishing pattern.", "Vishing is voice-based phishing."),
 ]
 
 

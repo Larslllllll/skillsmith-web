@@ -1270,6 +1270,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)iOS.*Jailbreak|ios.*jailbreak|cydia|jailbreak.*ios|untethered.*jailbreak'), 7, 'iOS jailbreak'),
     (re.compile(r'(?i)APT.*Attack|advanced.*persistent.*threat|apt.*group|apt.*campaign'), 9, 'APT attack'),
     (re.compile(r'(?i)Phishing.*Kit|phishing.*kit|cred.*harvester|evilginx|evilproxy|phishlet'), 8, 'Phishing kit'),
+    (re.compile(r'(?i)BEC.*Attack|business.*email.*compromise|ceo.*fraud|wire.*transfer.*fraud'), 8, 'BEC attack'),
+    (re.compile(r'(?i)Vishing|voice.*phishing|vishing|phone.*scam|telephone.*phishing|spam.*call'), 6, 'Vishing'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
