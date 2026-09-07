@@ -3015,6 +3015,9 @@ _EXPLAIN_RULES = [
     ("dirbuster directory busting", "DirBuster pattern.", "DirBuster finds hidden directories."),
     ("gobuster directory scanner", "Gobuster pattern.", "Gobuster enumerates directories and files."),
 
+    ("sqlmap sql injection", "SQLMap pattern.", "SQLMap automates SQL injection attacks."),
+    ("xss injection", "XSS pattern.", "XSS injects malicious scripts."),
+
 ]
 
 

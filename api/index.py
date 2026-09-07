@@ -1219,6 +1219,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)FFUF|ffuf.*-u'), 6, 'FFUF web fuzzing'),
     (re.compile(r'(?i)DirBuster|dirbuster.*-l'), 5, 'DirBuster directory busting'),
     (re.compile(r'(?i)Gobuster|gobuster.*dir'), 5, 'Gobuster directory scanner'),
+    (re.compile(r'(?i)Sqlmap|sqlmap.*--dump'), 7, 'SQLMap SQL injection'),
+    (re.compile(r'(?i)<script>|alert\(|onerror=|onclick='), 8, 'XSS injection'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
