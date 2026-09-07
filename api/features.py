@@ -2958,6 +2958,9 @@ _EXPLAIN_RULES = [
     ("silenttrinity c2", "SILENTTRINITY pattern.", "SILENTTRINITY is a C2 framework using Python."),
     ("asyncrat malware", "AsyncRAT pattern.", "AsyncRAT is a remote access trojan."),
 
+    ("bitsadmin download", "BITSAdmin pattern.", "BITSAdmin downloads files via BITS service."),
+    ("smbexec lateral movement", "SMBExec pattern.", "SMBExec provides lateral movement via SMB."),
+
 ]
 
 

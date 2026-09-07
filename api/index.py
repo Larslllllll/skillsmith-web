@@ -1181,6 +1181,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)SharpHound|sharphound.*-c'), 7, 'SharpHound AD collector'),
     (re.compile(r'(?i)SILENTTRINITY|silenttrinity.*st'), 8, 'SILENTTRINITY C2'),
     (re.compile(r'(?i)AsyncRAT|asyncrat.*client'), 8, 'AsyncRAT malware'),
+    (re.compile(r'(?i)BITSAdmin|bitsadmin.*transfer'), 7, 'BITSAdmin download'),
+    (re.compile(r'(?i)SMBExec|smbexec.*share'), 7, 'SMBExec lateral movement'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
