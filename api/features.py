@@ -2928,6 +2928,9 @@ _EXPLAIN_RULES = [
     ("cobalt strike c2", "Cobalt Strike pattern.", "Cobalt Strike is a commercial C2 framework."),
     ("msfvenom payload generator", "Msfvenom pattern.", "Msfvenom generates exploit payloads."),
 
+    ("rubeus kerberos tool", "Rubeus pattern.", "Rubeus is a Kerberos exploitation toolkit."),
+    ("kekeo kerberos tool", "Kekeo pattern.", "Kekeo performs Kerberos ticket abuse."),
+
 ]
 
 

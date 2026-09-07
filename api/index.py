@@ -1161,6 +1161,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)Armitage|armitage.*server'), 7, 'Armitage C2'),
     (re.compile(r'(?i)CobaltStrike|cobalt.*strike'), 8, 'Cobalt Strike C2'),
     (re.compile(r'(?i)msfvenom|msfvenom.*-p'), 8, 'Msfvenom payload generator'),
+    (re.compile(r'(?i)Rubeus|rubeus.*asktgt'), 8, 'Rubeus Kerberos tool'),
+    (re.compile(r'(?i)Kekeo|kekeo.* tgt::'), 8, 'Kekeo Kerberos tool'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
