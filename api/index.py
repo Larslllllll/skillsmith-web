@@ -1189,6 +1189,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)KrbRelay|krbrelay.*upstream'), 8, 'KrbRelay Kerberos relay'),
     (re.compile(r'(?i)DarkSide|darkside.*ransom'), 9, 'DarkSide ransomware'),
     (re.compile(r'(?i)LockBit|lockbit.*ransom'), 9, 'LockBit ransomware'),
+    (re.compile(r'(?i)Havoc|havoc.*c2'), 8, 'Havoc C2 framework'),
+    (re.compile(r'(?i)Pupy|pupy.*rat'), 8, 'Pupy RAT'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---

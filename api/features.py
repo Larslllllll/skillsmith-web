@@ -2970,6 +2970,9 @@ _EXPLAIN_RULES = [
     ("darkside ransomware", "DarkSide pattern.", "DarkSide ransomware encrypts files for ransom."),
     ("lockbit ransomware", "LockBit pattern.", "LockBit is a ransomware-as-a-service."),
 
+    ("havoc c2 framework", "Havoc pattern.", "Havoc is a modern C2 framework."),
+    ("pupy rat", "Pupy pattern.", "Pupy is a cross-platform RAT."),
+
 ]
 
 
