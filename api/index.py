@@ -4423,4 +4423,6 @@ def _app_inner(environ, start_response):
     (re.compile(r'(?i)Token.*Reuse|refresh.*token.*reuse|jti.*replay|nonce.*reuse|jwt.*replay|replay.*attack.*token'), 8, 'Token reuse / replay attack'),
     (re.compile(r'(?i)Broken.*Authentication|auth.*bypass|credential.*stuffing|brute.*force.*login|credential.*spray|login.*without.*password'), 9, 'Broken authentication / credential attack'),
     (re.compile(r'(?i)Malicious.*Dependency|supply.*chain.*inject|typosquat|npm.*malware|pypi.*malware|malicious.*package|compromised.*dependency'), 9, 'Malicious dependency / supply chain attack'),
+    (re.compile(r'(?i)Race.*Condition|TOCTOU|time.*of.*check|concurrent.*access|deadlock|atomicity.*violation|check.*race.*condition'), 8, 'Race condition / TOCTOU vulnerability'),
+    (re.compile(r'(?i)Memory.*Leak|heap.*overflow|stack.*overflow|buffer.*overflow|use.*after.*free|double.*free|null.*pointer'), 8, 'Memory safety vulnerability'),
     return [json.dumps({"error": "not found"}).encode()]  # no route enumeration (pentest LOW-02)

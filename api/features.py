@@ -3192,6 +3192,9 @@ _EXPLAIN_RULES = [
 
     ("malicious dependency", "Malicious Dependency pattern.", "Malicious dependencies execute arbitrary code through software supply chain attacks."),
     ("broken authentication", "Broken Authentication pattern.", "Broken authentication allows attackers to gain access through weak or missing credential checks."),
+
+    ("memory leak", "Memory Safety pattern.", "Memory safety issues like buffer overflows can lead to code execution."),
+    ("race condition", "Race Condition pattern.", "Race conditions allow attackers to exploit timing differences in operations."),
 ]
 
 
