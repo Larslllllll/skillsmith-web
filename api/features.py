@@ -3103,6 +3103,9 @@ _EXPLAIN_RULES = [
 
     ("cryptojacking", "Cryptojacking pattern.", "Cryptojacking uses victims' resources to mine crypto."),
     ("formjacking", "Formjacking pattern.", "Formjacking steals payment data from forms."),
+
+    ("watering hole attack", "Watering Hole pattern.", "Watering hole attacks target specific groups."),
+    ("insider threat", "Insider Threat pattern.", "Insider threats come from trusted actors."),
 ]
 
 
