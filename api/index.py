@@ -1274,6 +1274,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)Vishing|voice.*phishing|vishing|phone.*scam|telephone.*phishing|spam.*call'), 6, 'Vishing'),
     (re.compile(r'(?i)Smishing|sms.*phishing|text.*message.*phishing|text.*scam'), 6, 'Smishing'),
     (re.compile(r'(?i)Whaling|whaling.*attack|executive.*phishing|c-level.*phishing|ceo.*spear.*phishing'), 7, 'Whaling'),
+    (re.compile(r'(?i)Cryptojacking|crypto.*jacking|coinhive|monero.*miner|browser.*miner|crypto.*mining'), 7, 'Cryptojacking'),
+    (re.compile(r'(?i)Formjacking|form.*jacking|payment.*skimmer|credit.*card.*skimmer|magecart'), 8, 'Formjacking'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---

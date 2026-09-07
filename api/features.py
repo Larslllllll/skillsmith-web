@@ -3100,6 +3100,9 @@ _EXPLAIN_RULES = [
 
     ("smishing", "Smishing pattern.", "Smishing uses SMS for phishing."),
     ("whaling", "Whaling pattern.", "Whaling targets high-level executives."),
+
+    ("cryptojacking", "Cryptojacking pattern.", "Cryptojacking uses victims' resources to mine crypto."),
+    ("formjacking", "Formjacking pattern.", "Formjacking steals payment data from forms."),
 ]
 
 
