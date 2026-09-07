@@ -1289,6 +1289,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)AWS.*Exfiltration|aws.*data.*leak|s3.*public.*expose|cloudtrail.*delete|bucket.*policy.*public'), 8, 'AWS data exfiltration'),
     (re.compile(r'(?i)Azure.*Misconfig|azure.*blob.*public|storage.*account.*key.*leak|keyvault.*secret.*expose|managed.*identity.*exploit'), 8, 'Azure misconfiguration'),
     (re.compile(r'(?i)GCP.*IAM|gcp.*service.*account.*key|default.*compute.*service.*account|service.*account.*token|iam.*policy.*member'), 8, 'GCP IAM privilege escalation'),
+    (re.compile(r'(?i)Model.*Pinning|model.*pin|ai.*model.*hijack|model.*trojan|backdoor.*model'), 9, 'AI model pinning/hijacking'),
+    (re.compile(r'(?i)Multi.*Modal.*Inject|multimodal.*prompt|invisible.*prompt|image.*prompt.*inject|vision.*model.*poison'), 8, 'Multi-modal injection attack'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---

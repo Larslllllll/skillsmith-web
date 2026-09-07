@@ -3124,6 +3124,9 @@ _EXPLAIN_RULES = [
     ("aws exfiltration", "AWS Exfiltration pattern.", "AWS exfiltration leaks data through S3 or other services."),
     ("azure misconfiguration", "Azure Misconfig pattern.", "Azure misconfig exposes storage, keyvault, or identity."),
     ("gcp iam", "GCP IAM pattern.", "GCP IAM abuse exploits service account tokens."),
+
+    ("model pinning", "Model Pinning pattern.", "Model pinning locks an AI model to a specific behavior."),
+    ("multimodal injection", "Multi-Modal Injection pattern.", "Multi-modal injection hides prompts in images or other media."),
 ]
 
 
