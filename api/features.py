@@ -2964,6 +2964,9 @@ _EXPLAIN_RULES = [
     ("evilgrade update injection", "evilgrade pattern.", "evilgrade injects fake software updates."),
     ("entropy analysis", "Entropy pattern.", "Entropy analysis detects packed malware."),
 
+    ("inveigh relay/mitm", "Inveigh pattern.", "Inveigh performs relay/MITM attacks."),
+    ("krbrelay kerberos relay", "KrbRelay pattern.", "KrbRelay relays Kerberos authentication."),
+
 ]
 
 

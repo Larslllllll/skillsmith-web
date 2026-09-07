@@ -1185,6 +1185,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)SMBExec|smbexec.*share'), 7, 'SMBExec lateral movement'),
     (re.compile(r'(?i)evilgrade|evilgrade.*isrvoof'), 8, 'evilgrade update injection'),
     (re.compile(r'(?i)Entropy|entropy.*analysis|entropy.*score'), 5, 'Entropy analysis'),
+    (re.compile(r'(?i)Inveigh|inveigh.*relay'), 8, 'Inveigh relay/MITM'),
+    (re.compile(r'(?i)KrbRelay|krbrelay.*upstream'), 8, 'KrbRelay Kerberos relay'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
