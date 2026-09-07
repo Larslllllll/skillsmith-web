@@ -2973,6 +2973,9 @@ _EXPLAIN_RULES = [
     ("havoc c2 framework", "Havoc pattern.", "Havoc is a modern C2 framework."),
     ("pupy rat", "Pupy pattern.", "Pupy is a cross-platform RAT."),
 
+    ("mythic c2 framework", "Mythic pattern.", "Mythic is a cross-platform C2 framework."),
+    ("scritch c2", "Scritch pattern.", "Scritch is a C2 framework."),
+
 ]
 
 

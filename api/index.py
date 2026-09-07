@@ -1191,6 +1191,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)LockBit|lockbit.*ransom'), 9, 'LockBit ransomware'),
     (re.compile(r'(?i)Havoc|havoc.*c2'), 8, 'Havoc C2 framework'),
     (re.compile(r'(?i)Pupy|pupy.*rat'), 8, 'Pupy RAT'),
+    (re.compile(r'(?i)Mythic|mythic.*c2'), 8, 'Mythic C2 framework'),
+    (re.compile(r'(?i)Scritch|scritch.*payload'), 8, 'Scritch C2'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
