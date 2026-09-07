@@ -3218,6 +3218,9 @@ _EXPLAIN_RULES = [
 
     ("man in the middle", "MITM Attack pattern.", "Man-in-the-middle attacks intercept and alter communications between two parties."),
     ("zero day", "Zero-Day Exploit pattern.", "Zero-day exploits target unknown vulnerabilities before patches are available."),
+
+    ("lateral movement", "Lateral Movement pattern.", "Lateral movement spreads attacker access across network systems."),
+    ("privilege escalation", "Privilege Escalation pattern.", "Privilege escalation gains higher access levels than authorized."),
 ]
 
 

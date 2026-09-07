@@ -4440,4 +4440,6 @@ def _app_inner(environ, start_response):
     (re.compile(r'(?i)Supply.*Chain.*Attack|supply.*chain.*compromise|third.*party.*risk|vendor.*compromise|upstream.*attack'), 9, 'Supply chain attack / third-party risk'),
     (re.compile(r'(?i)Zero.*Day.*Exploit|0day|unknown.*vulnerability|unpatched|unmitigated.*exploit|critical.*zero.*day'), 8, 'Zero-day / unknown vulnerability exploit'),
     (re.compile(r'(?i)Man.*In.*The.*Middle|mitm|intercept.*traffic|ssl.*strip|tls.*strip|arp.*spoof|network.*interception'), 8, 'Man-in-the-middle attack'),
+    (re.compile(r'(?i)Privilege.*Escalation|elevat.*privilege|sudo.*exploit|windows.*privesc|linux.*privesc|UAC.*bypass|token.*impersonat'), 8, 'Privilege escalation attempt'),
+    (re.compile(r'(?i)Lateral.*Movement|pivot.*network|lateral.*spread|pass.*hash|crackmapexec|impacket.*psexec|wmiexec|smbexec|evil.*winrm'), 8, 'Lateral movement / network pivot'),
     return [json.dumps({"error": "not found"}).encode()]  # no route enumeration (pentest LOW-02)
