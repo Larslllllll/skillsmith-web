@@ -1229,6 +1229,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)LFI|lfi|local.*file.*include|\.\./'), 8, 'LFI vulnerability'),
     (re.compile(r'(?i)PrivilegeEscalation|priv.*esc|sudo.*exploit'), 9, 'Privilege escalation'),
     (re.compile(r'(?i)ZeroDay|zero.day|0day.*exploit|cve.*remote'), 10, 'Zero-day exploit'),
+    (re.compile(r'(?i)BufferOverflow|buffer.*overflow|%s.*format|strcpy\(|memcpy\('), 9, 'Buffer overflow'),
+    (re.compile(r'(?i)RaceCondition|race.*condition|TOCTOU|time-of-check'), 7, 'Race condition'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---

@@ -3030,6 +3030,9 @@ _EXPLAIN_RULES = [
 
     ("privilege escalation", "Privilege Escalation pattern.", "Privilege escalation exploits gain higher access."),
     ("zero-day exploit", "Zero-Day pattern.", "Zero-day exploits target unknown vulnerabilities."),
+
+    ("buffer overflow", "Buffer Overflow pattern.", "Buffer overflow overwrites memory."),
+    ("race condition", "Race Condition pattern.", "Race condition exploits timing bugs."),
 ]
 
 
