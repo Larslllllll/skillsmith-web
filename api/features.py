@@ -3204,6 +3204,9 @@ _EXPLAIN_RULES = [
 
     ("tool poisoning", "Tool Poisoning pattern.", "Tool poisoning attacks compromise tool definitions to manipulate AI agent behavior."),
     ("model extraction", "Model Extraction pattern.", "Model extraction attacks steal AI model weights or capabilities through repeated queries."),
+
+    ("data exfiltration", "Data Exfiltration pattern.", "Data exfiltration attempts to steal sensitive data from compromised systems."),
+    ("denial of service", "DoS Attack pattern.", "Denial of service attacks attempt to disrupt service availability."),
 ]
 
 
