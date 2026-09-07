@@ -2946,6 +2946,9 @@ _EXPLAIN_RULES = [
     ("responder llmnr poisoner", "Responder pattern.", "Responder poisons LLMNR/NBT-NS protocols."),
     ("mitm6 ipv6 poisoner", "mitm6 pattern.", "mitm6 attacks via IPv6."),
 
+    ("ntlmrelayx ntlm relay", "ntlmrelayx pattern.", "ntlmrelayx performs NTLM relay attacks."),
+    ("certipy ad cs attack", "Certipy pattern.", "Certipy attacks Active Directory Certificate Services."),
+
 ]
 
 
