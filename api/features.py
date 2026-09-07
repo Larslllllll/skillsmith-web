@@ -3156,6 +3156,9 @@ _EXPLAIN_RULES = [
 
     ("phishing attack", "Phishing Attack pattern.", "Phishing attacks trick users into revealing credentials."),
     ("backdoor access", "Backdoor Access pattern.", "Backdoor access provides unauthorized persistent access."),
+
+    ("data exfiltration", "Data Exfiltration pattern.", "Data exfiltration attempts unauthorized data transfer."),
+    ("denial of service", "DoS Attack pattern.", "Denial of service attacks exhaust system resources."),
 ]
 
 

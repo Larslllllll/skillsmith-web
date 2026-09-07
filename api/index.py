@@ -4399,4 +4399,6 @@ def _app_inner(environ, start_response):
     (re.compile(r'(?i)Kernel.*Exploit|kernel.*panic|cve.*linux|privilege.*kernel|rootkit.*kernel'), 10, 'Kernel exploit attempt'),
     (re.compile(r'(?i)Backdoor.*Access|reverse.*shell|bind.*shell|netcat.*backdoor|root.*kit|persistent.*access'), 9, 'Backdoor access attempt'),
     (re.compile(r'(?i)Phishing.*Attack|credential.*harvest|fake.*login|decoy.*page|clone.*website|impersonat.*service'), 7, 'Phishing attack pattern'),
+    (re.compile(r'(?i)Denial.*of.*Service|dos.*attack|resource.*exhaust|ddos|bandwidth.*exhaust|overload.*server|flood.*request'), 8, 'Denial of service attack'),
+    (re.compile(r'(?i)Data.*Exfiltration|exfil.*data|steal.*credential|export.*secret|extract.*token|leak.*password'), 9, 'Data exfiltration attempt'),
     return [json.dumps({"error": "not found"}).encode()]  # no route enumeration (pentest LOW-02)
