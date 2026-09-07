@@ -1280,6 +1280,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)Insider.*Threat|malicious.*insider|rogue.*employee|trusted.*actor.*abuse'), 9, 'Insider threat'),
     (re.compile(r'(?i)Pass-the-Hash|pass.the.hash|pth|hash.*relay|ntlm.*relay'), 8, 'Pass-the-Hash attack'),
     (re.compile(r'(?i)Kerberoasting|kerberoasting|kerberos.*ticket|TGS.*req|spn.*ticket'), 7, 'Kerberoasting attack'),
+    (re.compile(r'(?i)Golden.*Ticket|golden.*ticket|ticket.*grant.*ticket|TGT.*forge'), 10, 'Golden ticket attack'),
+    (re.compile(r'(?i)Silver.*Ticket|silver.*ticket|service.*ticket.*forge|TGS.*forge'), 9, 'Silver ticket attack'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---

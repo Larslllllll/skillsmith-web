@@ -3109,6 +3109,9 @@ _EXPLAIN_RULES = [
 
     ("pass-the-hash attack", "Pass-the-Hash pattern.", "Pass-the-Hash exploits cached credentials."),
     ("kerberoasting attack", "Kerberoasting pattern.", "Kerberoasting extracts service tickets."),
+
+    ("golden ticket attack", "Golden Ticket pattern.", "Golden tickets forge Kerberos TGTs."),
+    ("silver ticket attack", "Silver Ticket pattern.", "Silver tickets forge Kerberos TGSs."),
 ]
 
 
