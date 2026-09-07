@@ -1197,6 +1197,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)LockBit|lockbit.*ransomware'), 9, 'LockBit ransomware'),
     (re.compile(r'(?i)Azura|azura.*c2'), 8, 'Azura C2 framework'),
     (re.compile(r'(?i)Brute.Ratel|brute.*ratel.*c2'), 9, 'Brute Ratel C2'),
+    (re.compile(r'(?i)StormBreaker|stormbreaker.*malware'), 9, 'StormBreaker malware'),
+    (re.compile(r'(?i)Typhoon|typhoon.*ddos'), 8, 'Typhoon DDoS tool'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---

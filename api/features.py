@@ -2982,6 +2982,9 @@ _EXPLAIN_RULES = [
     ("azura c2 framework", "Azura pattern.", "Azura is a C2 framework."),
     ("brute ratel c2", "Brute Ratel pattern.", "Brute Ratel is a C2 framework."),
 
+    ("stormbreaker malware", "StormBreaker pattern.", "StormBreaker is a malware toolkit."),
+    ("typhoon ddos tool", "Typhoon pattern.", "Typhoon is a DDoS tool."),
+
 ]
 
 
