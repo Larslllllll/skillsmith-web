@@ -3210,6 +3210,8 @@ _EXPLAIN_RULES = [
 
     ("phishing attack", "Phishing Attack pattern.", "Phishing attacks trick users into revealing sensitive information."),
     ("backdoor access", "Backdoor Access pattern.", "Backdoors provide unauthorized access bypassing normal authentication."),
+
+    ("bot attack", "Bot Attack pattern.", "Bot attacks use compromised devices for coordinated malicious activities."),
 ]
 
 
