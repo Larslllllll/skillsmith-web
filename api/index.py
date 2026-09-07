@@ -1243,6 +1243,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)Hardcoded.*Secret|hardcoded.*password|password.*=.*[\'\"]|secret.*=.*[\'\"]'), 8, 'Hardcoded secret'),
     (re.compile(r'(?i)WAF.*Bypass|waf.*bypass|modsecurity| Cloudflare.*bypass'), 7, 'WAF bypass'),
     (re.compile(r'(?i)HTTP.*Smuggling|http.*smuggling|CL.*TE|TE.*CL|request.*smuggling'), 8, 'HTTP smuggling'),
+    (re.compile(r'(?i)LDAP.*Injection|ldap.*inject|\*.*admin|cn=.*admin'), 8, 'LDAP injection'),
+    (re.compile(r'(?i)NoSQL.*Injection|nosql.*inject|\$where|\$ne|\$regex'), 8, 'NoSQL injection'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---

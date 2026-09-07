@@ -3051,6 +3051,9 @@ _EXPLAIN_RULES = [
 
     ("waf bypass", "WAF Bypass pattern.", "WAF bypass evades web application firewalls."),
     ("http smuggling", "HTTP Smuggling pattern.", "HTTP smuggling exploits request parsing differences."),
+
+    ("ldap injection", "LDAP Injection pattern.", "LDAP injection exploits directory queries."),
+    ("nosql injection", "NoSQL Injection pattern.", "NoSQL injection exploits database queries."),
 ]
 
 
