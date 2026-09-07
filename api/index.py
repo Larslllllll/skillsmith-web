@@ -1203,6 +1203,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)NanoCore|nanocore.*rat'), 8, 'NanoCore RAT'),
     (re.compile(r'(?i)Ruler|ruler.*form'), 7, 'Ruler email attack'),
     (re.compile(r'(?i)MailSniper|mailsniper.*-g'), 7, 'MailSniper mailbox attack'),
+    (re.compile(r'(?i)PurpleSharp|purplesharp.*attack'), 6, 'PurpleSharp AD simulation'),
+    (re.compile(r'(?i)Intruder|intruder.*scan'), 6, 'Intruder scanner'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---

@@ -2991,6 +2991,9 @@ _EXPLAIN_RULES = [
     ("ruler email attack", "Ruler pattern.", "Ruler exploits Exchange email protocols."),
     ("mailsniper mailbox attack", "MailSniper pattern.", "MailSniper searches mailboxes for credentials."),
 
+    ("purplesharp ad simulation", "PurpleSharp pattern.", "PurpleSharp simulates adversary attacks."),
+    ("intruder scanner", "Intruder pattern.", "Intruder is a automated security scanner."),
+
 ]
 
 
