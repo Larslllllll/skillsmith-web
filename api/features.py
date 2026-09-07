@@ -3183,6 +3183,9 @@ _EXPLAIN_RULES = [
 
     ("browser hijack", "Browser Hijack pattern.", "Browser hijacking takes control of browser settings for malicious purposes."),
     ("kernel exploit", "Kernel Exploit pattern.", "Kernel exploits target OS kernel vulnerabilities for privilege escalation."),
+
+    ("api key in url", "API Key in URL pattern.", "API keys in URLs are logged by servers and can be exposed in transit."),
+    ("waf detection", "WAF Detection pattern.", "WAF detection probes for firewall presence to plan bypass strategies."),
 ]
 
 

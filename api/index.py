@@ -4417,4 +4417,6 @@ def _app_inner(environ, start_response):
     (re.compile(r'(?i)Fileless.*Attack|amSI|powerShell.*obfuscated|memory.*only.*malware|lolbin.*powershell'), 8, 'Fileless attack pattern'),
     (re.compile(r'(?i)Kernel.*Exploit|cve\d{4}\d{4,7}|local.*privesc|dirty.*pipe|dirty.*cow|kernel.*memory.*corrupt|kernel.*race'), 8, 'Kernel-level exploit attempt'),
     (re.compile(r'(?i)Browser.*Hijack|chromium.*inject|extension.*malware|malicious.*plugin|chrome.*backdoor|firefox.*exploit'), 8, 'Browser hijack / extension malware'),
+    (re.compile(r'(?i)waf.*probing|cloudflare.*detect|imperva.*detect|akamai.*detect|web.*application.*firewall.*detect'), 7, 'WAF detection / fingerprinting'),
+    (re.compile(r'(?i)api[_-]?key[=:][^\s&"]+|[?&]api[_-]?key=|api[_-]?key.*in.*url|key.*in.*query.*string'), 8, 'API key in URL (insecure transit)'),
     return [json.dumps({"error": "not found"}).encode()]  # no route enumeration (pentest LOW-02)
