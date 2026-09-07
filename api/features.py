@@ -2931,6 +2931,9 @@ _EXPLAIN_RULES = [
     ("rubeus kerberos tool", "Rubeus pattern.", "Rubeus is a Kerberos exploitation toolkit."),
     ("kekeo kerberos tool", "Kekeo pattern.", "Kekeo performs Kerberos ticket abuse."),
 
+    ("bloodhound ad mapper", "BloodHound pattern.", "BloodHound maps Active Directory relationships."),
+    ("mimikatz credential dumper", "Mimikatz pattern.", "Mimikatz extracts credentials from memory."),
+
 ]
 
 

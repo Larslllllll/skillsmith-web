@@ -1163,6 +1163,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)msfvenom|msfvenom.*-p'), 8, 'Msfvenom payload generator'),
     (re.compile(r'(?i)Rubeus|rubeus.*asktgt'), 8, 'Rubeus Kerberos tool'),
     (re.compile(r'(?i)Kekeo|kekeo.* tgt::'), 8, 'Kekeo Kerberos tool'),
+    (re.compile(r'(?i)BloodHound|bloodhound.*collect|sharpHound'), 7, 'BloodHound AD mapper'),
+    (re.compile(r'(?i)mimikatz|sekurlsa::logonpasswords'), 9, 'Mimikatz credential dumper'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
