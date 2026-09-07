@@ -3120,6 +3120,10 @@ _EXPLAIN_RULES = [
     ("lolbins abuse", "LOLBins pattern.", "LOLBins are legitimate binaries used maliciously."),
     ("lolbins", "LOLBins pattern.", "LOLBins are living-off-the-land binaries."),
     ("gtfobins abuse", "GTFOBins pattern.", "GTFOBins lists Unix binaries for exploitation."),
+
+    ("aws exfiltration", "AWS Exfiltration pattern.", "AWS exfiltration leaks data through S3 or other services."),
+    ("azure misconfiguration", "Azure Misconfig pattern.", "Azure misconfig exposes storage, keyvault, or identity."),
+    ("gcp iam", "GCP IAM pattern.", "GCP IAM abuse exploits service account tokens."),
 ]
 
 

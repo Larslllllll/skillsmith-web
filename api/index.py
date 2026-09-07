@@ -1286,6 +1286,9 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)LOL.*Driver|lol.*driver|living.*off.*land.*driver|sign.*driver.*vuln'), 7, 'LOL driver abuse'),
     (re.compile(r'(?i)LOLBins| LOLBins|living.*off.*land.*binaries|microsoft.*signed.*binaries'), 7, 'LOLBins abuse'),
     (re.compile(r'(?i)GTFOBins| GTFOBins|unix.*binary.*exploit|bin.*suid.*exploit'), 6, 'GTFOBins abuse'),
+    (re.compile(r'(?i)AWS.*Exfiltration|aws.*data.*leak|s3.*public.*expose|cloudtrail.*delete|bucket.*policy.*public'), 8, 'AWS data exfiltration'),
+    (re.compile(r'(?i)Azure.*Misconfig|azure.*blob.*public|storage.*account.*key.*leak|keyvault.*secret.*expose|managed.*identity.*exploit'), 8, 'Azure misconfiguration'),
+    (re.compile(r'(?i)GCP.*IAM|gcp.*service.*account.*key|default.*compute.*service.*account|service.*account.*token|iam.*policy.*member'), 8, 'GCP IAM privilege escalation'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
