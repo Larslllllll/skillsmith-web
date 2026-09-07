@@ -2920,6 +2920,14 @@ _EXPLAIN_RULES = [
     ("covenant c2", "Covenant pattern.", "Covenant is a .NET C2 framework."),
     ("sliver c2", "Sliver pattern.", "Sliver is an open-source C2 framework."),
 
+    ("metasploit toolkit", "Metasploit pattern.", "Metasploit is a framework for penetration testing."),
+    ("armitage c2", "Armitage pattern.", "Armitage is a GUI for Metasploit."),
+
+    ("metasploit toolkit", "Metasploit pattern.", "Metasploit is a penetration testing framework."),
+    ("armitage c2", "Armitage pattern.", "Armitage is a GUI for Metasploit."),
+    ("cobalt strike c2", "Cobalt Strike pattern.", "Cobalt Strike is a commercial C2 framework."),
+    ("msfvenom payload generator", "Msfvenom pattern.", "Msfvenom generates exploit payloads."),
+
 ]
 
 

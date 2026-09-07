@@ -1157,6 +1157,10 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)base64\s+-d.*\|.*sh'), 70, "Base64 decode pipe shell"),
     (re.compile(r'(?i)xxd\s+-r\s+-p'), 60, "Hex to binary decode"),
     (re.compile(r'(?i)rev\s+\|.*sh'), 70, "Reverse pipe to shell"),
+    (re.compile(r'(?i)Metasploit|metasploit.*framework'), 7, 'Metasploit toolkit'),
+    (re.compile(r'(?i)Armitage|armitage.*server'), 7, 'Armitage C2'),
+    (re.compile(r'(?i)CobaltStrike|cobalt.*strike'), 8, 'Cobalt Strike C2'),
+    (re.compile(r'(?i)msfvenom|msfvenom.*-p'), 8, 'Msfvenom payload generator'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
