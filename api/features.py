@@ -2979,6 +2979,9 @@ _EXPLAIN_RULES = [
     ("darkside ransomware", "DarkSide pattern.", "DarkSide ransomware encrypts files."),
     ("lockbit ransomware", "LockBit pattern.", "LockBit is ransomware-as-a-service."),
 
+    ("azura c2 framework", "Azura pattern.", "Azura is a C2 framework."),
+    ("brute ratel c2", "Brute Ratel pattern.", "Brute Ratel is a C2 framework."),
+
 ]
 
 
