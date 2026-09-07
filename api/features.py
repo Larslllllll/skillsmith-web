@@ -3039,6 +3039,9 @@ _EXPLAIN_RULES = [
 
     ("command injection", "Command Injection pattern.", "Command injection executes OS commands."),
     ("sql injection", "SQLi pattern.", "SQL injection exploits database queries."),
+
+    ("open redirect", "Open Redirect pattern.", "Open redirect漏洞 redirects users to malicious sites."),
+    ("xml injection", "XML Injection pattern.", "XML injection attacks exploit XML parsers."),
 ]
 
 
