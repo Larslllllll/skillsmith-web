@@ -3085,6 +3085,8 @@ _EXPLAIN_RULES = [
 
     ("trojan horse", "Trojan Horse pattern.", "Trojan horses disguise as legitimate software."),
     ("backdoor", "Backdoor pattern.", "Backdoors provide hidden unauthorized access."),
+
+    ("adware", "Adware pattern.", "Adware displays unwanted advertisements."),
 ]
 
 
