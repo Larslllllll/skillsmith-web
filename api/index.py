@@ -825,6 +825,8 @@ _CODE_PATTERNS = [
     (re.compile(r'(?i)Koadic|koadic.*cmdshell'), 8, 'Koadic C2'),
     (re.compile(r'(?i)\bCovenant\b|Covenant.*C2|Grunt'), 9, 'Covenant C2'),
     (re.compile(r'(?i)\bSliver\b|Sliver.*C2'), 9, 'Sliver C2'),
+    (re.compile(r'(?i)BruteRatel|brute.*ratel'), 9, 'Brute Ratel C2'),
+    (re.compile(r'(?i)Villain|villain.*c2'), 8, 'Villain C2'),
     (re.compile(r'(?i)screen\s+--dump\s+--wdmm'), 7, 'screen session dump'),
 ]
 
