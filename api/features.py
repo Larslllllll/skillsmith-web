@@ -2976,6 +2976,9 @@ _EXPLAIN_RULES = [
     ("mythic c2 framework", "Mythic pattern.", "Mythic is a cross-platform C2 framework."),
     ("scritch c2", "Scritch pattern.", "Scritch is a C2 framework."),
 
+    ("darkside ransomware", "DarkSide pattern.", "DarkSide ransomware encrypts files."),
+    ("lockbit ransomware", "LockBit pattern.", "LockBit is ransomware-as-a-service."),
+
 ]
 
 
