@@ -4397,4 +4397,6 @@ def _app_inner(environ, start_response):
     (re.compile(r'(?i)Privilege.*Escalation|priv.*esc|elevat.*privilege|root.*access|sudo.*without.*password'), 9, 'Privilege escalation vulnerability'),
     (re.compile(r'(?i)Container.*Escape|docker.*break|namespace.*escape|pod.*escape|run.*privileged|kubernetes.*escape'), 10, 'Container escape attempt'),
     (re.compile(r'(?i)Kernel.*Exploit|kernel.*panic|cve.*linux|privilege.*kernel|rootkit.*kernel'), 10, 'Kernel exploit attempt'),
+    (re.compile(r'(?i)Backdoor.*Access|reverse.*shell|bind.*shell|netcat.*backdoor|root.*kit|persistent.*access'), 9, 'Backdoor access attempt'),
+    (re.compile(r'(?i)Phishing.*Attack|credential.*harvest|fake.*login|decoy.*page|clone.*website|impersonat.*service'), 7, 'Phishing attack pattern'),
     return [json.dumps({"error": "not found"}).encode()]  # no route enumeration (pentest LOW-02)

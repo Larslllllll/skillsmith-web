@@ -3153,6 +3153,9 @@ _EXPLAIN_RULES = [
 
     ("kernel exploit", "Kernel Exploit pattern.", "Kernel exploits attack the OS kernel for privilege escalation."),
     ("container escape", "Container Escape pattern.", "Container escapes break out of container isolation."),
+
+    ("phishing attack", "Phishing Attack pattern.", "Phishing attacks trick users into revealing credentials."),
+    ("backdoor access", "Backdoor Access pattern.", "Backdoor access provides unauthorized persistent access."),
 ]
 
 
