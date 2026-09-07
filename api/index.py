@@ -4433,4 +4433,6 @@ def _app_inner(environ, start_response):
     (re.compile(r'(?i)Tool.*Poisoning|poisoned.*tool|malicious.*tool.*definition|tool.*hijack|tool.*compromise'), 8, 'Tool definition poisoning attack'),
     (re.compile(r'(?i)DoS.*Attack|denial.*service|ddos|amplification|brute.*force.*denial|service.*disrupt'), 8, 'Denial of service attack'),
     (re.compile(r'(?i)Data.*Exfiltration|data.*exfil|steal.*data|export.*data|leak.*data|unauthorized.*data.*access'), 8, 'Data exfiltration attempt'),
+    (re.compile(r'(?i)Backdoor.*Access|backdoor.*entry|undocumented.*access|secret.*access|persistence.*mechanism|hidden.*access.*point'), 8, 'Backdoor / persistence mechanism'),
+    (re.compile(r'(?i)Phishing.*Attack|spear.*phishing|whaling.*attack|smishing.*phishing|voice.*phishing|vishing|pharming.*attack'), 8, 'Phishing / social engineering attack'),
     return [json.dumps({"error": "not found"}).encode()]  # no route enumeration (pentest LOW-02)
