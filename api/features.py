@@ -2988,6 +2988,9 @@ _EXPLAIN_RULES = [
     ("lsassy credential extraction", "Lsassy pattern.", "Lsassy extracts credentials from lsass."),
     ("nanocore rat", "NanoCore pattern.", "NanoCore is a remote access trojan."),
 
+    ("ruler email attack", "Ruler pattern.", "Ruler exploits Exchange email protocols."),
+    ("mailsniper mailbox attack", "MailSniper pattern.", "MailSniper searches mailboxes for credentials."),
+
 ]
 
 

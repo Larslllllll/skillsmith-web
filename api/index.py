@@ -1201,6 +1201,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)Typhoon|typhoon.*ddos'), 8, 'Typhoon DDoS tool'),
     (re.compile(r'(?i)Lsassy|lsassy.*credential'), 7, 'Lsassy credential extraction'),
     (re.compile(r'(?i)NanoCore|nanocore.*rat'), 8, 'NanoCore RAT'),
+    (re.compile(r'(?i)Ruler|ruler.*form'), 7, 'Ruler email attack'),
+    (re.compile(r'(?i)MailSniper|mailsniper.*-g'), 7, 'MailSniper mailbox attack'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
