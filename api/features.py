@@ -2943,6 +2943,9 @@ _EXPLAIN_RULES = [
     ("powersploit powershell toolkit", "PowerSploit pattern.", "PowerSploit provides PowerShell scripts for attacks."),
     ("empire post-exploitation", "Empire pattern.", "Empire is a post-exploitation framework."),
 
+    ("responder llmnr poisoner", "Responder pattern.", "Responder poisons LLMNR/NBT-NS protocols."),
+    ("mitm6 ipv6 poisoner", "mitm6 pattern.", "mitm6 attacks via IPv6."),
+
 ]
 
 

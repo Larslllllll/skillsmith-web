@@ -1171,6 +1171,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)wmiexec|wmi.*exec'), 7, 'WMIExec lateral movement'),
     (re.compile(r'(?i)PowerSploit|power.*sploit.*Invoke'), 8, 'PowerSploit PowerShell toolkit'),
     (re.compile(r'(?i)Empire|empire.*launcher'), 7, 'Empire post-exploitation'),
+    (re.compile(r'(?i)Responder|responder.*-I'), 7, 'Responder LLMNR poisoner'),
+    (re.compile(r'(?i)mitm6|mitm6.*-d'), 7, 'mitm6 IPv6 poisoner'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
