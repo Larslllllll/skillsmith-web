@@ -3087,6 +3087,9 @@ _EXPLAIN_RULES = [
     ("backdoor", "Backdoor pattern.", "Backdoors provide hidden unauthorized access."),
 
     ("adware", "Adware pattern.", "Adware displays unwanted advertisements."),
+
+    ("android malware", "Android Malware pattern.", "Android malware targets mobile devices."),
+    ("ios jailbreak", "iOS Jailbreak pattern.", "iOS jailbreak bypasses Apple security."),
 ]
 
 
