@@ -3045,6 +3045,9 @@ _EXPLAIN_RULES = [
 
     ("cors misconfiguration", "CORS pattern.", "CORS misconfiguration exposes APIs."),
     ("jwt vulnerability", "JWT pattern.", "JWT vulnerabilities allow token bypass."),
+
+    ("api key exposure", "API Key Exposure pattern.", "API key exposure leaks credentials."),
+    ("hardcoded secret", "Hardcoded Secret pattern.", "Hardcoded secrets are embedded in code."),
 ]
 
 
