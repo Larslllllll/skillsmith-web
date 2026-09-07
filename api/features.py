@@ -2955,6 +2955,9 @@ _EXPLAIN_RULES = [
     ("privexchange attack", "PrivExchange pattern.", "PrivExchange exploits Exchange for privilege escalation."),
     ("sharphound ad collector", "SharpHound pattern.", "SharpHound collects AD data for BloodHound."),
 
+    ("silenttrinity c2", "SILENTTRINITY pattern.", "SILENTTRINITY is a C2 framework using Python."),
+    ("asyncrat malware", "AsyncRAT pattern.", "AsyncRAT is a remote access trojan."),
+
 ]
 
 

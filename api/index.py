@@ -1179,6 +1179,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)vssadmin|vssadmin.*shadow'), 7, 'vssadmin shadow copy'),
     (re.compile(r'(?i)PrivExchange|privexchange.*exploit'), 8, 'PrivExchange attack'),
     (re.compile(r'(?i)SharpHound|sharphound.*-c'), 7, 'SharpHound AD collector'),
+    (re.compile(r'(?i)SILENTTRINITY|silenttrinity.*st'), 8, 'SILENTTRINITY C2'),
+    (re.compile(r'(?i)AsyncRAT|asyncrat.*client'), 8, 'AsyncRAT malware'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
