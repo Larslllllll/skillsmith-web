@@ -1272,6 +1272,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)Phishing.*Kit|phishing.*kit|cred.*harvester|evilginx|evilproxy|phishlet'), 8, 'Phishing kit'),
     (re.compile(r'(?i)BEC.*Attack|business.*email.*compromise|ceo.*fraud|wire.*transfer.*fraud'), 8, 'BEC attack'),
     (re.compile(r'(?i)Vishing|voice.*phishing|vishing|phone.*scam|telephone.*phishing|spam.*call'), 6, 'Vishing'),
+    (re.compile(r'(?i)Smishing|sms.*phishing|text.*message.*phishing|text.*scam'), 6, 'Smishing'),
+    (re.compile(r'(?i)Whaling|whaling.*attack|executive.*phishing|c-level.*phishing|ceo.*spear.*phishing'), 7, 'Whaling'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
