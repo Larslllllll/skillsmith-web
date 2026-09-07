@@ -3063,6 +3063,9 @@ _EXPLAIN_RULES = [
 
     ("supply chain attack", "Supply Chain Attack pattern.", "Supply chain attacks compromise dependencies."),
     ("typosquatting", "Typosquatting pattern.", "Typosquatting tricks users with misspelled packages."),
+
+    ("lambda attack", "Lambda Attack pattern.", "Lambda attacks exploit serverless functions."),
+    ("serverless exploit", "Serverless Exploit pattern.", "Serverless exploits target cloud functions."),
 ]
 
 
