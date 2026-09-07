@@ -1278,6 +1278,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)Formjacking|form.*jacking|payment.*skimmer|credit.*card.*skimmer|magecart'), 8, 'Formjacking'),
     (re.compile(r'(?i)Watering.*Hole|watering.*hole|compromise.*website|drive-by.*download'), 8, 'Watering hole attack'),
     (re.compile(r'(?i)Insider.*Threat|malicious.*insider|rogue.*employee|trusted.*actor.*abuse'), 9, 'Insider threat'),
+    (re.compile(r'(?i)Pass-the-Hash|pass.the.hash|pth|hash.*relay|ntlm.*relay'), 8, 'Pass-the-Hash attack'),
+    (re.compile(r'(?i)Kerberoasting|kerberoasting|kerberos.*ticket|TGS.*req|spn.*ticket'), 7, 'Kerberoasting attack'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---

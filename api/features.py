@@ -3106,6 +3106,9 @@ _EXPLAIN_RULES = [
 
     ("watering hole attack", "Watering Hole pattern.", "Watering hole attacks target specific groups."),
     ("insider threat", "Insider Threat pattern.", "Insider threats come from trusted actors."),
+
+    ("pass-the-hash attack", "Pass-the-Hash pattern.", "Pass-the-Hash exploits cached credentials."),
+    ("kerberoasting attack", "Kerberoasting pattern.", "Kerberoasting extracts service tickets."),
 ]
 
 
