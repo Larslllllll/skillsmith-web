@@ -3048,6 +3048,9 @@ _EXPLAIN_RULES = [
 
     ("api key exposure", "API Key Exposure pattern.", "API key exposure leaks credentials."),
     ("hardcoded secret", "Hardcoded Secret pattern.", "Hardcoded secrets are embedded in code."),
+
+    ("waf bypass", "WAF Bypass pattern.", "WAF bypass evades web application firewalls."),
+    ("http smuggling", "HTTP Smuggling pattern.", "HTTP smuggling exploits request parsing differences."),
 ]
 
 

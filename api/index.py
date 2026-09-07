@@ -1241,6 +1241,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)JWT|json.*web.*token|jwt.*bypass|jwt.*none'), 8, 'JWT vulnerability'),
     (re.compile(r'(?i)API.*Key.*Exposure|api_key.*=|API_KEY.*=.*[\'\"]|sk-[a-zA-Z0-9]{20,}'), 8, 'API key exposure'),
     (re.compile(r'(?i)Hardcoded.*Secret|hardcoded.*password|password.*=.*[\'\"]|secret.*=.*[\'\"]'), 8, 'Hardcoded secret'),
+    (re.compile(r'(?i)WAF.*Bypass|waf.*bypass|modsecurity| Cloudflare.*bypass'), 7, 'WAF bypass'),
+    (re.compile(r'(?i)HTTP.*Smuggling|http.*smuggling|CL.*TE|TE.*CL|request.*smuggling'), 8, 'HTTP smuggling'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
