@@ -2934,6 +2934,9 @@ _EXPLAIN_RULES = [
     ("bloodhound ad mapper", "BloodHound pattern.", "BloodHound maps Active Directory relationships."),
     ("mimikatz credential dumper", "Mimikatz pattern.", "Mimikatz extracts credentials from memory."),
 
+    ("kerbrute ad attack", "Kerbrute pattern.", "Kerbrute performs Kerberos brute force attacks."),
+    ("secretsdump credential dump", "secretsdump pattern.", "secretsdump extracts credential hashes."),
+
 ]
 
 
