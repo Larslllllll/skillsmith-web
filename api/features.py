@@ -3150,6 +3150,9 @@ _EXPLAIN_RULES = [
 
     ("privilege escalation", "Privilege Escalation pattern.", "Privilege escalation gains unauthorized higher access."),
     ("lateral movement", "Lateral Movement pattern.", "Lateral movement spreads access through a network."),
+
+    ("kernel exploit", "Kernel Exploit pattern.", "Kernel exploits attack the OS kernel for privilege escalation."),
+    ("container escape", "Container Escape pattern.", "Container escapes break out of container isolation."),
 ]
 
 
