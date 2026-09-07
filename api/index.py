@@ -4429,4 +4429,6 @@ def _app_inner(environ, start_response):
     (re.compile(r'(?i)XML.*Injection|xxe|xinclude|xml.*bomb|billion.*laughs|entity.*expansion|external.*entity|param.*entity'), 8, 'XML injection / XXE attack'),
     (re.compile(r'(?i)Indirect.*Prompt|injected.*via.*context|poisoned.*context|context.*injection|rag.*poisoning|context.*manipulat'), 8, 'Indirect prompt injection via context'),
     (re.compile(r'(?i)Prompt.*Worm|self.*replicating.*prompt|worm.*propagation|prompt.*virus|recursive.*prompt.*injection'), 8, 'Self-replicating prompt worm'),
+    (re.compile(r'(?i)Model.*Extraction|model.*stealing|model.*extraction|weights.*theft|neural.*theft|model.*distillation.*attack'), 8, 'Model extraction / weight theft'),
+    (re.compile(r'(?i)Tool.*Poisoning|poisoned.*tool|malicious.*tool.*definition|tool.*hijack|tool.*compromise'), 8, 'Tool definition poisoning attack'),
     return [json.dumps({"error": "not found"}).encode()]  # no route enumeration (pentest LOW-02)

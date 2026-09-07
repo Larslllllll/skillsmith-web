@@ -3201,6 +3201,9 @@ _EXPLAIN_RULES = [
 
     ("prompt worm", "Prompt Worm pattern.", "Self-replicating prompt worms spread by injecting malicious content into AI contexts."),
     ("indirect prompt", "Indirect Prompt pattern.", "Indirect prompt injection attacks target context data rather than direct prompts."),
+
+    ("tool poisoning", "Tool Poisoning pattern.", "Tool poisoning attacks compromise tool definitions to manipulate AI agent behavior."),
+    ("model extraction", "Model Extraction pattern.", "Model extraction attacks steal AI model weights or capabilities through repeated queries."),
 ]
 
 
