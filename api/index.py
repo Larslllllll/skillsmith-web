@@ -1282,6 +1282,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)Kerberoasting|kerberoasting|kerberos.*ticket|TGS.*req|spn.*ticket'), 7, 'Kerberoasting attack'),
     (re.compile(r'(?i)Golden.*Ticket|golden.*ticket|ticket.*grant.*ticket|TGT.*forge'), 10, 'Golden ticket attack'),
     (re.compile(r'(?i)Silver.*Ticket|silver.*ticket|service.*ticket.*forge|TGS.*forge'), 9, 'Silver ticket attack'),
+    (re.compile(r'(?i)DLL.*Side-Loading|dll.*side.*load|dll.*hijack|search.*order.*hijack'), 8, 'DLL side-loading'),
+    (re.compile(r'(?i)LOL.*Driver|lol.*driver|living.*off.*land.*driver|sign.*driver.*vuln'), 7, 'LOL driver abuse'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---

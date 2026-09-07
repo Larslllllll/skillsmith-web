@@ -3112,6 +3112,9 @@ _EXPLAIN_RULES = [
 
     ("golden ticket attack", "Golden Ticket pattern.", "Golden tickets forge Kerberos TGTs."),
     ("silver ticket attack", "Silver Ticket pattern.", "Silver tickets forge Kerberos TGSs."),
+
+    ("dll side-loading", "DLL Side-Loading pattern.", "DLL side-loading exploits DLL search order."),
+    ("lol driver abuse", "LOL Driver pattern.", "LOL drivers exploit signed vulnerable drivers."),
 ]
 
 
