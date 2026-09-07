@@ -4383,4 +4383,6 @@ def _app_inner(environ, start_response):
         return handle_scan(environ, start_response)
 
     start_response("404 Not Found", [("Content-Type", "application/json")] + _CORS_HEADERS)
+    (re.compile(r'(?i)Goal.*Hijack|goal.*hijack|objective.*override|reward.*hacking|reward.*cheating'), 9, 'AI goal hijacking attack'),
+    (re.compile(r'(?i)Agent.*Loop|agent.*infinite.*loop|loop.*forever|recursive.*agent|circular.*agent'), 7, 'Agent infinite loop vulnerability'),
     return [json.dumps({"error": "not found"}).encode()]  # no route enumeration (pentest LOW-02)

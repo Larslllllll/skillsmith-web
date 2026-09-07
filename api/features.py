@@ -3130,6 +3130,11 @@ _EXPLAIN_RULES = [
 
     ("dependency confusion", "Dependency Confusion pattern.", "Dependency confusion exploits namespace squatting."),
     ("repo jacking", "Repo Jacking pattern.", "Repo jacking exploits renamed popular packages."),
+
+    ("agent infinite loop", "Agent Loop pattern.", "Infinite agent loops cause resource exhaustion."),
+    ("goal hijacking", "Goal Hijack pattern.", "Goal hijacking overrides the agent's original objective."),
+    ("goal hijack", "Goal Hijack pattern.", "Goal hijack exploits objective misalignment."),
+    ("objective override", "Goal Hijack pattern.", "Objective override changes agent goals."),
 ]
 
 
