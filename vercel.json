@@ -72,6 +72,82 @@
     {
       "src": "/api/buy_credit",
       "dest": "/api/index.py"
+    },
+    {
+      "src": "/guides",
+      "dest": "/guides.html"
+    },
+    {
+      "src": "/faq",
+      "dest": "/faq.html"
+    },
+    {
+      "src": "/api-docs",
+      "dest": "/api-docs.html"
+    },
+    {
+      "src": "/impressum",
+      "dest": "/impressum.html"
+    },
+    {
+      "src": "/privacy",
+      "dest": "/privacy-policy.html"
+    },
+    {
+      "src": "/terms",
+      "dest": "/terms.html"
+    },
+    {
+      "src": "/scan",
+      "dest": "/scan.html"
+    },
+    {
+      "src": "/analysis",
+      "dest": "/analysis.html"
+    },
+    {
+      "src": "/stats",
+      "dest": "/stats.html"
+    },
+    {
+      "src": "/guide/how-it-works",
+      "dest": "/guide-how-it-works.html"
+    },
+    {
+      "src": "/guide/writing-safe-skills",
+      "dest": "/guide-writing-safe-skills.html"
+    },
+    {
+      "src": "/guide/malicious-skills",
+      "dest": "/guide-malicious-skills.html"
+    },
+    {
+      "src": "/guide/prompt-injection",
+      "dest": "/guide-prompt-injection.html"
+    },
+    {
+      "src": "/guide/homoglyph-attacks",
+      "dest": "/guide-homoglyph-attacks.html"
+    },
+    {
+      "src": "/guide/audit-checklist",
+      "dest": "/guide-audit-checklist.html"
+    },
+    {
+      "src": "/guide/dependency-osv",
+      "dest": "/guide-dependency-osv.html"
+    },
+    {
+      "src": "/guide/rug-pulls",
+      "dest": "/guide-rug-pulls.html"
+    },
+    {
+      "src": "/guide/threat-modeling",
+      "dest": "/guide-threat-modeling.html"
+    },
+    {
+      "src": "/terms",
+      "dest": "/terms.html"
     }
   ],
   "headers": [

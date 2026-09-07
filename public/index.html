@@ -337,7 +337,41 @@ Body markdown describing usage."></textarea>
     </div>
   </section>
 
-  <section style="display:flex;flex-direction:column;gap:1.2rem;">
+  
+<section style="max-width:62ch;margin:2rem auto;padding:0 1rem;font-size:.95rem;line-height:1.7;">
+<h2>Why Use a Claude Agent Skill Scanner?</h2>
+<p>AI agent skills are powerful tools that extend what Claude can do — but they also introduce security risks. A malicious or poorly designed SKILL.md can leak your data, execute harmful code, or trick Claude into revealing sensitive information.</p>
+<p>skillsmith helps you catch these risks before they cause damage. Our scanner analyzes Claude Agent Skills for known attack patterns, prompt-injection attempts, data exfiltration vectors, and other security threats.</p>
+
+<h3>Key Features</h3>
+<ul>
+<li><strong>Prompt Injection Detection</strong> — Finds hidden instructions that try to override Claude's system prompt or chain-of-thought</li>
+<li><strong>Exfiltration Endpoint Analysis</strong> — Detects when a skill tries to send your data to unauthorized servers</li>
+<li><strong>Behavioral Sandbox</strong> — Safely simulates what an agent would do when following a skill's instructions</li>
+<li><strong>Score Trend Tracking</strong> — Monitor changes in a skill's security posture over time</li>
+<li><strong>CLI & API Access</strong> — Integrate scanning into your CI/CD pipeline or security workflows</li>
+</ul>
+
+<h3>How It Works</h3>
+<p>Upload a SKILL.md file or provide a GitHub URL. The scanner performs a multi-layer analysis:</p>
+<ol>
+<li><strong>Static Pattern Match</strong> — Checks against 1,700+ known attack patterns in categories like injection, code execution, data leakage, and social engineering</li>
+<li><strong>Heuristic Analysis</strong> — Looks for suspicious phrases, encoded payloads, and obfuscation techniques</li>
+<li><strong>Paraphrase Detection</strong> — Catches attack patterns disguised through synonyms and rephrasing</li>
+<li><strong>Optional Behavioral Analysis</strong> — Runs the skill in an isolated sandbox to observe actual agent behavior</li>
+</ol>
+
+<h3>About Claude Agent Skills</h3>
+<p>Claude Agent Skills are markdown files (SKILL.md) that define how Claude should approach a task. They can include instructions, code snippets, tool definitions, and runtime parameters. Because skills can import and execute arbitrary code, they are a significant attack surface.</p>
+<p>Common risks include: skills that exfiltrate conversation history, skills that execute untrusted code on your system, skills that bypass consent mechanisms, and skills that plant persistent backdoors.</p>
+
+<h3>Free vs Pro</h3>
+<p>The scanner is free to use with 5 scans per day. Pro users get 100 scans per day for $5/month, plus API access and unlimited lookups. Both tiers include all scanner features and behavioral analysis.</p>
+
+<h3>Security Scanner Accuracy</h3>
+<p>skillsmith uses heuristic pattern matching — it is not a formal proof of safety. A clean scan does not guarantee a skill is harmless, and a flagged scan may be a false positive. Always review skill code yourself before running anything you don't trust.</p>
+</section>
+<section style="display:flex;flex-direction:column;gap:1.2rem;">
     <details style="border:1px solid #e39e7e;background:rgba(227,158,126,.08);border-radius:8px;padding:.7rem 1rem;">
       <summary style="cursor:pointer;color:#e39e7e;font-weight:700;font-size:.8rem;">⚠ Not 100% accurate — read before trusting a result</summary>
       <p class="sub" style="font-size:.78rem;margin:.6rem 0 0;">
