@@ -3066,6 +3066,9 @@ _EXPLAIN_RULES = [
 
     ("lambda attack", "Lambda Attack pattern.", "Lambda attacks exploit serverless functions."),
     ("serverless exploit", "Serverless Exploit pattern.", "Serverless exploits target cloud functions."),
+
+    ("ci/cd attack", "CI/CD Attack pattern.", "CI/CD attacks compromise build pipelines."),
+    ("gitops attack", "GitOps Attack pattern.", "GitOps attacks target deployment automation."),
 ]
 
 

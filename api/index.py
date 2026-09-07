@@ -1253,6 +1253,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)Typosquatting|typo.*squat|pypi.*typo|domain.*typo|homograph.*attack'), 6, 'Typosquatting'),
     (re.compile(r'(?i)Lambda.*Attack|aws.*lambda.*exploit|lambda.*code.*inject|lambda.*rce'), 8, 'Lambda attack'),
     (re.compile(r'(?i)Serverless.*Exploit|serverless.*exploit|azure.*function.*attack|cloud.*function.*exploit'), 8, 'Serverless exploit'),
+    (re.compile(r'(?i)CI/CD.*Attack|ci.cd.*inject|github.*action.*inject|gitlab.*ci.*inject'), 8, 'CI/CD attack'),
+    (re.compile(r'(?i)GitOps.*Attack|gitops.*inject|argocd.*compromise|flux.*vulnerability'), 8, 'GitOps attack'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
