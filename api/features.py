@@ -3215,6 +3215,9 @@ _EXPLAIN_RULES = [
 
     ("supply chain attack", "Supply Chain Attack pattern.", "Supply chain attacks compromise third-party dependencies to infiltrate systems."),
     ("credential stuffing", "Credential Stuffing pattern.", "Credential stuffing uses stolen credentials to gain unauthorized access."),
+
+    ("man in the middle", "MITM Attack pattern.", "Man-in-the-middle attacks intercept and alter communications between two parties."),
+    ("zero day", "Zero-Day Exploit pattern.", "Zero-day exploits target unknown vulnerabilities before patches are available."),
 ]
 
 
