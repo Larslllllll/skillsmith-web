@@ -3033,6 +3033,9 @@ _EXPLAIN_RULES = [
 
     ("buffer overflow", "Buffer Overflow pattern.", "Buffer overflow overwrites memory."),
     ("race condition", "Race Condition pattern.", "Race condition exploits timing bugs."),
+
+    ("deserialization attack", "Deserialization pattern.", "Deserialization attacks exploit unsafe object loading."),
+    ("path traversal", "Path Traversal pattern.", "Path traversal accesses unauthorized files."),
 ]
 
 

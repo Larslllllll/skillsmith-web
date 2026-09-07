@@ -1231,6 +1231,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)ZeroDay|zero.day|0day.*exploit|cve.*remote'), 10, 'Zero-day exploit'),
     (re.compile(r'(?i)BufferOverflow|buffer.*overflow|%s.*format|strcpy\(|memcpy\('), 9, 'Buffer overflow'),
     (re.compile(r'(?i)RaceCondition|race.*condition|TOCTOU|time-of-check'), 7, 'Race condition'),
+    (re.compile(r'(?i)Deserialization|deserialize|pickle\.|yaml\.load'), 9, 'Deserialization attack'),
+    (re.compile(r'(?i)PathTraversal|path.*traversal|\.\./|\.\.\\|traverse.*path'), 8, 'Path traversal'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
