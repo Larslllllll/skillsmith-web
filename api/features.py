@@ -3171,6 +3171,9 @@ _EXPLAIN_RULES = [
 
     ("credential stuffing", "Credential Stuffing pattern.", "Credential stuffing uses leaked credentials to gain unauthorized access."),
     ("supply chain risk", "Supply Chain Risk pattern.", "Supply chain risks come from compromised third-party dependencies."),
+
+    ("social engineering", "Social Engineering pattern.", "Social engineering manipulates users into revealing information."),
+    ("typosquatting", "Typosquatting pattern.", "Typosquatting uses similar package names to trick developers."),
 ]
 
 
