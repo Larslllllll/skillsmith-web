@@ -2997,6 +2997,9 @@ _EXPLAIN_RULES = [
     ("go365 credential attack", "Go365 pattern.", "Go365 attacks O365 accounts."),
     ("ssh-audit scanner", "ssh-audit pattern.", "ssh-audit checks SSH configurations."),
 
+    ("cloudfrs enumeration", "CloudFrs pattern.", "CloudFrs enumerates cloud storage."),
+    ("pacu aws exploitation", "Pacu pattern.", "Pacu is an AWS exploitation framework."),
+
 ]
 
 

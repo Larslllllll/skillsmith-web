@@ -1207,6 +1207,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)Intruder|intruder.*scan'), 6, 'Intruder scanner'),
     (re.compile(r'(?i)Go365|go365.*recon'), 7, 'Go365 credential attack'),
     (re.compile(r'(?i)ssh-audit|ssh.*audit'), 5, 'ssh-audit scanner'),
+    (re.compile(r'(?i)CloudFrs|cloudfrs.*enum'), 6, 'CloudFrs enumeration'),
+    (re.compile(r'(?i)Pacu|pacu.*aws'), 6, 'Pacu AWS exploitation'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
