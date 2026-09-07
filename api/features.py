@@ -3027,6 +3027,9 @@ _EXPLAIN_RULES = [
 
     ("xxe vulnerability", "XXE pattern.", "XXE exploits XML external entities."),
     ("lfi vulnerability", "LFI pattern.", "LFI includes local files."),
+
+    ("privilege escalation", "Privilege Escalation pattern.", "Privilege escalation exploits gain higher access."),
+    ("zero-day exploit", "Zero-Day pattern.", "Zero-day exploits target unknown vulnerabilities."),
 ]
 
 

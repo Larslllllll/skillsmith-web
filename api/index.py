@@ -1227,6 +1227,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)RCE|remote.*code.*exec|exec\(|system\('), 9, 'RCE vulnerability'),
     (re.compile(r'(?i)XXE|xml.*entity|<!ENTITY'), 9, 'XXE vulnerability'),
     (re.compile(r'(?i)LFI|lfi|local.*file.*include|\.\./'), 8, 'LFI vulnerability'),
+    (re.compile(r'(?i)PrivilegeEscalation|priv.*esc|sudo.*exploit'), 9, 'Privilege escalation'),
+    (re.compile(r'(?i)ZeroDay|zero.day|0day.*exploit|cve.*remote'), 10, 'Zero-day exploit'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
