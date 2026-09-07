@@ -4419,4 +4419,6 @@ def _app_inner(environ, start_response):
     (re.compile(r'(?i)Browser.*Hijack|chromium.*inject|extension.*malware|malicious.*plugin|chrome.*backdoor|firefox.*exploit'), 8, 'Browser hijack / extension malware'),
     (re.compile(r'(?i)waf.*probing|cloudflare.*detect|imperva.*detect|akamai.*detect|web.*application.*firewall.*detect'), 7, 'WAF detection / fingerprinting'),
     (re.compile(r'(?i)api[_-]?key[=:][^\s&"]+|[?&]api[_-]?key=|api[_-]?key.*in.*url|key.*in.*query.*string'), 8, 'API key in URL (insecure transit)'),
+    (re.compile(r'(?i)Session.*Poisoning|session.*fixation|session.*hijack|cookie.*theft|cookie.*stealing|session.*covalent'), 8, 'Session poisoning / fixation attack'),
+    (re.compile(r'(?i)Token.*Reuse|refresh.*token.*reuse|jti.*replay|nonce.*reuse|jwt.*replay|replay.*attack.*token'), 8, 'Token reuse / replay attack'),
     return [json.dumps({"error": "not found"}).encode()]  # no route enumeration (pentest LOW-02)

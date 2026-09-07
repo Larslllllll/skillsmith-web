@@ -3186,6 +3186,9 @@ _EXPLAIN_RULES = [
 
     ("api key in url", "API Key in URL pattern.", "API keys in URLs are logged by servers and can be exposed in transit."),
     ("waf detection", "WAF Detection pattern.", "WAF detection probes for firewall presence to plan bypass strategies."),
+
+    ("token reuse", "Token Reuse pattern.", "Token reuse attacks replay valid tokens to gain unauthorized access."),
+    ("session poisoning", "Session Poisoning pattern.", "Session poisoning manipulates session state for malicious purposes."),
 ]
 
 
