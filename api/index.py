@@ -4427,4 +4427,6 @@ def _app_inner(environ, start_response):
     (re.compile(r'(?i)Memory.*Leak|heap.*overflow|stack.*overflow|buffer.*overflow|use.*after.*free|double.*free|null.*pointer'), 8, 'Memory safety vulnerability'),
     (re.compile(r'(?i)LDAP.*Injection|ldap.*injection|inject.*ldap|blind.*ldap|ldap.*filter.*inject|ldapsearch.*inject'), 8, 'LDAP injection attack'),
     (re.compile(r'(?i)XML.*Injection|xxe|xinclude|xml.*bomb|billion.*laughs|entity.*expansion|external.*entity|param.*entity'), 8, 'XML injection / XXE attack'),
+    (re.compile(r'(?i)Indirect.*Prompt|injected.*via.*context|poisoned.*context|context.*injection|rag.*poisoning|context.*manipulat'), 8, 'Indirect prompt injection via context'),
+    (re.compile(r'(?i)Prompt.*Worm|self.*replicating.*prompt|worm.*propagation|prompt.*virus|recursive.*prompt.*injection'), 8, 'Self-replicating prompt worm'),
     return [json.dumps({"error": "not found"}).encode()]  # no route enumeration (pentest LOW-02)

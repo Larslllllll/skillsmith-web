@@ -3198,6 +3198,9 @@ _EXPLAIN_RULES = [
 
     ("xml injection", "XML Injection pattern.", "XML injection exploits insecure XML parsers to access unauthorized data."),
     ("ldap injection", "LDAP Injection pattern.", "LDAP injection manipulates LDAP queries to bypass authentication or access data."),
+
+    ("prompt worm", "Prompt Worm pattern.", "Self-replicating prompt worms spread by injecting malicious content into AI contexts."),
+    ("indirect prompt", "Indirect Prompt pattern.", "Indirect prompt injection attacks target context data rather than direct prompts."),
 ]
 
 
