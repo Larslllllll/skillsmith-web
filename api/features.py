@@ -3078,6 +3078,9 @@ _EXPLAIN_RULES = [
 
     ("keylogger", "Keylogger pattern.", "Keyloggers record keystrokes for theft."),
     ("spyware", "Spyware pattern.", "Spyware secretly monitors user activity."),
+
+    ("fileless malware", "Fileless Malware pattern.", "Fileless malware runs in memory only."),
+    ("polymorphic malware", "Polymorphic Malware pattern.", "Polymorphic malware changes its code."),
 ]
 
 
