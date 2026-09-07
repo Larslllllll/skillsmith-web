@@ -2952,6 +2952,9 @@ _EXPLAIN_RULES = [
     ("invoke-mimikatz loader", "Invoke-Mimikatz pattern.", "Invoke-Mimikatz loads Mimikatz in memory."),
     ("vssadmin shadow copy", "vssadmin pattern.", "vssadmin creates volume shadow copies."),
 
+    ("privexchange attack", "PrivExchange pattern.", "PrivExchange exploits Exchange for privilege escalation."),
+    ("sharphound ad collector", "SharpHound pattern.", "SharpHound collects AD data for BloodHound."),
+
 ]
 
 

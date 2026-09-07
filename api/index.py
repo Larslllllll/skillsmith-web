@@ -1177,6 +1177,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)certipy|certipy.*auth'), 8, 'Certipy AD CS attack'),
     (re.compile(r'(?i)Invoke-Mimikatz|invoke.*mimikatz'), 9, 'Invoke-Mimikatz loader'),
     (re.compile(r'(?i)vssadmin|vssadmin.*shadow'), 7, 'vssadmin shadow copy'),
+    (re.compile(r'(?i)PrivExchange|privexchange.*exploit'), 8, 'PrivExchange attack'),
+    (re.compile(r'(?i)SharpHound|sharphound.*-c'), 7, 'SharpHound AD collector'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
