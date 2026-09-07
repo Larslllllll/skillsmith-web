@@ -3018,6 +3018,9 @@ _EXPLAIN_RULES = [
     ("sqlmap sql injection", "SQLMap pattern.", "SQLMap automates SQL injection attacks."),
     ("xss injection", "XSS pattern.", "XSS injects malicious scripts."),
 
+    ("csrf vulnerability", "CSRF pattern.", "CSRF exploits cross-site request forgery."),
+    ("ssrf vulnerability", "SSRF pattern.", "SSRF exploits server-side request forgery."),
+
 ]
 
 

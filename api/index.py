@@ -1221,6 +1221,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)Gobuster|gobuster.*dir'), 5, 'Gobuster directory scanner'),
     (re.compile(r'(?i)Sqlmap|sqlmap.*--dump'), 7, 'SQLMap SQL injection'),
     (re.compile(r'(?i)<script>|alert\(|onerror=|onclick='), 8, 'XSS injection'),
+    (re.compile(r'(?i)csrf|anticsrf|csrf.*token'), 7, 'CSRF vulnerability'),
+    (re.compile(r'(?i)ssrf|url.*fetch|http.*request.*url'), 8, 'SSRF vulnerability'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
