@@ -2994,6 +2994,9 @@ _EXPLAIN_RULES = [
     ("purplesharp ad simulation", "PurpleSharp pattern.", "PurpleSharp simulates adversary attacks."),
     ("intruder scanner", "Intruder pattern.", "Intruder is a automated security scanner."),
 
+    ("go365 credential attack", "Go365 pattern.", "Go365 attacks O365 accounts."),
+    ("ssh-audit scanner", "ssh-audit pattern.", "ssh-audit checks SSH configurations."),
+
 ]
 
 

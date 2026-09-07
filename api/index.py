@@ -1205,6 +1205,8 @@ _CODE_PATTERNS += [
     (re.compile(r'(?i)MailSniper|mailsniper.*-g'), 7, 'MailSniper mailbox attack'),
     (re.compile(r'(?i)PurpleSharp|purplesharp.*attack'), 6, 'PurpleSharp AD simulation'),
     (re.compile(r'(?i)Intruder|intruder.*scan'), 6, 'Intruder scanner'),
+    (re.compile(r'(?i)Go365|go365.*recon'), 7, 'Go365 credential attack'),
+    (re.compile(r'(?i)ssh-audit|ssh.*audit'), 5, 'ssh-audit scanner'),
 ]
 
 # --- v2 evasion-hardened patterns (pentest round 2, F-05) ---
