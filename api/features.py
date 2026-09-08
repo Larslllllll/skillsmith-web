@@ -3221,6 +3221,11 @@ _EXPLAIN_RULES = [
 
     ("lateral movement", "Lateral Movement pattern.", "Lateral movement spreads attacker access across network systems."),
     ("privilege escalation", "Privilege Escalation pattern.", "Privilege escalation gains higher access levels than authorized."),
+
+    ("template injection", "Template Injection pattern.", "Template injection attacks exploit template engines for remote code execution."),
+    ("template injection", "Template Injection pattern.", "Template injection attacks exploit template engines for remote code execution."),
+    ("dos attack", "DoS Attack pattern.", "DoS attacks overwhelm services with traffic or resource consumption."),
+    ("insufficient logging", "Insufficient Logging pattern.", "Insufficient logging hinders security incident detection and forensic analysis."),
 ]
 
 

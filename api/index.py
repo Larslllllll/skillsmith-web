@@ -4406,6 +4406,56 @@ def _app_inner(environ, start_response):
     (re.compile(r'(?i)SQL.*Injection|nosql.*injection|sqlmap|union.*select|drop.*table|insert.*into|select.*from'), 9, 'SQL injection attack'),
     (re.compile(r'(?i)Session.*Hijack|session.*steal|cookie.*theft|token.*intercept|session.*fixation'), 8, 'Session hijacking attempt'),
     (re.compile(r'(?i)Cryptojacking|crypto.*miner|coinhive|web.*miner|xmrig|monero.*miner|hashrate.*steal'), 9, 'Cryptojacking attack'),
+    (re.compile(r'(?i)LFI|local.*file.*injection|path.*traversal|file.*upload.*security|upload.*path.*traversal'), 8, 'Local file inclusion / path traversal'),
+
+    (re.compile(r'(?i)RFI|remote.*file.*injection|fetch.*file.*url|remote.*url.*inclusion'), 8, 'Remote file inclusion'),
+
+    (re.compile(r'(?i)Auth.*Bypass|authentication.*bypass|login.*bypass|auth.*bypass.*cookie|auth.*bypass.*token'), 9, 'Authentication bypass attempt'),
+
+    (re.compile(r'(?i)Weak.*auth|default.*password|hardcoded.*password|password.*in.*code'), 10, 'Weak authentication credentials'),
+
+    (re.compile(r'(?i)Session.*Fixation|session.*fixation|session.*hijack|session.*attack|session.*theft'), 8, 'Session fixation / hijacking'),
+
+    (re.compile(r'(?i)Cookie.*Stealing|cookie.*theft|session.*cookie.*theft|cookie.*injection'), 8, 'Cookie theft attempt'),
+
+    (re.compile(r'(?i)Host.*Header.*Injection|header.*injection|header.*spoofing|redirect.*host'), 8, 'Host header injection'),
+
+    (re.compile(r'(?i)HTTP.*Response.*Splitting|response.*splitting|CRLF.*split|response.*split.*attack'), 8, 'HTTP response splitting'),
+
+    (re.compile(r'(?i)SSTI|server.*side.*template.*injection|template.*injection|j2\s+injection|twig\s+injection'), 8, 'Server-side template injection'),
+
+    (re.compile(r'(?i)Jinja2.*injection|Django.*template.*injection|Templating.*injection'), 8, 'Jinja2 template injection'),
+
+    (re.compile(r'(?i)XPath.*Injection|xml.*query.*injection|document.*node.*injection'), 8, 'XPath injection'),
+
+    (re.compile(r'(?i)CRLF.*Injection|CRLF.*split|email.*header.*injection|header.*CRLF.*split'), 8, 'CRLF injection (email header)'),
+
+    (re.compile(r'(?i)SVG.*Injection|svg.*javascript|svg.*onload|svg.*event.*handler'), 8, 'SVG injection attack'),
+
+    (re.compile(r'(?i)CSS.*Injection|style.*injection|css.*property.*injection|style.*tag.*injection'), 8, 'CSS injection attack'),
+
+    (re.compile(r'(?i)Prototype.*Pollution|__proto__\\s*=|\\nprototype\\s*=|pollution.*object'), 8, 'Prototype pollution'),
+
+    (re.compile(r'(?i)Object\.prototype|Array\.prototype|custom.*prototype'), 8, 'Custom object prototype pollution'),
+
+    (re.compile(r'(?i)DDoS|denial.*of.*service|DoS.*attack|service.*disruption'), 7, 'Denial of service attack'),
+
+    (re.compile(r'(?i)Resource.*Exhaustion|memory.*exhaustion|cpu.*exhaustion|flood.*attack'), 7, 'Resource exhaustion attack'),
+
+    (re.compile(r'(?i)Secret.*Exposure|password.*in.*code|hardcoded.*secret|key.*in.*code'), 9, 'Hardcoded secret exposure'),
+
+    (re.compile(r'(?i)Token.*Exposure|api.*key.*in.*code|token.*in.*source'), 9, 'API token exposure'),
+
+    (re.compile(r'(?i)Credential.*Exposure|username.*password.*in.*code'), 9, 'Credential exposure in source'),
+
+    (re.compile(r'(?i)PII.*Exposure|ssn.*in.*code|credit.*card.*in.*code|email.*in.*code'), 9, 'PII exposure in source'),
+
+    (re.compile(r'(?i)Sensitive.*Data.*Exposure|private.*key|internal.*api|secret.*configuration'), 9, 'Sensitive data exposure'),
+
+    (re.compile(r'(?i)Insufficient.*Logging|no.*logging|log.*file.*missing|logs.*deleted'), 8, 'Insufficient logging'),
+
+    (re.compile(r'(?i)Debug.*Information.*Exposure|stack.*trace|debug.*mode|error.*details'), 8, 'Debug information exposure'),
+
     (re.compile(r'(?i)Bot.*Attack|bot.*exploit|web.*crawler|scraper.*block|automated.*threat|crawl.*disallowed'), 6, 'Bot attack pattern'),
     (re.compile(r'(?i)Supply.*Chain.*Risk|third.*party.*risk|vendor.*compromise|dependency.*attack|suspect.*dependency'), 7, 'Supply chain risk pattern'),
     (re.compile(r'(?i)Credential.*Stuffing|password.*spray|brute.*force.*login|account.*takeover|credential.*reuse'), 8, 'Credential stuffing attack'),
