@@ -3226,6 +3226,14 @@ _EXPLAIN_RULES = [
     ("template injection", "Template Injection pattern.", "Template injection attacks exploit template engines for remote code execution."),
     ("dos attack", "DoS Attack pattern.", "DoS attacks overwhelm services with traffic or resource consumption."),
     ("insufficient logging", "Insufficient Logging pattern.", "Insufficient logging hinders security incident detection and forensic analysis."),
+
+    ("server-side template injection", "Server-Side Template Injection pattern.", "Server-side template injection exploits template engines for remote code execution."),
+    ("prototype pollution", "Prototype Pollution pattern.", "Prototype pollution modifies object prototypes for application exploitation."),
+    ("idor", "IDOR pattern.", "IDOR (Insecure Direct Object Reference) allows access to unauthorized data."),
+    ("hardcoded secrets", "Hardcoded Secrets pattern.", "Hardcoded secrets leak credentials or keys in source code."),
+    ("ssrf bypass", "SSRF Bypass pattern.", "SSRF bypass evades server-side request forgery protections."),
+    ("crlf injection", "CRLF Injection pattern.", "CRLF injection splits HTTP headers for various attacks."),
+    ("http response splitting", "HTTP Response Splitting pattern.", "HTTP response splitting injects CRLF sequences to split HTTP responses."),
 ]
 
 
