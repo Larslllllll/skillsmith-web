@@ -4492,4 +4492,7 @@ def _app_inner(environ, start_response):
     (re.compile(r'(?i)Man.*In.*The.*Middle|mitm|intercept.*traffic|ssl.*strip|tls.*strip|arp.*spoof|network.*interception'), 8, 'Man-in-the-middle attack'),
     (re.compile(r'(?i)Privilege.*Escalation|elevat.*privilege|sudo.*exploit|windows.*privesc|linux.*privesc|UAC.*bypass|token.*impersonat'), 8, 'Privilege escalation attempt'),
     (re.compile(r'(?i)Lateral.*Movement|pivot.*network|lateral.*spread|pass.*hash|crackmapexec|impacket.*psexec|wmiexec|smbexec|evil.*winrm'), 8, 'Lateral movement / network pivot'),
+    (re.compile(r'(?i)HTTP.*Response.*Splitting|Response.*Splitting|CRLF.*Split.*HTTP'), 8, 'HTTP Response Splitting'),
+    (re.compile(r'(?i)CRLF.*Injection|Header.*Injection|CRLF.*Split'), 8, 'CRLF Injection'),
+    (re.compile(r'(?i)Prototype.*Pollution|__proto__|prototype.*pollution'), 8, 'Prototype Pollution'),
     return [json.dumps({"error": "not found"}).encode()]  # no route enumeration (pentest LOW-02)

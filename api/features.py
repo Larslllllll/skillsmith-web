@@ -3234,6 +3234,10 @@ _EXPLAIN_RULES = [
     ("ssrf bypass", "SSRF Bypass pattern.", "SSRF bypass evades server-side request forgery protections."),
     ("crlf injection", "CRLF Injection pattern.", "CRLF injection splits HTTP headers for various attacks."),
     ("http response splitting", "HTTP Response Splitting pattern.", "HTTP response splitting injects CRLF sequences to split HTTP responses."),
+
+    ("prototype pollution", "Prototype Pollution pattern.", "Prototype pollution modifies object prototypes for application exploitation."),
+    ("crlf injection", "CRLF Injection pattern.", "CRLF injection splits HTTP headers for various attacks."),
+    ("http response splitting", "HTTP Response Splitting pattern.", "HTTP response splitting injects CRLF sequences to split HTTP responses."),
 ]
 
 
