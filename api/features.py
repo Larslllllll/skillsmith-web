@@ -3238,6 +3238,14 @@ _EXPLAIN_RULES = [
     ("prototype pollution", "Prototype Pollution pattern.", "Prototype pollution modifies object prototypes for application exploitation."),
     ("crlf injection", "CRLF Injection pattern.", "CRLF injection splits HTTP headers for various attacks."),
     ("http response splitting", "HTTP Response Splitting pattern.", "HTTP response splitting injects CRLF sequences to split HTTP responses."),
+
+    ("server-side template injection", "Server-Side Template Injection pattern.", "This pattern detects server-side template injection attack indicators in agent skills."),
+    ("prototype pollution", "Prototype Pollution pattern.", "This pattern detects prototype pollution attack indicators in agent skills."),
+    ("idorinsecure direct object reference", "IDOR (Insecure Direct Object Reference) pattern.", "This pattern detects idor (insecure direct object reference) attack indicators in agent skills."),
+    ("hardcoded secrets", "Hardcoded Secrets pattern.", "This pattern detects hardcoded secrets attack indicators in agent skills."),
+    ("ssrf bypass", "SSRF Bypass pattern.", "This pattern detects ssrf bypass attack indicators in agent skills."),
+    ("crlf injection", "CRLF Injection pattern.", "This pattern detects crlf injection attack indicators in agent skills."),
+    ("http response splitting", "HTTP Response Splitting pattern.", "This pattern detects http response splitting attack indicators in agent skills."),
 ]
 
 

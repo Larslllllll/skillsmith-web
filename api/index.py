@@ -4495,4 +4495,11 @@ def _app_inner(environ, start_response):
     (re.compile(r'(?i)HTTP.*Response.*Splitting|Response.*Splitting|CRLF.*Split.*HTTP'), 8, 'HTTP Response Splitting'),
     (re.compile(r'(?i)CRLF.*Injection|Header.*Injection|CRLF.*Split'), 8, 'CRLF Injection'),
     (re.compile(r'(?i)Prototype.*Pollution|__proto__|prototype.*pollution'), 8, 'Prototype Pollution'),
+    (re.compile(r'(?i)HTTP.*Response.*Splitting|Response.*Splitting|CRLF.*Split.*HTTP'), 8, 'HTTP Response Splitting'),
+    (re.compile(r'(?i)CRLF.*Injection|Header.*Injection|CRLF.*Split'), 8, 'CRLF Injection'),
+    (re.compile(r'(?i)SSRF.*Bypass|SSRF.*Evasion|request.*bypass'), 8, 'SSRF Bypass'),
+    (re.compile(r'(?i)Hardcoded.*Password|hardcoded.*secret|secret.*in.*code|password.*in.*source'), 9, 'Hardcoded Secrets'),
+    (re.compile(r'(?i)IDOR|insecure.*direct.*object|direct.*object.*reference'), 8, 'IDOR (Insecure Direct Object Reference)'),
+    (re.compile(r'(?i)Prototype.*Pollution|__proto__|prototype.*pollution'), 8, 'Prototype Pollution'),
+    (re.compile(r'(?i)Template.*Injektion|SSTI|jinja|twig|django.*template|flask.*template|fastapi.*template'), 8, 'Server-Side Template Injection'),
     return [json.dumps({"error": "not found"}).encode()]  # no route enumeration (pentest LOW-02)
